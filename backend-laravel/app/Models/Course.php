@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Course extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'course_code',
+        'course_name',
+        'description',
+        'faculty_id',
+        'credits',
+        'semester',
+        'academic_year',
+        'thumbnail',
+        'status',
+    ];
+
+    protected $casts = [
+        'credits' => 'integer',
+    ];
+
+    /**
+     * Get the instructor (faculty) for the course
+     */
+    public function instructor()
+    {
+        return $this->belongsTo(User::class, 'faculty_id');
+    }
+
+    /**
+     * Get the faculty for the course (alias for instructor)
+     */
+    public function faculty()
+    {
+        return $this->belongsTo(User::class, 'faculty_id');
+    }
+
+    /**
+     * Get the enrollments for the course
+     */
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * Get the modules for the course
+     */
+    public function modules()
+    {
+        return $this->hasMany(Module::class);
+    }
+
+    /**
+     * Get the assignments for the course
+     */
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class);
+    }
+}

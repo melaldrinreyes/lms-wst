@@ -1,0 +1,104 @@
+import { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI } from '../services/api';
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [loading, setLoading] = useState(false);
+
+  const login = async (credentials) => {
+    setLoading(true);
+    try {
+      console.log('Logging in with credentials:', { email: credentials.email });
+      const response = await authAPI.login(credentials);
+      console.log('Login response:', response);
+      
+      if (response.success) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('token', response.token);
+        setUser(response.user);
+        return { success: true, user: response.user };
+      } else {
+        console.error('Login failed:', response.message);
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      console.error('Error response:', error.response?.data);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Login failed. Please try again.' 
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (data) => {
+    setLoading(true);
+    try {
+      // Prepare data for API - Laravel expects password_confirmation
+      const registrationData = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        password_confirmation: data.confirmPassword || data.password, // Add password_confirmation field
+        role: data.role || 'student',
+      };
+
+      const response = await authAPI.register(registrationData);
+      
+      if (response.success) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('token', response.token);
+        setUser(response.user);
+        return { success: true };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+      const validationErrors = error.response?.data?.errors;
+      
+      if (validationErrors) {
+        const firstError = Object.values(validationErrors)[0][0];
+        return { success: false, error: firstError };
+      }
+      
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      setUser(null);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}

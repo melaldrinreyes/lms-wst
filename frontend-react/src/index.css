@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    width: 100%;
+    @apply bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200;
+  }
+  
+  html {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-900;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-600;
+  }
+}
+
+@layer components {
+  /* Gradient Text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent;
+  }
+  
+  /* Primary Button */
+  .btn-primary {
+    @apply px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold;
+    @apply hover:from-orange-600 hover:to-orange-700 transition-all;
+    @apply shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50;
+  }
+  
+  /* Card */
+  .card {
+    @apply bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800;
+    @apply shadow-lg hover:shadow-xl transition-all;
+  }
+  
+  /* Input */
+  .input {
+    @apply w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700;
+    @apply rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent;
+    @apply text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all;
+  }
+}
+
+@layer utilities {
+  /* Mobile bottom nav utilities */
+  .pb-mobile-nav {
+    padding-bottom: 4rem; /* 64px for bottom nav on mobile */
+  }
+  
+  @media (min-width: 768px) {
+    .pb-mobile-nav {
+      padding-bottom: 1.5rem; /* 24px on desktop */
+    }
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
