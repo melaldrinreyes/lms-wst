@@ -138,37 +138,18 @@ function ProtectedRoute({ children, requiredRole }) {
     // Clear any stale data
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    console.warn('Unauthorized access attempt - No user found');
     return <Navigate to="/" replace />;
   }
 
   // Check if token exists
   const token = localStorage.getItem('token');
   if (!token) {
-    console.warn('Unauthorized access attempt - No token found');
     localStorage.removeItem('user');
-    return <Navigate to="/" replace />;
-  }
-
-  // Verify token hasn't expired (basic check)
-  try {
-    const tokenParts = token.split('.');
-    if (tokenParts.length !== 3) {
-      console.warn('Unauthorized access attempt - Invalid token format');
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      return <Navigate to="/" replace />;
-    }
-  } catch (error) {
-    console.error('Token validation error:', error);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
     return <Navigate to="/" replace />;
   }
   
   // Check if user has required role
   if (requiredRole && user.role !== requiredRole) {
-    console.warn(`Unauthorized access attempt - User role '${user.role}' does not match required role '${requiredRole}'`);
     // Redirect to user's appropriate dashboard
     return <Navigate to={`/${user.role}`} replace />;
   }
@@ -182,11 +163,7 @@ function PublicRoute({ children }) {
   
   // If user is logged in, redirect to their dashboard
   if (user) {
-    const token = localStorage.getItem('token');
-    if (token) {
-      console.log('Authenticated user accessing public route - redirecting to dashboard');
-      return <Navigate to={`/${user.role}`} replace />;
-    }
+    return <Navigate to={`/${user.role}`} replace />;
   }
   
   return children;
