@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register route middleware aliases
         $middleware->alias([
             'check.role' => \App\Http\Middleware\CheckRole::class,
+            'check.dashboard' => \App\Http\Middleware\CheckDashboardAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

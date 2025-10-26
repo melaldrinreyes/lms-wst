@@ -6,9 +6,61 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
+    const token = localStorage.getItem('token');
+    
+    // Validate that both user and token exist
+    if (!saved || !token) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      return null;
+    }
+    
+    try {
+      const parsedUser = JSON.parse(saved);
+      // Validate user has required fields
+      if (!parsedUser.id || !parsedUser.email || !parsedUser.role) {
+        console.warn('Invalid user data in localStorage');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        return null;
+      }
+      return parsedUser;
+    } catch (error) {
+      console.error('Failed to parse user data:', error);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      return null;
+    }
   });
   const [loading, setLoading] = useState(false);
+
+  // Verify authentication on mount and periodically
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token && user) {
+        try {
+          // Verify the token is still valid
+          const response = await authAPI.getUser();
+          if (!response.success) {
+            console.warn('Token verification failed - logging out');
+            logout();
+          }
+        } catch (error) {
+          console.error('Auth verification failed:', error);
+          if (error.response?.status === 401) {
+            logout();
+          }
+        }
+      }
+    };
+
+    verifyAuth();
+    
+    // Verify auth every 5 minutes
+    const interval = setInterval(verifyAuth, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const login = async (credentials) => {
     setLoading(true);

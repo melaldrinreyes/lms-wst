@@ -47,40 +47,63 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::put('/user/password', [AuthController::class, 'updatePassword']);
     
-    // Course routes
+    // Course routes (All authenticated users can view courses)
     Route::get('/courses/statistics/all', [CourseController::class, 'statistics']);
     Route::get('/courses', [CourseController::class, 'index']);
-    Route::post('/courses', [CourseController::class, 'store']);
     Route::get('/courses/{id}', [CourseController::class, 'show']);
-    Route::put('/courses/{id}', [CourseController::class, 'update']);
-    Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
-    Route::post('/courses/{id}/enroll', [CourseController::class, 'enroll']);
-    Route::put('/courses/{courseId}/students/{studentId}/status', [CourseController::class, 'updateStudentStatus']);
-    Route::delete('/courses/{courseId}/students/{studentId}', [CourseController::class, 'removeStudent']);
     
-    // Module routes
+    // Course creation and modification (Faculty and Admin only)
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::post('/courses', [CourseController::class, 'store']);
+        Route::put('/courses/{id}', [CourseController::class, 'update']);
+        Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+    });
+    
+    // Enrollment management (Faculty and Admin)
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::put('/courses/{courseId}/students/{studentId}/status', [CourseController::class, 'updateStudentStatus']);
+        Route::delete('/courses/{courseId}/students/{studentId}', [CourseController::class, 'removeStudent']);
+    });
+    
+    // Student enrollment (Students only)
+    Route::middleware(['check.role:3'])->group(function () {
+        Route::post('/courses/{id}/enroll', [CourseController::class, 'enroll']);
+    });
+    
+    // Module routes (Faculty and Admin can manage, all can view)
     Route::get('/courses/{courseId}/modules', [ModuleController::class, 'index']);
-    Route::post('/modules', [ModuleController::class, 'store']);
-    Route::put('/modules/{id}', [ModuleController::class, 'update']);
-    Route::delete('/modules/{id}', [ModuleController::class, 'destroy']);
     
-    // Assignment routes
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::post('/modules', [ModuleController::class, 'store']);
+        Route::put('/modules/{id}', [ModuleController::class, 'update']);
+        Route::delete('/modules/{id}', [ModuleController::class, 'destroy']);
+    });
+    
+    // Assignment routes (Faculty and Admin can manage, all can view)
     Route::get('/courses/{courseId}/assignments', [AssignmentController::class, 'index']);
-    Route::post('/assignments', [AssignmentController::class, 'store']);
     Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
-    Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
-    Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy']);
     
-    // Submission routes
-    Route::get('/submissions/pending/count', [SubmissionController::class, 'pendingCount']);
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::post('/assignments', [AssignmentController::class, 'store']);
+        Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
+        Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy']);
+    });
+    
+    // Submission routes (Faculty and Admin can grade)
     Route::get('/submissions', [SubmissionController::class, 'index']);
     Route::get('/submissions/{id}', [SubmissionController::class, 'show']);
-    Route::post('/submissions/{id}/grade', [SubmissionController::class, 'grade']);
     
-    // Student routes
-    Route::get('/students', [StudentController::class, 'index']);
-    Route::get('/students/{id}', [StudentController::class, 'show']);
-    Route::get('/courses/{courseId}/students', [StudentController::class, 'byCourse']);
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::get('/submissions/pending/count', [SubmissionController::class, 'pendingCount']);
+        Route::post('/submissions/{id}/grade', [SubmissionController::class, 'grade']);
+    });
+    
+    // Student routes (Faculty and Admin can view all students)
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::get('/students', [StudentController::class, 'index']);
+        Route::get('/students/{id}', [StudentController::class, 'show']);
+        Route::get('/courses/{courseId}/students', [StudentController::class, 'byCourse']);
+    });
     
     // Student-specific routes (role_id = 3)
     Route::middleware(['check.role:3'])->group(function () {
