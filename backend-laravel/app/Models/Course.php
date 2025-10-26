@@ -16,6 +16,8 @@ class Course extends Model
         'faculty_id',
         'credits',
         'semester',
+        'year_level',
+        'section',
         'academic_year',
         'thumbnail',
         'status',

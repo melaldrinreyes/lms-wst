@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Module;
 use App\Models\Assignment;
 use App\Models\Enrollment;
+use App\Models\EnrollmentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,6 +40,8 @@ class CourseController extends Controller
                         'description' => $course->description,
                         'credits' => $course->credits,
                         'semester' => $course->semester,
+                        'year_level' => $course->year_level,
+                        'section' => $course->section,
                         'academic_year' => $course->academic_year,
                         'thumbnail' => $course->thumbnail,
                         'status' => $course->status,
@@ -61,7 +64,7 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        $course = Course::with(['enrollments.user', 'modules', 'assignments'])
+        $course = Course::with(['enrollments.user', 'modules', 'assignments', 'faculty'])
             ->findOrFail($id);
 
         return response()->json([
@@ -73,12 +76,20 @@ class CourseController extends Controller
                 'description' => $course->description,
                 'credits' => $course->credits,
                 'semester' => $course->semester,
+                'year_level' => $course->year_level,
+                'section' => $course->section,
                 'academic_year' => $course->academic_year,
                 'thumbnail' => $course->thumbnail,
                 'status' => $course->status,
                 'students' => $course->enrollments->count(),
                 'modules' => $course->modules,
                 'assignments' => $course->assignments,
+                'faculty' => $course->faculty ? [
+                    'id' => $course->faculty->id,
+                    'name' => $course->faculty->name,
+                    'email' => $course->faculty->email,
+                    'profile_image' => $course->faculty->profile_image,
+                ] : null,
                 'enrolled_students' => $course->enrollments->map(function ($enrollment) {
                     return [
                         'id' => $enrollment->user->id,
@@ -105,6 +116,8 @@ class CourseController extends Controller
             'description' => 'nullable|string',
             'credits' => 'required|integer|min:1|max:10',
             'semester' => 'required|string|max:20',
+            'year_level' => 'nullable|string|max:20',
+            'section' => 'nullable|string|max:50',
             'academic_year' => 'required|string|max:9',
             'thumbnail' => 'nullable|string',
         ]);
@@ -116,6 +129,8 @@ class CourseController extends Controller
             'faculty_id' => $request->user()->id,
             'credits' => $validated['credits'],
             'semester' => $validated['semester'],
+            'year_level' => $validated['year_level'] ?? null,
+            'section' => $validated['section'] ?? null,
             'academic_year' => $validated['academic_year'],
             'thumbnail' => $validated['thumbnail'] ?? 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400',
             'status' => 'active',
@@ -141,6 +156,8 @@ class CourseController extends Controller
             'description' => 'nullable|string',
             'credits' => 'required|integer|min:1|max:10',
             'semester' => 'required|string|max:20',
+            'year_level' => 'nullable|string|max:20',
+            'section' => 'nullable|string|max:50',
             'academic_year' => 'required|string|max:9',
             'thumbnail' => 'nullable|string',
             'status' => 'required|in:active,inactive,archived',
@@ -152,6 +169,8 @@ class CourseController extends Controller
             'description' => $validated['description'] ?? null,
             'credits' => $validated['credits'],
             'semester' => $validated['semester'],
+            'year_level' => $validated['year_level'] ?? null,
+            'section' => $validated['section'] ?? null,
             'academic_year' => $validated['academic_year'],
             'thumbnail' => $validated['thumbnail'],
             'status' => $validated['status'],
@@ -204,5 +223,163 @@ class CourseController extends Controller
                 'total_assignments' => Assignment::count(),
             ],
         ]);
+    }
+
+    /**
+     * Enroll a student in a course
+     */
+    public function enroll(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+            
+            // Log the enrollment attempt
+            \Log::info('Enrollment attempt', [
+                'user_id' => $user->id,
+                'user_role_id' => $user->role_id,
+                'course_id' => $id
+            ]);
+            
+            $course = Course::findOrFail($id);
+
+            // Check if user is a student (role_id = 3)
+            if ($user->role_id !== 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only students can enroll in courses.',
+                ], 400);
+            }
+
+            // Check if the course is active
+            if ($course->status !== 'active') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This course is not currently available for enrollment.',
+                ], 400);
+            }
+
+            // Check if currently enrolled (not dropped)
+            $existingEnrollment = Enrollment::where('student_id', $user->id)
+                ->where('course_id', $id)
+                ->where('status', 'enrolled')
+                ->first();
+
+            if ($existingEnrollment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are already enrolled in this course.',
+                ], 400);
+            }
+
+            // Check if already have a pending request
+            $pendingRequest = EnrollmentRequest::where('student_id', $user->id)
+                ->where('course_id', $id)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($pendingRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have a pending enrollment request for this course.',
+                ], 400);
+            }
+
+            // If student previously had a request (rejected or approved), delete it to allow re-enrollment
+            // This handles cases where student left a course and wants to rejoin
+            EnrollmentRequest::where('student_id', $user->id)
+                ->where('course_id', $id)
+                ->whereIn('status', ['rejected', 'approved'])
+                ->delete();
+
+            // Create enrollment request
+            \Log::info('Creating enrollment request', [
+                'student_id' => $user->id,
+                'course_id' => $id
+            ]);
+            
+            $enrollmentRequest = EnrollmentRequest::create([
+                'student_id' => $user->id,
+                'course_id' => $id,
+                'status' => 'pending',
+                'message' => $request->input('message', null),
+            ]);
+            
+            \Log::info('Enrollment request created', ['request_id' => $enrollmentRequest->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Enrollment request submitted successfully! Waiting for instructor approval.',
+                'request' => $enrollmentRequest,
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Enrollment error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error submitting enrollment request: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update a student's enrollment status
+     */
+    public function updateStudentStatus(Request $request, $courseId, $studentId)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:enrolled,completed,dropped',
+            ]);
+
+            $enrollment = Enrollment::where('course_id', $courseId)
+                ->where('student_id', $studentId)
+                ->firstOrFail();
+
+            $enrollment->update([
+                'status' => $validated['status'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student status updated successfully',
+                'enrollment' => $enrollment,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating student status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove a student from a course
+     */
+    public function removeStudent(Request $request, $courseId, $studentId)
+    {
+        try {
+            $enrollment = Enrollment::where('course_id', $courseId)
+                ->where('student_id', $studentId)
+                ->firstOrFail();
+
+            // Delete the enrollment to allow re-enrollment
+            $enrollment->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student removed from course successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error removing student: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

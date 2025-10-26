@@ -120,8 +120,13 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $userRole,
                 'student_id' => $user->student_id,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'date_of_birth' => $user->date_of_birth,
+                'gender' => $user->gender,
                 'profile_image' => $user->profile_image,
                 'status' => $user->status,
+                'last_login' => $user->last_login,
             ],
             'token' => $token,
         ], 200);
@@ -169,6 +174,79 @@ class AuthController extends Controller
                 'status' => $user->status,
                 'last_login' => $user->last_login,
             ],
+        ], 200);
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,other',
+        ]);
+
+        $user->update($validated);
+
+        $roleMap = [
+            1 => 'admin',
+            2 => 'faculty',
+            3 => 'student',
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $roleMap[$user->role_id] ?? 'student',
+                'student_id' => $user->student_id,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'date_of_birth' => $user->date_of_birth,
+                'gender' => $user->gender,
+                'profile_image' => $user->profile_image,
+                'status' => $user->status,
+                'last_login' => $user->last_login,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Update user password
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check if current password is correct
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password is incorrect',
+            ], 400);
+        }
+
+        // Update password
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully',
         ], 200);
     }
 }

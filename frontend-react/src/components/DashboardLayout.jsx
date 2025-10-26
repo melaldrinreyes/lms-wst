@@ -9,15 +9,16 @@ import {
   LogOut,
   Moon,
   Sun,
-  GraduationCap,
   Menu,
   X,
-  MoreHorizontal
+  MoreHorizontal,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { facultyAPI } from '../services/api';
 
 export default function DashboardLayout({ role }) {
   const { user, logout } = useAuth();
@@ -26,16 +27,40 @@ export default function DashboardLayout({ role }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   // Use provided role or user's role
   const currentRole = role || user?.role || 'student';
+
+  // Fetch pending enrollment requests count for faculty
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      if (currentRole === 'faculty') {
+        try {
+          const response = await facultyAPI.getEnrollmentRequests();
+          if (response.success) {
+            const pendingCount = response.requests.filter(req => req.status === 'pending').length;
+            setPendingRequestsCount(pendingCount);
+          }
+        } catch (error) {
+          console.error('Error fetching pending requests:', error);
+        }
+      }
+    };
+
+    fetchPendingRequests();
+    
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchPendingRequests, 30000);
+    
+    return () => clearInterval(interval);
+  }, [currentRole]);
 
   const sidebarLinks = {
     student: [
       { to: '/student', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/student/courses', icon: BookOpen, label: 'My Courses' },
       { to: '/student/assignments', icon: ClipboardList, label: 'Assignments' },
-      { to: '/student/forums', icon: MessageSquare, label: 'Forums' },
       { to: '/chatbot', icon: Bot, label: 'AI Assistant', external: true },
       { to: '/profile', icon: User, label: 'Profile', external: true },
     ],
@@ -49,8 +74,7 @@ export default function DashboardLayout({ role }) {
     faculty: [
       { to: '/faculty', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/faculty/courses', icon: BookOpen, label: 'My Courses' },
-      { to: '/faculty/classes', icon: GraduationCap, label: 'My Classes' },
-      { to: '/faculty/students', icon: User, label: 'My Students' },
+      { to: '/faculty/join-requests', icon: UserPlus, label: 'Join Requests' },
       { to: '/chatbot', icon: Bot, label: 'AI Assistant', external: true },
       { to: '/profile', icon: User, label: 'Profile', external: true },
     ],
@@ -62,7 +86,7 @@ export default function DashboardLayout({ role }) {
       { to: '/student', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/student/courses', icon: BookOpen, label: 'Courses' },
       { to: '/student/assignments', icon: ClipboardList, label: 'Tasks' },
-      { to: '/student/forums', icon: MessageSquare, label: 'Forums' },
+      { to: '/chatbot', icon: Bot, label: 'Assistant' },
     ],
     admin: [
       { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -73,8 +97,7 @@ export default function DashboardLayout({ role }) {
     faculty: [
       { to: '/faculty', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/faculty/courses', icon: BookOpen, label: 'Courses' },
-      { to: '/faculty/classes', icon: GraduationCap, label: 'Classes' },
-      { to: '/faculty/students', icon: User, label: 'Students' },
+      { to: '/faculty/join-requests', icon: UserPlus, label: 'Requests' },
     ],
   };
 
@@ -145,6 +168,15 @@ export default function DashboardLayout({ role }) {
               </div>
               <div className="border-t border-gray-800 p-2">
                 <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-gray-400 hover:bg-gray-800 transition"
+                >
+                  {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                  <span className="font-medium">
+                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                  </span>
+                </button>
+                <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 transition"
                 >
@@ -198,7 +230,7 @@ export default function DashboardLayout({ role }) {
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                  `flex items-center gap-3 px-4 py-3 rounded-lg transition relative ${
                     isActive
                       ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
                       : 'text-gray-400 hover:bg-gray-800 hover:text-orange-500'
@@ -207,12 +239,27 @@ export default function DashboardLayout({ role }) {
               >
                 <link.icon size={20} />
                 <span className="font-medium">{link.label}</span>
+                {/* Notification Badge */}
+                {link.to === '/faculty/join-requests' && pendingRequestsCount > 0 && (
+                  <span className="ml-auto bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center">
+                    {pendingRequestsCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
 
           {/* Bottom Actions */}
-          <div className="p-4 border-t border-gray-800">
+          <div className="p-4 border-t border-gray-800 space-y-2">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-gray-400 hover:bg-gray-800 transition"
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+              <span className="font-medium">
+                {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+              </span>
+            </button>
             <button
               onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 transition"
@@ -245,6 +292,13 @@ export default function DashboardLayout({ role }) {
                 {/* Active indicator */}
                 {active && (
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-b-full"></div>
+                )}
+                
+                {/* Notification Badge */}
+                {item.to === '/faculty/join-requests' && pendingRequestsCount > 0 && (
+                  <span className="absolute top-2 right-1/4 bg-orange-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center leading-none">
+                    {pendingRequestsCount}
+                  </span>
                 )}
                 
                 <Icon size={22} strokeWidth={active ? 2.5 : 2} />

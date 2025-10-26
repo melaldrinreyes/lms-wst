@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, UserCircle, X } from 'lucide-react';
+import { Mail, Lock, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Toast from '../components/ui/Toast';
 
-export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwitchToForgotPassword }) {
+export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwitchToForgotPassword, onLoginSuccess }) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'student',
   });
   const [toast, setToast] = useState(null);
   const { login, loading } = useAuth();
@@ -20,9 +19,18 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwit
     const result = await login(formData);
     if (result.success) {
       setToast({ message: 'Login successful!', type: 'success' });
+      
       setTimeout(() => {
         onClose();
-        navigate(`/${formData.role}`);
+        
+        // If there's a custom success handler, use it
+        if (onLoginSuccess) {
+          onLoginSuccess(result.user);
+        } else {
+          // Otherwise, navigate based on the user role from backend
+          const userRole = result.user?.role;
+          navigate(`/${userRole}`);
+        }
       }, 1000);
     } else {
       setToast({ message: result.error || 'Login failed', type: 'error' });
@@ -116,26 +124,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwit
                     </div>
                   </div>
 
-                  {/* Role */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Login As
-                    </label>
-                    <div className="relative">
-                      <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                      <select
-                        value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white appearance-none transition"
-                      >
-                        <option value="student">Student</option>
-                        <option value="faculty">Faculty</option>
-                        <option value="alumni">Alumni</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
-                  </div>
-
                   {/* Forgot Password */}
                   <div className="flex items-center justify-between">
                     <label className="flex items-center">
@@ -163,6 +151,13 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwit
                     {loading ? 'Signing in...' : 'Sign In'}
                   </button>
                 </form>
+
+                {/* Info Note */}
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                  <p className="text-xs text-blue-400 text-center">
+                    Your account role will be automatically detected upon login.
+                  </p>
+                </div>
 
                 {/* Divider */}
                 <div className="relative my-5">

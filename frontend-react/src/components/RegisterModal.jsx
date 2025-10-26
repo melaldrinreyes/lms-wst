@@ -31,7 +31,7 @@ export default function RegisterModal({ isOpen, onClose }) {
       setToast({ message: 'Registration successful!', type: 'success' });
       setTimeout(() => {
         onClose();
-        navigate(`/${formData.role}`);
+        navigate('/student');
       }, 1000);
     } else {
       setToast({ message: result.error || 'Registration failed', type: 'error' });
@@ -80,10 +80,10 @@ export default function RegisterModal({ isOpen, onClose }) {
                     <span className="text-white font-bold text-lg">M</span>
                   </div>
                   <h2 className="text-xl font-bold text-white mb-1">
-                    Create Account
+                    Create Student Account
                   </h2>
                   <p className="text-gray-400 text-xs">
-                    Join MINSU E-LEARN today
+                    Register as a student at MINSU E-LEARN
                   </p>
                 </div>
 
@@ -125,43 +125,22 @@ export default function RegisterModal({ isOpen, onClose }) {
                     </div>
                   </div>
 
-                  {/* Role */}
+                  {/* Student ID */}
                   <div>
                     <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                      Register As
+                      Student ID (Optional)
                     </label>
                     <div className="relative">
                       <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                      <select
-                        value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm appearance-none transition"
-                      >
-                        <option value="student">Student</option>
-                        <option value="faculty">Faculty</option>
-                        <option value="alumni">Alumni</option>
-                      </select>
+                      <input
+                        type="text"
+                        value={formData.student_id}
+                        onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-gray-500 transition"
+                        placeholder="2024-00001"
+                      />
                     </div>
                   </div>
-
-                  {/* Student ID (only for students) */}
-                  {formData.role === 'student' && (
-                    <div>
-                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                        Student ID (Optional)
-                      </label>
-                      <div className="relative">
-                        <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                        <input
-                          type="text"
-                          value={formData.student_id}
-                          onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-                          className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-gray-500 transition"
-                          placeholder="2024-00001"
-                        />
-                      </div>
-                    </div>
-                  )}
 
                   {/* Password */}
                   <div>
@@ -205,9 +184,16 @@ export default function RegisterModal({ isOpen, onClose }) {
                     disabled={loading}
                     className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/50 hover:shadow-orange-500/70"
                   >
-                    {loading ? 'Creating account...' : 'Create Account'}
+                    {loading ? 'Creating account...' : 'Create Student Account'}
                   </button>
                 </form>
+
+                {/* Info Note */}
+                <div className="mt-3 p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                  <p className="text-xs text-blue-400 text-center">
+                    <strong>Student Registration Only.</strong> Faculty and staff accounts are created by administrators.
+                  </p>
+                </div>
 
                 {/* Divider */}
                 <div className="relative my-4">

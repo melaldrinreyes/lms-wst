@@ -56,7 +56,7 @@ export default function ChatbotPage() {
     },
     instructor: {
       patterns: ['instructor', 'teacher', 'professor', 'contact', 'email', 'message', 'reach'],
-      response: '👨‍🏫 **To contact your instructor:**\n\n• Go to the specific **Course** page\n• Click **Contact Instructor** in the sidebar\n• Or use the **Discussion Forum** to ask questions\n• You can also find their email in the course details\n• Office hours are listed on each course page\n\n⏰ **Response time:**\nInstructors typically respond within 24-48 hours.\n\nNeed help with a specific question for your instructor?'
+      response: '👨‍🏫 **To contact your instructor:**\n\n• Go to the specific **Course** page\n• Click **Contact Instructor** in the sidebar\n• You can also find their email in the course details\n• Office hours are listed on each course page\n\n⏰ **Response time:**\nInstructors typically respond within 24-48 hours.\n\nNeed help with a specific question for your instructor?'
     },
     password: {
       patterns: ['password', 'reset', 'forgot', 'login', 'access', 'locked', 'unlock'],
@@ -64,19 +64,17 @@ export default function ChatbotPage() {
     },
     schedule: {
       patterns: ['schedule', 'timetable', 'classes', 'calendar', 'when', 'timing', 'time'],
-      response: '🗓️ **Your course schedule:**\n\n• View it on your **Dashboard** (Schedule section)\n• Download as PDF from **Profile** → **Account Info**\n• Add to Google Calendar using the sync button\n• Check individual course pages for class timings\n• Get notifications for upcoming classes\n\n📅 **Class reminders:**\nEnable notifications in your profile settings!\n\nWant to see your schedule for a specific day?'
-    },
-    forum: {
-      patterns: ['forum', 'discussion', 'post', 'topic', 'thread', 'comment', 'reply'],
-      response: '💬 **Using discussion forums:**\n\n1. Go to **Courses** → Select course → **Discussion** tab\n2. Browse existing topics or click **New Topic**\n3. Write your question or comment\n4. Add tags and click **Post**\n5. Get notifications when others reply\n\n✨ **Forum features:**\n• Upvote helpful answers\n• Mark topics as resolved\n• Follow threads you\'re interested in\n• Search for similar questions\n\nForums are great for peer learning!'
+      response: '🗓️ **Your course schedule:**\n\n• View it on your **Dashboard** (Schedule section)\n• Download as PDF from **Profile** → **Account Info**\n• Add to Google Calendar using the sync button\n• Check individual course pages for class timings\n\nWant to see your schedule for a specific day?'
     },
     courses: {
       patterns: ['course', 'enroll', 'register', 'class', 'subject', 'module'],
-      response: '📚 **Managing courses:**\n\n• View all courses on your **Dashboard**\n• Browse available courses in the **Courses** section\n• Track progress with the progress bar\n• Access materials, assignments, and forums per course\n• Download course resources anytime\n\n🎓 **Course features:**\n• Video lectures\n• Reading materials\n• Quizzes and assignments\n• Live discussions\n\nLooking for a specific course?'
+      response: '📚 **Managing courses:**\n\n• View all courses on your **Dashboard**\n• Browse available courses in the **Courses** section\n• Track progress with the progress bar\n• Access materials and assignments per course\n• Download course resources anytime\n\n🎓 **Course features:**\n• Video lectures\n• Reading materials\n• Quizzes and assignments\n\nLooking for a specific course?'
     },
     help: {
       patterns: ['help', 'support', 'assist', 'guide', 'how', 'what', 'explain'],
-      response: '🆘 **I can help you with:**\n\n✓ Submitting assignments\n✓ Viewing grades\n✓ Contacting instructors\n✓ Course schedules\n✓ Discussion forums\n✓ Account settings\n✓ Password resets\n✓ Technical issues\n✓ Navigation tips\n\n💡 Use the quick action buttons below for common questions!\n\nWhat would you like to know more about?'
+      response: '🆘 **I can help you with:**\n\n✓ Submitting assignments\n✓ Viewing grades\n✓ Contacting instructors\n✓ Course schedules\n✓ Account settings\n✓ Password resets\n✓ Technical issues\n✓ Navigation tips\n\n💡 Use the quick action buttons below for common questions!\n\nWhat would you like to know more about?'
+    },
+    navigation: {
     },
     thanks: {
       patterns: ['thank', 'thanks', 'appreciate', 'helpful', 'great', 'awesome', 'perfect'],
@@ -89,7 +87,9 @@ export default function ChatbotPage() {
     },
     navigation: {
       patterns: ['where', 'find', 'locate', 'navigate', 'go to', 'access'],
-      response: '🧭 **Navigation help:**\n\n**Main sections:**\n• Dashboard - Overview and quick access\n• Courses - All your enrolled courses\n• Assignments - Pending and completed tasks\n• Forums - Class discussions\n• Profile - Your account settings\n\n💡 Use the sidebar menu to navigate quickly!\n\nWhat are you trying to find?'
+      response: '🧭 **Navigation help:**\n\n**Main sections:**\n• Dashboard - Overview and quick access\n• Courses - All your enrolled courses\n• Assignments - Pending and completed tasks\n• Profile - Your account settings\n\n💡 Use the sidebar menu to navigate quickly!\n\nWhat are you trying to find?'
+    },
+    thanks: {
     },
     technical: {
       patterns: ['error', 'bug', 'problem', 'issue', 'not working', 'broken', 'crash'],
@@ -122,7 +122,7 @@ export default function ChatbotPage() {
     }
     
     // Default response with suggestions
-    return '🤔 I\'m not sure about that specific question. Here are some things I can help with:\n\n• Submitting assignments\n• Viewing grades\n• Contacting instructors\n• Course schedules\n• Discussion forums\n• Account settings\n• Technical support\n\n💡 Try using the quick action buttons or rephrase your question!';
+    return '🤔 I\'m not sure about that specific question. Here are some things I can help with:\n\n• Submitting assignments\n• Viewing grades\n• Contacting instructors\n• Course schedules\n• Account settings\n• Technical support\n\n💡 Try using the quick action buttons or rephrase your question!';
   };
 
   const handleSend = (messageText = null) => {

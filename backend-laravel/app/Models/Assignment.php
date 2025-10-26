@@ -14,13 +14,14 @@ class Assignment extends Model
         'title',
         'description',
         'due_date',
-        'points',
+        'max_points',
+        'file_path',
         'status',
     ];
 
     protected $casts = [
         'due_date' => 'datetime',
-        'points' => 'integer',
+        'max_points' => 'integer',
     ];
 
     /**

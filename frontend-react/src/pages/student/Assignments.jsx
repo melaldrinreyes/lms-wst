@@ -1,55 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Clock, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
+import { studentAPI } from '../../services/api';
 
 export default function Assignments() {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [file, setFile] = useState(null);
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const assignments = [
-    {
-      id: 1,
-      title: 'React Project - Build a Todo App',
-      course: 'Web Development',
-      dueDate: '2025-10-28',
-      status: 'pending',
-      points: 100,
-      description: 'Create a fully functional todo application using React with CRUD operations.',
-    },
-    {
-      id: 2,
-      title: 'Binary Trees Implementation',
-      course: 'Data Structures',
-      dueDate: '2025-10-30',
-      status: 'pending',
-      points: 80,
-      description: 'Implement binary tree operations including insertion, deletion, and traversal.',
-    },
-    {
-      id: 3,
-      title: 'SQL Queries Assignment',
-      course: 'Database Systems',
-      dueDate: '2025-11-02',
-      status: 'submitted',
-      points: 50,
-      submittedDate: '2025-10-20',
-      description: 'Write complex SQL queries for the given database schema.',
-    },
-    {
-      id: 4,
-      title: 'Sorting Algorithms Analysis',
-      course: 'Data Structures',
-      dueDate: '2025-11-05',
-      status: 'graded',
-      points: 60,
-      grade: 55,
-      description: 'Analyze and compare different sorting algorithms.',
-    },
-  ];
+  useEffect(() => {
+    fetchAssignments();
+  }, []);
+
+  const fetchAssignments = async () => {
+    try {
+      setLoading(true);
+      const response = await studentAPI.getMyAssignments();
+      if (response.success) {
+        setAssignments(response.assignments || []);
+      }
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      setToast({ message: 'Failed to load assignments', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -108,8 +89,20 @@ export default function Assignments() {
 
       {/* Assignments List */}
       <div className="bg-gray-900 dark:bg-gray-950 rounded-xl overflow-hidden border border-gray-800">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading assignments...</p>
+          </div>
+        ) : assignments.length === 0 ? (
+          <div className="text-center py-12">
+            <Upload size={48} className="mx-auto text-gray-600 mb-4" />
+            <p className="text-gray-400">No assignments available yet</p>
+            <p className="text-sm text-gray-500 mt-2">Assignments will appear here once your instructors post them</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
             <thead>
               <tr className="border-b border-gray-800">
                 <th className="text-left py-4 px-6 text-sm font-semibold text-gray-400">
@@ -149,27 +142,27 @@ export default function Assignments() {
                       {assignment.status === 'pending' && (
                         <p className="text-xs text-orange-400 mt-1 flex items-center gap-1">
                           <Clock size={12} className="inline" />
-                          {getDaysRemaining(assignment.dueDate)}
+                          {getDaysRemaining(assignment.due_date)}
                         </p>
                       )}
                     </div>
                   </td>
                   <td className="py-5 px-6 text-sm text-gray-400">
-                    {assignment.course}
+                    {assignment.course?.name || assignment.course}
                   </td>
                   <td className="py-5 px-6 text-sm text-gray-300">
                     <div className="flex items-center gap-1">
                       <Calendar size={14} className="text-gray-500" />
-                      {new Date(assignment.dueDate).toLocaleDateString()}
+                      {new Date(assignment.due_date).toLocaleDateString()}
                     </div>
                   </td>
                   <td className="py-5 px-6 text-sm text-white font-semibold">
                     {assignment.status === 'graded' ? (
                       <span className="text-green-400">
-                        {assignment.grade}/{assignment.points}
+                        {assignment.grade}/{assignment.max_points}
                       </span>
                     ) : (
-                      <span>{assignment.points}</span>
+                      <span>{assignment.max_points}</span>
                     )}
                   </td>
                   <td className="py-5 px-6">
@@ -208,6 +201,7 @@ export default function Assignments() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       {/* Submit Modal */}

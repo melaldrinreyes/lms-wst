@@ -1,41 +1,50 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, ClipboardList, TrendingUp, Bell } from 'lucide-react';
+import { BookOpen, ClipboardList, Bell, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { studentAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function StudentDashboard() {
-  const activeCourses = [
-    { id: 1, name: 'Web Development', progress: 75, instructor: 'Dr. Smith', color: 'from-orange-500 to-orange-600' },
-    { id: 2, name: 'Data Structures', progress: 60, instructor: 'Prof. Johnson', color: 'from-orange-500 to-orange-600' },
-    { id: 3, name: 'Database Systems', progress: 85, instructor: 'Dr. Williams', color: 'from-orange-500 to-orange-600' },
-  ];
+  const { user } = useAuth();
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const announcements = [
-    { id: 1, title: 'Midterm Exam Schedule Released', date: '2 hours ago', type: 'important' },
-    { id: 2, title: 'New Assignment Posted in Web Development', date: '5 hours ago', type: 'info' },
-    { id: 3, title: 'Library Hours Extended During Finals Week', date: '1 day ago', type: 'info' },
-  ];
+  useEffect(() => {
+    fetchEnrolledClasses();
+  }, []);
 
-  const upcomingAssignments = [
-    { id: 1, title: 'React Project', course: 'Web Development', dueDate: 'Oct 28, 2025', status: 'pending' },
-    { id: 2, title: 'Binary Trees Lab', course: 'Data Structures', dueDate: 'Oct 30, 2025', status: 'pending' },
-    { id: 3, title: 'SQL Queries', course: 'Database Systems', dueDate: 'Nov 2, 2025', status: 'submitted' },
-  ];
+  const fetchEnrolledClasses = async () => {
+    try {
+      setLoading(true);
+      const response = await studentAPI.getMyClasses();
+      if (response.success) {
+        setClasses(response.classes || []);
+      }
+    } catch (error) {
+      console.error('Error fetching enrolled classes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const activeClasses = classes.filter(c => c.status === 'active');
+  const displayClasses = activeClasses.slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Welcome Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-lg shadow-orange-500/30"
-        >
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Welcome Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-lg shadow-orange-500/30"
+      >
           <div className="relative z-10">
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, Student! 👋
+              Welcome back, {user?.name || 'Student'}! 👋
           </h1>
           <p className="text-orange-100 mb-6">
-            You have 2 assignments due this week. Let's stay on track!
+            Ready to learn something new today? Check out your courses and assignments below.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
@@ -55,12 +64,11 @@ export default function StudentDashboard() {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { label: 'Active Courses', value: '3', icon: BookOpen, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-500/10', border: 'border-blue-500/20', iconBg: 'bg-blue-500' },
-          { label: 'Assignments', value: '2', icon: ClipboardList, color: 'from-orange-500 to-orange-600', bg: 'bg-orange-500/10', border: 'border-orange-500/20', iconBg: 'bg-orange-500' },
-          { label: 'Avg Progress', value: '73%', icon: TrendingUp, color: 'from-green-500 to-green-600', bg: 'bg-green-500/10', border: 'border-green-500/20', iconBg: 'bg-green-500' },
-          { label: 'Announcements', value: '3', icon: Bell, color: 'from-purple-500 to-purple-600', bg: 'bg-purple-500/10', border: 'border-purple-500/20', iconBg: 'bg-purple-500' },
+          { label: 'Active Courses', value: String(activeClasses.length), icon: BookOpen, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-500/10', border: 'border-blue-500/20', iconBg: 'bg-blue-500' },
+          { label: 'Assignments', value: '0', icon: ClipboardList, color: 'from-orange-500 to-orange-600', bg: 'bg-orange-500/10', border: 'border-orange-500/20', iconBg: 'bg-orange-500' },
+          { label: 'Announcements', value: '0', icon: Bell, color: 'from-purple-500 to-purple-600', bg: 'bg-purple-500/10', border: 'border-purple-500/20', iconBg: 'bg-purple-500' },
         ].map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -100,32 +108,54 @@ export default function StudentDashboard() {
               </Link>
             </div>
             <div className="space-y-4">
-              {activeCourses.map((course) => (
-                <div
-                  key={course.id}
-                  className="bg-gray-800/50 rounded-xl p-4 border border-gray-800 hover:border-orange-500/50 transition"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-white">
-                        {course.name}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        {course.instructor}
-                      </p>
-                    </div>
-                    <span className="text-sm font-semibold text-orange-500">
-                      {course.progress}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2.5">
-                    <div
-                      className={`bg-gradient-to-r ${course.color} h-2.5 rounded-full transition-all shadow-md shadow-orange-500/30`}
-                      style={{ width: `${course.progress}%` }}
-                    />
-                  </div>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                  <p className="text-gray-400 mt-2">Loading classes...</p>
                 </div>
-              ))}
+              ) : displayClasses.length === 0 ? (
+                <div className="text-center py-8">
+                  <BookOpen className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400">No enrolled classes yet</p>
+                  <p className="text-gray-500 text-sm mt-1">Your enrolled classes will appear here</p>
+                </div>
+              ) : (
+                displayClasses.map((classItem) => (
+                  <Link
+                    key={classItem.id}
+                    to={`/student/courses/${classItem.id}`}
+                    className="block bg-gray-800/50 rounded-xl p-4 border border-gray-800 hover:border-orange-500/50 transition cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-white">
+                          {classItem.course_name || classItem.name || classItem.subject_name}
+                        </h3>
+                        {/* Instructor Info */}
+                        <div className="flex items-center gap-2 mt-1">
+                          {classItem.faculty?.profile_image ? (
+                            <img 
+                              src={classItem.faculty.profile_image} 
+                              alt={classItem.faculty.name}
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-5 h-5 bg-orange-500/20 rounded-full flex items-center justify-center">
+                              <User size={12} className="text-orange-400" />
+                            </div>
+                          )}
+                          <p className="text-sm text-gray-400">
+                            {classItem.faculty?.name || 'Instructor'}
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {classItem.semester} • {classItem.academic_year}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -135,29 +165,10 @@ export default function StudentDashboard() {
           <h2 className="text-xl font-bold text-white mb-6">
             Announcements
           </h2>
-          <div className="space-y-3">
-            {announcements.map((announcement) => (
-              <div
-                key={announcement.id}
-                className="pb-3 border-b border-gray-800 last:border-0 last:pb-0"
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                      announcement.type === 'important' ? 'bg-orange-500' : 'bg-blue-500'
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">
-                      {announcement.title}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {announcement.date}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="text-center py-8">
+            <Bell className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">No announcements yet</p>
+            <p className="text-gray-500 text-sm mt-1">Check back later for updates</p>
           </div>
         </div>
       </div>
@@ -175,56 +186,11 @@ export default function StudentDashboard() {
             See All →
           </Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
-                  Assignment
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
-                  Course
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
-                  Due Date
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {upcomingAssignments.map((assignment) => (
-                <tr
-                  key={assignment.id}
-                  className="border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition"
-                >
-                  <td className="py-3 px-4 text-sm font-medium text-white">
-                    {assignment.title}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-400">
-                    {assignment.course}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-400">
-                    {assignment.dueDate}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                        assignment.status === 'submitted'
-                          ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                          : 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
-                      }`}
-                    >
-                      {assignment.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="text-center py-8">
+          <ClipboardList className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-400">No upcoming assignments</p>
+          <p className="text-gray-500 text-sm mt-1">Your assignments will appear here</p>
         </div>
-      </div>
       </div>
     </div>
   );

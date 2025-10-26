@@ -30,7 +30,7 @@ export default function Register() {
     if (result.success) {
       setToast({ message: 'Registration successful!', type: 'success' });
       setTimeout(() => {
-        navigate(`/${formData.role}`);
+        navigate('/student');
       }, 1000);
     } else {
       setToast({ message: result.error || 'Registration failed', type: 'error' });
@@ -54,10 +54,10 @@ export default function Register() {
               <span className="text-white font-bold text-2xl">M</span>
             </div>
             <h1 className="text-2xl font-bold text-white">
-              Create Account
+              Create Student Account
             </h1>
             <p className="text-gray-400 mt-2">
-              Join MINSU E-LEARN today
+              Register as a student at MINSU E-LEARN
             </p>
           </div>
 
@@ -102,40 +102,19 @@ export default function Register() {
             {/* Role */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Register As
+                Student ID (Optional)
               </label>
               <div className="relative">
                 <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white appearance-none"
-                >
-                  <option value="student">Student</option>
-                  <option value="faculty">Faculty</option>
-                  <option value="alumni">Alumni</option>
-                </select>
+                <input
+                  type="text"
+                  value={formData.student_id}
+                  onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                  placeholder="2024-00001"
+                />
               </div>
             </div>
-
-            {/* Student ID (only for students) */}
-            {formData.role === 'student' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Student ID (Optional)
-                </label>
-                <div className="relative">
-                  <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                  <input
-                    type="text"
-                    value={formData.student_id}
-                    onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
-                    placeholder="2024-00001"
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Password */}
             <div>
@@ -179,9 +158,16 @@ export default function Register() {
               disabled={loading}
               className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Creating account...' : 'Create Student Account'}
             </button>
           </form>
+
+          {/* Info Note */}
+          <div className="mt-5 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <p className="text-xs text-blue-400 text-center">
+              <strong>Student Registration Only.</strong> Faculty and staff accounts are created by administrators.
+            </p>
+          </div>
 
           {/* Login Link */}
           <p className="mt-6 text-center text-sm text-gray-400">

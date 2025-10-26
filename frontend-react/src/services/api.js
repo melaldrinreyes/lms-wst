@@ -69,6 +69,16 @@ export const authAPI = {
     const response = await api.get('/user');
     return response.data;
   },
+
+  updateProfile: async (data) => {
+    const response = await api.put('/user/profile', data);
+    return response.data;
+  },
+
+  updatePassword: async (data) => {
+    const response = await api.put('/user/password', data);
+    return response.data;
+  },
 };
 
 // Course API calls
@@ -107,6 +117,21 @@ export const courseAPI = {
 
   getStatistics: async () => {
     const response = await api.get('/courses/statistics/all');
+    return response.data;
+  },
+
+  enroll: async (courseId) => {
+    const response = await api.post(`/courses/${courseId}/enroll`);
+    return response.data;
+  },
+
+  updateStudentStatus: async (courseId, studentId, status) => {
+    const response = await api.put(`/courses/${courseId}/students/${studentId}/status`, { status });
+    return response.data;
+  },
+
+  removeStudent: async (courseId, studentId) => {
+    const response = await api.delete(`/courses/${courseId}/students/${studentId}`);
     return response.data;
   },
 };
@@ -211,6 +236,16 @@ export const studentAPI = {
     return response.data;
   },
 
+  getMyClasses: async () => {
+    const response = await api.get('/student/classes');
+    return response.data;
+  },
+
+  getMyAssignments: async () => {
+    const response = await api.get('/student/assignments');
+    return response.data;
+  },
+
   getByCourse: async (courseId) => {
     const response = await api.get(`/courses/${courseId}/students`);
     return response.data;
@@ -231,6 +266,27 @@ export const facultyAPI = {
 
   getDashboard: async () => {
     const response = await api.get('/faculty/dashboard');
+    return response.data;
+  },
+
+  // Enrollment requests
+  getEnrollmentRequests: async () => {
+    const response = await api.get('/faculty/enrollment-requests');
+    return response.data;
+  },
+
+  approveEnrollmentRequest: async (id) => {
+    const response = await api.post(`/faculty/enrollment-requests/${id}/approve`);
+    return response.data;
+  },
+
+  rejectEnrollmentRequest: async (id) => {
+    const response = await api.post(`/faculty/enrollment-requests/${id}/reject`);
+    return response.data;
+  },
+
+  deleteEnrollmentRequest: async (id) => {
+    const response = await api.delete(`/faculty/enrollment-requests/${id}`);
     return response.data;
   },
 };

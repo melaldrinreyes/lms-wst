@@ -50,7 +50,7 @@ export default function Chatbot() {
     },
     instructor: {
       patterns: ['instructor', 'teacher', 'professor', 'contact', 'email', 'message'],
-      response: '👨‍🏫 **To contact your instructor:**\n\n• Go to the specific **Course** page\n• Click **Contact Instructor** in the sidebar\n• Or use the **Discussion Forum** to ask questions\n• You can also find their email in the course details\n\nInstructors typically respond within 24-48 hours.'
+      response: '👨‍🏫 **To contact your instructor:**\n\n• Go to the specific **Course** page\n• Click **Contact Instructor** in the sidebar\n• You can also find their email in the course details\n\nInstructors typically respond within 24-48 hours.'
     },
     password: {
       patterns: ['password', 'reset', 'forgot', 'login', 'access'],
@@ -60,17 +60,13 @@ export default function Chatbot() {
       patterns: ['schedule', 'timetable', 'classes', 'calendar', 'when'],
       response: '🗓️ **Your course schedule:**\n\n• View it on your **Dashboard** (Schedule section)\n• Download as PDF from **Profile** → **Account Info**\n• Add to Google Calendar using the sync button\n• Check individual course pages for class timings\n\nWant to see your schedule for a specific day?'
     },
-    forum: {
-      patterns: ['forum', 'discussion', 'post', 'topic', 'thread'],
-      response: '💬 **Using discussion forums:**\n\n1. Go to **Courses** → Select course → **Discussion** tab\n2. Browse existing topics or click **New Topic**\n3. Write your question or comment\n4. Add tags and click **Post**\n5. Get notifications when others reply\n\nForums are great for peer learning!'
-    },
     courses: {
       patterns: ['course', 'enroll', 'register', 'class', 'subject'],
-      response: '📚 **Managing courses:**\n\n• View all courses on your **Dashboard**\n• Browse available courses in the **Courses** section\n• Track progress with the progress bar\n• Access materials, assignments, and forums per course\n\nLooking for a specific course?'
+      response: '📚 **Managing courses:**\n\n• View all courses on your **Dashboard**\n• Browse available courses in the **Courses** section\n• Track progress with the progress bar\n• Access materials and assignments per course\n\nLooking for a specific course?'
     },
     help: {
       patterns: ['help', 'support', 'assist', 'guide', 'how'],
-      response: '🆘 **I can help you with:**\n\n✓ Submitting assignments\n✓ Viewing grades\n✓ Contacting instructors\n✓ Course schedules\n✓ Discussion forums\n✓ Account settings\n✓ Technical issues\n\nWhat would you like to know more about?'
+      response: '🆘 **I can help you with:**\n\n✓ Submitting assignments\n✓ Viewing grades\n✓ Contacting instructors\n✓ Course schedules\n✓ Account settings\n✓ Technical issues\n\nWhat would you like to know more about?'
     },
     thanks: {
       patterns: ['thank', 'thanks', 'appreciate', 'helpful'],
@@ -107,7 +103,7 @@ export default function Chatbot() {
     }
     
     // Default response with suggestions
-    return '🤔 I\'m not sure about that specific question. Here are some things I can help with:\n\n• Submitting assignments\n• Viewing grades\n• Contacting instructors\n• Course schedules\n• Discussion forums\n• Account settings\n\nCould you rephrase your question or pick one of these topics?';
+    return '🤔 I\'m not sure about that specific question. Here are some things I can help with:\n\n• Submitting assignments\n• Viewing grades\n• Contacting instructors\n• Course schedules\n• Account settings\n\nCould you rephrase your question or pick one of these topics?';
   };
 
   const handleSend = (messageText = null) => {

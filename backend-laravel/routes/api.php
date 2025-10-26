@@ -10,6 +10,7 @@ use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ClassController;
+use App\Http\Controllers\EnrollmentRequestController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -43,6 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/user/password', [AuthController::class, 'updatePassword']);
     
     // Course routes
     Route::get('/courses/statistics/all', [CourseController::class, 'statistics']);
@@ -51,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses/{id}', [CourseController::class, 'show']);
     Route::put('/courses/{id}', [CourseController::class, 'update']);
     Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+    Route::post('/courses/{id}/enroll', [CourseController::class, 'enroll']);
+    Route::put('/courses/{courseId}/students/{studentId}/status', [CourseController::class, 'updateStudentStatus']);
+    Route::delete('/courses/{courseId}/students/{studentId}', [CourseController::class, 'removeStudent']);
     
     // Module routes
     Route::get('/courses/{courseId}/modules', [ModuleController::class, 'index']);
@@ -76,6 +82,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/{id}', [StudentController::class, 'show']);
     Route::get('/courses/{courseId}/students', [StudentController::class, 'byCourse']);
     
+    // Student-specific routes (role_id = 3)
+    Route::middleware(['check.role:3'])->group(function () {
+        Route::get('/student/classes', [StudentController::class, 'myClasses']);
+        Route::get('/student/assignments', [StudentController::class, 'myAssignments']);
+    });
+    
     // Faculty routes (role_id = 2)
     Route::middleware(['check.role:2'])->group(function () {
         Route::post('/faculty/students', [StudentController::class, 'store']);
@@ -92,6 +104,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/faculty/classes/{id}/available-students', [ClassController::class, 'availableStudents']);
         Route::post('/faculty/classes/{id}/students', [ClassController::class, 'addStudent']);
         Route::delete('/faculty/classes/{id}/students/{studentId}', [ClassController::class, 'removeStudent']);
+        
+        // Enrollment request routes
+        Route::get('/faculty/enrollment-requests', [EnrollmentRequestController::class, 'index']);
+        Route::post('/faculty/enrollment-requests/{id}/approve', [EnrollmentRequestController::class, 'approve']);
+        Route::post('/faculty/enrollment-requests/{id}/reject', [EnrollmentRequestController::class, 'reject']);
+        Route::delete('/faculty/enrollment-requests/{id}', [EnrollmentRequestController::class, 'destroy']);
     });
     
     // Super Admin routes (role_id = 1)

@@ -1,27 +1,143 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Lock, Activity, Save } from 'lucide-react';
 import Toast from '../components/ui/Toast';
+import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../services/api';
 
 export default function Profile() {
+  const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [toast, setToast] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@minsu.edu.ph',
-    phone: '+63 XXX XXX XXXX',
-    studentId: '2021-12345',
-    department: 'Computer Science',
+    name: '',
+    email: '',
+    phone: '',
+    studentId: '',
+    address: '',
+    dateOfBirth: '',
+    gender: '',
+  });
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    new_password_confirmation: '',
   });
 
-  const handleSave = (e) => {
+  // Helper function to format date to yyyy-MM-dd
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Fetch fresh user data from API on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const response = await authAPI.getUser();
+        if (response.success) {
+          updateUser(response.user);
+          setFormData({
+            name: response.user.name || '',
+            email: response.user.email || '',
+            phone: response.user.phone || '',
+            studentId: response.user.student_id || '',
+            address: response.user.address || '',
+            dateOfBirth: formatDate(response.user.date_of_birth),
+            gender: response.user.gender || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Update form data when user changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        studentId: user.student_id || '',
+        address: user.address || '',
+        dateOfBirth: formatDate(user.date_of_birth),
+        gender: user.gender || '',
+      });
+    }
+  }, [user]);
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    setToast({ message: 'Profile updated successfully!', type: 'success' });
+    try {
+      setSaving(true);
+      const response = await authAPI.updateProfile({
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        date_of_birth: formData.dateOfBirth,
+        gender: formData.gender,
+      });
+
+      if (response.success) {
+        // Update user in auth context
+        updateUser(response.user);
+        setToast({ message: 'Profile updated successfully!', type: 'success' });
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setToast({ message: error.response?.data?.message || 'Failed to update profile', type: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    
+    if (passwordData.new_password !== passwordData.new_password_confirmation) {
+      setToast({ message: 'New passwords do not match', type: 'error' });
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await authAPI.updatePassword({
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password,
+        new_password_confirmation: passwordData.new_password_confirmation,
+      });
+
+      if (response.success) {
+        setToast({ message: 'Password updated successfully!', type: 'success' });
+        setPasswordData({
+          current_password: '',
+          new_password: '',
+          new_password_confirmation: '',
+        });
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setToast({ message: error.response?.data?.message || 'Failed to update password', type: 'error' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const activityLog = [
     { id: 1, action: 'Submitted assignment: React Project', time: '2 hours ago' },
     { id: 2, action: 'Logged in to the system', time: '5 hours ago' },
-    { id: 3, action: 'Posted in Web Development forum', time: '1 day ago' },
     { id: 4, action: 'Viewed course: Database Systems', time: '2 days ago' },
   ];
 
@@ -35,6 +151,13 @@ export default function Profile() {
         </h1>
       </div>
 
+      {loading ? (
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-gray-800 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
+          <p className="text-gray-400">Loading profile...</p>
+        </div>
+      ) : (
+        <>
       {/* Tabs */}
       <div className="border-b border-gray-800">
         <nav className="flex gap-4">
@@ -64,15 +187,23 @@ export default function Profile() {
         <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
           <form onSubmit={handleSave} className="space-y-6">
             <div className="flex items-center gap-6 pb-6 border-b border-gray-800">
-              <div className="w-24 h-24 bg-orange-500/10 rounded-full flex items-center justify-center">
-                <User className="text-orange-500" size={48} />
-              </div>
+              {user?.profile_image ? (
+                <img 
+                  src={user.profile_image} 
+                  alt={user.name}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 bg-orange-500/10 rounded-full flex items-center justify-center">
+                  <User className="text-orange-500" size={48} />
+                </div>
+              )}
               <div>
                 <h3 className="text-lg font-semibold text-white">
                   {formData.name}
                 </h3>
                 <p className="text-sm text-gray-400">
-                  Student ID: {formData.studentId}
+                  {user?.student_id ? `Student ID: ${formData.studentId}` : user?.email}
                 </p>
                 <button
                   type="button"
@@ -117,28 +248,59 @@ export default function Profile() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  placeholder="+63 XXX XXX XXXX"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Department
+                  Date of Birth
                 </label>
                 <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Gender
+                </label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Address
+                </label>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  placeholder="Enter your complete address"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold"
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save size={18} />
-              Save Changes
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </form>
         </div>
@@ -147,15 +309,18 @@ export default function Profile() {
       {/* Security Tab */}
       {activeTab === 'security' && (
         <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
-          <form className="space-y-6">
+          <form onSubmit={handlePasswordChange} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Current Password
               </label>
               <input
                 type="password"
+                value={passwordData.current_password}
+                onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
                 placeholder="••••••••"
+                required
               />
             </div>
 
@@ -165,8 +330,12 @@ export default function Profile() {
               </label>
               <input
                 type="password"
+                value={passwordData.new_password}
+                onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
                 placeholder="••••••••"
+                required
+                minLength={8}
               />
             </div>
 
@@ -176,17 +345,22 @@ export default function Profile() {
               </label>
               <input
                 type="password"
+                value={passwordData.new_password_confirmation}
+                onChange={(e) => setPasswordData({ ...passwordData, new_password_confirmation: e.target.value })}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
                 placeholder="••••••••"
+                required
+                minLength={8}
               />
             </div>
 
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold"
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Lock size={18} />
-              Change Password
+              {saving ? 'Updating...' : 'Change Password'}
             </button>
           </form>
         </div>
@@ -217,6 +391,8 @@ export default function Profile() {
             ))}
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

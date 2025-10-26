@@ -95,18 +95,21 @@ class SuperAdminController extends Controller
             }
 
             $instructors = User::where('role_id', 2)
-                ->with(['coursesTaught'])
                 ->get()
                 ->map(function ($instructor) {
-                    // Get courses taught
-                    $coursesCount = $instructor->coursesTaught->count();
+                    // Get classes taught
+                    $classesCount = \DB::table('classes')
+                        ->where('faculty_id', $instructor->id)
+                        ->count();
                     
-                    // Get total students enrolled in instructor's courses
-                    $studentsCount = Enrollment::whereHas('course', function ($q) use ($instructor) {
-                        $q->where('faculty_id', $instructor->id);
-                    })->distinct('student_id')->count('student_id');
+                    // Get total students enrolled in instructor's classes
+                    $studentsCount = \DB::table('class_student')
+                        ->join('classes', 'class_student.class_id', '=', 'classes.id')
+                        ->where('classes.faculty_id', $instructor->id)
+                        ->distinct('class_student.student_id')
+                        ->count('class_student.student_id');
                     
-                    // Get submissions for instructor's courses
+                    // Get submissions for instructor's courses (if using old course system)
                     $submissionsCount = Submission::whereHas('assignment', function ($q) use ($instructor) {
                         $q->whereHas('course', function ($q2) use ($instructor) {
                             $q2->where('faculty_id', $instructor->id);
@@ -119,21 +122,29 @@ class SuperAdminController extends Controller
                                 $q2->where('faculty_id', $instructor->id);
                             });
                         })->count();
+                    
+                    // Get graded submissions count
+                    $gradedSubmissions = Submission::whereNotNull('grade')
+                        ->whereHas('assignment', function ($q) use ($instructor) {
+                            $q->whereHas('course', function ($q2) use ($instructor) {
+                                $q2->where('faculty_id', $instructor->id);
+                            });
+                        })->count();
 
                     return [
                         'id' => $instructor->id,
                         'name' => $instructor->name,
                         'email' => $instructor->email,
                         'phone' => $instructor->phone,
-                        'profile_image' => $instructor->profile_image,
-                        'status' => $instructor->status,
+                        'profile_image' => $instructor->profile_image ?? 'https://ui-avatars.com/api/?name=' . urlencode($instructor->name) . '&background=0ea5e9&color=fff',
+                        'status' => $instructor->status ?? 'active',
                         'last_login' => $instructor->last_login,
                         'created_at' => $instructor->created_at,
                         'statistics' => [
-                            'courses' => $coursesCount,
+                            'courses' => $classesCount,
                             'students' => $studentsCount,
-                            'submissions' => $submissionsCount,
-                            'pending_submissions' => $pendingSubmissions,
+                            'graded' => $gradedSubmissions,
+                            'pending' => $pendingSubmissions,
                         ],
                     ];
                 });

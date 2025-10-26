@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Enrollment;
 use App\Models\Submission;
+use App\Models\Assignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -229,6 +230,128 @@ class StudentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching students by course: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the authenticated student's enrolled courses
+     */
+    public function myClasses(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Get all enrollments for this student
+            $enrollments = Enrollment::where('student_id', $user->id)
+                ->where('status', 'enrolled') // Only show active enrollments
+                ->with(['course.faculty'])
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'classes' => $enrollments->map(function ($enrollment) {
+                    $course = $enrollment->course;
+                    
+                    return [
+                        'id' => $course->id,
+                        'course_code' => $course->course_code,
+                        'course_name' => $course->course_name,
+                        'description' => $course->description,
+                        'credits' => $course->credits,
+                        'semester' => $course->semester,
+                        'academic_year' => $course->academic_year,
+                        'thumbnail' => $course->thumbnail,
+                        'status' => $course->status, // Course status (active/inactive/archived)
+                        'enrollment_status' => $enrollment->status, // Enrollment status (enrolled)
+                        'enrolled_date' => $enrollment->enrolled_at,
+                        'year_level' => $course->year_level ?? 'N/A',
+                        'section' => $course->section ?? 'N/A',
+                        'progress' => 0, // Placeholder - can calculate actual progress
+                        'faculty' => $course->faculty ? [
+                            'id' => $course->faculty->id,
+                            'name' => $course->faculty->name,
+                            'email' => $course->faculty->email,
+                            'profile_image' => $course->faculty->profile_image,
+                        ] : null,
+                    ];
+                }),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching enrolled courses: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all assignments from student's enrolled courses
+     */
+    public function myAssignments(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Get all course IDs the student is enrolled in
+            $enrolledCourseIds = Enrollment::where('student_id', $user->id)
+                ->where('status', 'enrolled')
+                ->pluck('course_id');
+
+            // Get all assignments from those courses with submission status
+            $assignments = Assignment::whereIn('course_id', $enrolledCourseIds)
+                ->with(['course'])
+                ->orderBy('due_date', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'assignments' => $assignments->map(function ($assignment) use ($user) {
+                    // Check if student has submitted this assignment
+                    $submission = Submission::where('assignment_id', $assignment->id)
+                        ->where('student_id', $user->id)
+                        ->first();
+
+                    $status = 'pending';
+                    $grade = null;
+                    $submittedDate = null;
+
+                    if ($submission) {
+                        if ($submission->grade !== null) {
+                            $status = 'graded';
+                            $grade = $submission->grade;
+                        } else {
+                            $status = 'submitted';
+                        }
+                        $submittedDate = $submission->submitted_at;
+                    } else {
+                        // Check if assignment is overdue
+                        if (now()->gt($assignment->due_date)) {
+                            $status = 'late';
+                        }
+                    }
+
+                    return [
+                        'id' => $assignment->id,
+                        'title' => $assignment->title,
+                        'description' => $assignment->description,
+                        'due_date' => $assignment->due_date,
+                        'max_points' => $assignment->max_points,
+                        'status' => $status,
+                        'course' => [
+                            'id' => $assignment->course->id,
+                            'name' => $assignment->course->course_name,
+                            'code' => $assignment->course->course_code,
+                        ],
+                        'grade' => $grade,
+                        'submitted_date' => $submittedDate,
+                    ];
+                }),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching assignments: ' . $e->getMessage(),
             ], 500);
         }
     }
