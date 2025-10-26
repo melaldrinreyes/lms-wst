@@ -34,6 +34,12 @@ export default function Courses() {
     return true;
   });
 
+  // Calculate total stats from actual database data
+  const totalModules = courses.reduce((sum, course) => sum + (course.modules_count || 0), 0);
+  const totalPublished = courses.reduce((sum, course) => sum + (course.published_modules_count || 0), 0);
+  const totalAssignments = courses.reduce((sum, course) => sum + (course.assignments_count || 0), 0);
+  const totalStudents = courses.reduce((sum, course) => sum + (course.students_count || 0), 0);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -46,6 +52,70 @@ export default function Courses() {
           {loading ? 'Loading...' : `${filteredCourses.length} ${filteredCourses.length === 1 ? 'Course' : 'Courses'}`}
         </p>
       </div>
+
+      {/* Stats Cards */}
+      {!loading && courses.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Course Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800"
+          >
+            <h3 className="text-lg font-bold text-white mb-4">Course Stats</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Total Modules</span>
+                <span className="text-white font-semibold">{totalModules}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Published</span>
+                <span className="text-green-400 font-semibold">{totalPublished}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Assignments</span>
+                <span className="text-white font-semibold">{totalAssignments}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Students</span>
+                <span className="text-white font-semibold">{totalStudents}</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Course Information */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800"
+          >
+            <h3 className="text-lg font-bold text-white mb-4">Course Information</h3>
+            {courses.length > 0 && courses[0] ? (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-gray-400 text-sm">Course Code</p>
+                  <p className="text-white font-semibold">{courses[0].course_code || courses[0].code || 'DBMS'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Credits</p>
+                  <p className="text-white font-semibold">{courses[0].credits || 3} units</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Semester</p>
+                  <p className="text-white font-semibold">{courses[0].semester || '1st Semester'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Academic Year</p>
+                  <p className="text-white font-semibold">{courses[0].academic_year || '2025-2026'}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-400">No course information available</p>
+            )}
+          </motion.div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-gray-800">

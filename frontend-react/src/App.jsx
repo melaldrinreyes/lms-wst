@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 /**
@@ -110,9 +109,8 @@ function PublicRoute({ children }) {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
+    <AuthProvider>
+      <Router>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -205,7 +203,6 @@ function App() {
           </Routes>
         </Router>
       </AuthProvider>
-    </ThemeProvider>
   );
 }
 

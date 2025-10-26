@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
 import LoginModal from './LoginModal';
@@ -8,7 +7,6 @@ import ForgotPasswordModal from './ForgotPasswordModal';
 import MobileBottomNav from './MobileBottomNav';
 
 export default function Navbar() {
-  const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);

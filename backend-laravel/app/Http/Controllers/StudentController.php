@@ -245,13 +245,18 @@ class StudentController extends Controller
             // Get all enrollments for this student
             $enrollments = Enrollment::where('student_id', $user->id)
                 ->where('status', 'enrolled') // Only show active enrollments
-                ->with(['course.faculty'])
+                ->with(['course.faculty', 'course.modules', 'course.assignments'])
                 ->get();
 
             return response()->json([
                 'success' => true,
                 'classes' => $enrollments->map(function ($enrollment) {
                     $course = $enrollment->course;
+                    
+                    // Get modules and assignments
+                    $modules = $course->modules ?? collect([]);
+                    $assignments = $course->assignments ?? collect([]);
+                    $publishedModules = $modules->where('status', 'published')->count();
                     
                     return [
                         'id' => $course->id,
@@ -268,6 +273,30 @@ class StudentController extends Controller
                         'year_level' => $course->year_level ?? 'N/A',
                         'section' => $course->section ?? 'N/A',
                         'progress' => 0, // Placeholder - can calculate actual progress
+                        // Add modules data
+                        'modules' => $modules->map(function ($module) {
+                            return [
+                                'id' => $module->id,
+                                'title' => $module->title,
+                                'status' => $module->status,
+                                'order' => $module->order,
+                            ];
+                        }),
+                        'modules_count' => $modules->count(),
+                        'published_modules_count' => $publishedModules,
+                        // Add assignments data
+                        'assignments' => $assignments->map(function ($assignment) {
+                            return [
+                                'id' => $assignment->id,
+                                'title' => $assignment->title,
+                                'due_date' => $assignment->due_date,
+                            ];
+                        }),
+                        'assignments_count' => $assignments->count(),
+                        // Add student count (total enrolled in this course)
+                        'students_count' => Enrollment::where('course_id', $course->id)
+                            ->where('status', 'enrolled')
+                            ->count(),
                         'faculty' => $course->faculty ? [
                             'id' => $course->faculty->id,
                             'name' => $course->faculty->name,

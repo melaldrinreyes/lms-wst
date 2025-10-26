@@ -7,22 +7,18 @@ import {
   Bot, 
   User, 
   LogOut,
-  Moon,
-  Sun,
   Menu,
   X,
   MoreHorizontal,
   UserPlus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { facultyAPI } from '../services/api';
 
 export default function DashboardLayout({ role }) {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -168,15 +164,6 @@ export default function DashboardLayout({ role }) {
               </div>
               <div className="border-t border-gray-800 p-2">
                 <button
-                  onClick={toggleTheme}
-                  className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-gray-400 hover:bg-gray-800 transition"
-                >
-                  {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                  <span className="font-medium">
-                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                  </span>
-                </button>
-                <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 transition"
                 >
@@ -251,15 +238,6 @@ export default function DashboardLayout({ role }) {
 
           {/* Bottom Actions */}
           <div className="p-4 border-t border-gray-800 space-y-2">
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-gray-400 hover:bg-gray-800 transition"
-            >
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-              <span className="font-medium">
-                {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-              </span>
-            </button>
             <button
               onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 transition"
