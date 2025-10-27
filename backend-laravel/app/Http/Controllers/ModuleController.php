@@ -27,6 +27,13 @@ class ModuleController extends Controller
      */
     public function store(Request $request)
     {
+        // Log incoming request data for debugging
+        \Log::info('Module creation request:', [
+            'all_data' => $request->all(),
+            'has_file' => $request->hasFile('file'),
+            'files' => $request->file(),
+        ]);
+
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
             'title' => 'required|string|max:255',
@@ -34,9 +41,33 @@ class ModuleController extends Controller
             'content' => 'nullable|string',
             'order' => 'required|integer',
             'status' => 'required|in:published,draft',
+            'file' => 'required|file|max:10240', // 10MB max - REQUIRED
         ]);
 
-        $module = Module::create($validated);
+        // Map the frontend field names to database column names
+        $moduleData = [
+            'course_id' => $validated['course_id'],
+            'module_title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'content' => $validated['content'] ?? null,
+            'module_order' => $validated['order'],
+            'status' => $validated['status'],
+        ];
+
+        // Handle file upload (now required)
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('modules', $filename, 'public');
+            $moduleData['file_path'] = $filePath;
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Module file is required',
+            ], 422);
+        }
+
+        $module = Module::create($moduleData);
 
         return response()->json([
             'success' => true,
@@ -58,9 +89,32 @@ class ModuleController extends Controller
             'content' => 'nullable|string',
             'order' => 'required|integer',
             'status' => 'required|in:published,draft',
+            'file' => 'nullable|file|max:10240', // 10MB max
         ]);
 
-        $module->update($validated);
+        // Map the frontend field names to database column names
+        $moduleData = [
+            'module_title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'content' => $validated['content'] ?? null,
+            'module_order' => $validated['order'],
+            'status' => $validated['status'],
+        ];
+
+        // Handle file upload
+        if ($request->hasFile('file')) {
+            // Delete old file if exists
+            if ($module->file_path && \Storage::disk('public')->exists($module->file_path)) {
+                \Storage::disk('public')->delete($module->file_path);
+            }
+            
+            $file = $request->file('file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('modules', $filename, 'public');
+            $moduleData['file_path'] = $filePath;
+        }
+
+        $module->update($moduleData);
 
         return response()->json([
             'success' => true,

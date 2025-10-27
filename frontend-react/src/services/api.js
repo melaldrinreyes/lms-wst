@@ -19,6 +19,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Don't override Content-Type if it's already set (e.g., for FormData)
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    
     return config;
   },
   (error) => {
@@ -144,6 +150,16 @@ export const moduleAPI = {
   },
 
   create: async (data) => {
+    // Support JSON payload or FormData (for file uploads)
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      const response = await api.post('/modules', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    }
+
     const response = await api.post('/modules', data);
     return response.data;
   },

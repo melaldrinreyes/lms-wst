@@ -93,7 +93,19 @@ class CourseController extends Controller
                 'thumbnail' => $course->thumbnail,
                 'status' => $course->status,
                 'students' => $course->enrollments->count(),
-                'modules' => $course->modules,
+                'modules' => $course->modules->map(function ($module) use ($course) {
+                    return [
+                        'id' => $module->id,
+                        'module_title' => $module->module_title,
+                        'description' => $module->description,
+                        'content' => $module->content,
+                        'file_path' => $module->file_path,
+                        'module_order' => $module->module_order,
+                        'status' => $module->status,
+                        'created_at' => $module->created_at,
+                        'updated_at' => $module->updated_at,
+                    ];
+                }),
                 'assignments' => $course->assignments->map(function ($assignment) use ($course) {
                     // Check if current user has submitted this assignment
                     $userSubmission = null;
