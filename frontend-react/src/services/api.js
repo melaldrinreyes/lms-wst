@@ -172,6 +172,17 @@ export const assignmentAPI = {
   },
 
   create: async (data) => {
+    // Support JSON payload or FormData (for file uploads)
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      const response = await api.post('/assignments', data, {
+        headers: {
+          // Let axios set the correct multipart boundary
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    }
+
     const response = await api.post('/assignments', data);
     return response.data;
   },
@@ -209,6 +220,21 @@ export const submissionAPI = {
       console.error('Error in submissionAPI.getPendingCount:', error);
       throw error;
     }
+  },
+
+  submit: async (data) => {
+    // Support JSON payload or FormData (for file uploads)
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      const response = await api.post('/submissions', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    }
+
+    const response = await api.post('/submissions', data);
+    return response.data;
   },
 
   grade: async (id, data) => {

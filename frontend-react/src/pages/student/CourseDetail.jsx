@@ -10,10 +10,11 @@ import {
   FileText,
   MessageSquare,
   Calendar,
-  LogOut
+  LogOut,
+  Upload
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { courseAPI } from '../../services/api';
+import { courseAPI, submissionAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
@@ -30,6 +31,13 @@ export default function CourseDetail() {
   const [toast, setToast] = useState(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [submissionData, setSubmissionData] = useState({
+    submission_text: '',
+    file: null
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchCourseData();
@@ -77,6 +85,77 @@ export default function CourseDetail() {
     } finally {
       setLeaving(false);
       setShowLeaveModal(false);
+    }
+  };
+
+  const handleOpenSubmitModal = (assignment) => {
+    setSelectedAssignment(assignment);
+    setSubmissionData({ submission_text: '', file: null });
+    setShowSubmitModal(true);
+  };
+
+  const handleSubmitAssignment = async (e) => {
+    e.preventDefault();
+    
+    if (!submissionData.file && !submissionData.submission_text.trim()) {
+      setToast({ 
+        message: 'Please provide either a file or submission text', 
+        type: 'error' 
+      });
+      return;
+    }
+
+    // Validate file size if provided
+    if (submissionData.file) {
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (submissionData.file.size > maxSize) {
+        setToast({ 
+          message: 'File size must be less than 10MB', 
+          type: 'error' 
+        });
+        return;
+      }
+    }
+
+    try {
+      setSubmitting(true);
+
+      // Build FormData if file exists
+      let payload;
+      if (submissionData.file) {
+        payload = new FormData();
+        payload.append('assignment_id', selectedAssignment.id);
+        payload.append('submission_text', submissionData.submission_text || '');
+        payload.append('file', submissionData.file);
+      } else {
+        payload = {
+          assignment_id: selectedAssignment.id,
+          submission_text: submissionData.submission_text,
+        };
+      }
+
+      const response = await submissionAPI.submit(payload);
+
+      if (response.success) {
+        setToast({ 
+          message: 'Assignment submitted successfully!', 
+          type: 'success' 
+        });
+        setShowSubmitModal(false);
+        setSubmissionData({ submission_text: '', file: null });
+        setSelectedAssignment(null);
+        
+        // Refresh course data to update submission status
+        fetchCourseData();
+      }
+    } catch (error) {
+      console.error('Error submitting assignment:', error);
+      setToast({ 
+        message: error.response?.data?.message || 'Failed to submit assignment. Please try again.', 
+        type: 'error' 
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -316,6 +395,33 @@ export default function CourseDetail() {
                         }`}>
                           {assignment.status}
                         </span>
+                        {/* Submission Status Badge */}
+                        {assignment.status === 'published' && (
+                          assignment.user_submission ? (
+                            <span className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1 ${
+                              assignment.user_submission.status === 'graded'
+                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                            }`}>
+                              {assignment.user_submission.status === 'graded' ? (
+                                <>
+                                  <CheckCircle size={12} />
+                                  Graded ({assignment.user_submission.grade})
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle size={12} />
+                                  Submitted
+                                </>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1 bg-red-500/10 text-red-400 border border-red-500/20">
+                              <Clock size={12} />
+                              Not Submitted
+                            </span>
+                          )
+                        )}
                       </div>
                       <p className="text-gray-400 text-sm mb-2">{assignment.description || 'No description'}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -327,10 +433,51 @@ export default function CourseDetail() {
                           <FileText size={14} />
                           Max Points: {assignment.max_points || 100}
                         </span>
+                        {assignment.user_submission && (
+                          <span className="flex items-center gap-1 text-green-400">
+                            <Clock size={14} />
+                            Submitted: {new Date(assignment.user_submission.submitted_at).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
+                      {/* Show grade and feedback if graded */}
+                      {assignment.user_submission && assignment.user_submission.status === 'graded' && (
+                        <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                          <p className="text-sm text-blue-400">
+                            <strong>Grade:</strong> {assignment.user_submission.grade} / {assignment.max_points}
+                          </p>
+                          {assignment.user_submission.feedback && (
+                            <p className="text-sm text-gray-300 mt-1">
+                              <strong>Feedback:</strong> {assignment.user_submission.feedback}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium">
-                      {assignment.status === 'published' ? 'View' : 'Coming Soon'}
+                    <button 
+                      onClick={() => assignment.status === 'published' && !assignment.user_submission && handleOpenSubmitModal(assignment)}
+                      disabled={assignment.status !== 'published' || assignment.user_submission}
+                      className={`px-4 py-2 rounded-lg transition text-sm font-medium flex items-center gap-2 ${
+                        assignment.user_submission
+                          ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                          : assignment.status === 'published'
+                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                          : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      {assignment.user_submission ? (
+                        <>
+                          <CheckCircle size={16} />
+                          <span>Submitted</span>
+                        </>
+                      ) : assignment.status === 'published' ? (
+                        <>
+                          <Upload size={16} />
+                          <span>Submit</span>
+                        </>
+                      ) : (
+                        'Coming Soon'
+                      )}
                     </button>
                   </div>
                 </motion.div>
@@ -416,6 +563,122 @@ export default function CourseDetail() {
               </button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* Submit Assignment Modal */}
+      {showSubmitModal && selectedAssignment && (
+        <Modal
+          isOpen={showSubmitModal}
+          onClose={() => !submitting && setShowSubmitModal(false)}
+          title={`Submit Assignment: ${selectedAssignment.title}`}
+        >
+          <form onSubmit={handleSubmitAssignment} className="space-y-4">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Due Date:</span>
+                <span className="text-white font-medium">
+                  {selectedAssignment.due_date ? new Date(selectedAssignment.due_date).toLocaleDateString() : 'No due date'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Max Points:</span>
+                <span className="text-white font-medium">{selectedAssignment.max_points || 100}</span>
+              </div>
+              {selectedAssignment.description && (
+                <div className="pt-2 border-t border-gray-700">
+                  <p className="text-gray-400 text-xs mb-1">Description:</p>
+                  <p className="text-gray-300 text-sm">{selectedAssignment.description}</p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="submission-text" className="block text-sm font-medium text-gray-300 mb-2">
+                Submission Text (Optional)
+              </label>
+              <textarea
+                id="submission-text"
+                rows={4}
+                value={submissionData.submission_text}
+                onChange={(e) => setSubmissionData({ ...submissionData, submission_text: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400 resize-none"
+                placeholder="Add any comments or notes about your submission..."
+                disabled={submitting}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="submission-file" className="block text-sm font-medium text-gray-300 mb-2">
+                Upload File (Optional)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  onChange={(e) => setSubmissionData({ ...submissionData, file: e.target.files[0] })}
+                  className="hidden"
+                  id="submission-file"
+                  accept=".pdf,.doc,.docx,.txt,.zip,.jpg,.jpeg,.png"
+                  disabled={submitting}
+                />
+                <label
+                  htmlFor="submission-file"
+                  className={`flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition cursor-pointer text-center text-gray-300 ${
+                    submitting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {submissionData.file ? submissionData.file.name : 'Choose File'}
+                </label>
+                {submissionData.file && (
+                  <button
+                    type="button"
+                    onClick={() => setSubmissionData({ ...submissionData, file: null })}
+                    className="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-gray-300"
+                    disabled={submitting}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Supported formats: PDF, DOC, DOCX, TXT, ZIP, JPG, PNG (Max 10MB)
+              </p>
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <p className="text-blue-400 text-sm">
+                <strong>Note:</strong> Make sure to provide either a file or submission text before submitting.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowSubmitModal(false)}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-white disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={18} />
+                    <span>Submit Assignment</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

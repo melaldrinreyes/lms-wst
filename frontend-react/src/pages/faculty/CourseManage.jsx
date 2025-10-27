@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
-import { courseAPI } from '../../services/api';
+import { courseAPI, assignmentAPI } from '../../services/api';
 
 export default function CourseManage() {
   const { id } = useParams();
@@ -21,6 +21,8 @@ export default function CourseManage() {
   const [submissions, setSubmissions] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submissionFilter, setSubmissionFilter] = useState('all');
+  const [submissionSort, setSubmissionSort] = useState('date-desc');
 
   useEffect(() => {
     fetchCourseData();
@@ -30,11 +32,47 @@ export default function CourseManage() {
     try {
       setLoading(true);
       const response = await courseAPI.getOne(id);
+      
+      console.log('=== COURSE DATA DEBUG ===');
+      console.log('Course ID:', id);
+      console.log('Full API Response:', response);
+      console.log('Course object:', response.course);
+      console.log('Assignments count:', response.course?.assignments?.length);
+      
       if (response.success) {
         setCourse(response.course);
-        setModules(response.modules || []);
-        setAssignments(response.assignments || []);
-        setSubmissions(response.submissions || []);
+        setModules(response.course.modules || []);
+        setAssignments(response.course.assignments || []);
+        
+        // Flatten all submissions from all assignments
+        const allSubmissions = [];
+        if (response.course.assignments) {
+          console.log('Processing assignments:', response.course.assignments.length);
+          response.course.assignments.forEach((assignment, index) => {
+            console.log(`Assignment ${index + 1}:`, {
+              title: assignment.title,
+              id: assignment.id,
+              status: assignment.status,
+              submission_list: assignment.submission_list,
+              submission_count: assignment.submission_list?.length || 0
+            });
+            
+            if (assignment.submission_list && assignment.submission_list.length > 0) {
+              assignment.submission_list.forEach(submission => {
+                console.log('Adding submission:', submission);
+                allSubmissions.push({
+                  ...submission,
+                  assignment_title: assignment.title,
+                });
+              });
+            }
+          });
+        }
+        console.log('Total submissions after flattening:', allSubmissions.length);
+        console.log('All submissions:', allSubmissions);
+        console.log('=== END DEBUG ===');
+        
+        setSubmissions(allSubmissions);
         setStudents(response.course.enrolled_students || []);
       }
     } catch (error) {
@@ -70,20 +108,87 @@ export default function CourseManage() {
   const handleGradeSubmission = (submission) => {
     setFormData({
       id: submission.id,
-      student: submission.student,
+      student: submission.student_name,
+      assignment: submission.assignment_title,
       grade: submission.grade || '',
-      feedback: submission.feedback || ''
+      feedback: submission.feedback || '',
+      submission_text: submission.submission_text,
+      file_path: submission.file_path
     });
     setIsModalOpen('grade');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setToast({ 
-      message: `${isModalOpen === 'module' ? 'Module' : isModalOpen === 'assignment' ? 'Assignment' : 'Grade'} saved successfully!`, 
-      type: 'success' 
-    });
-    setIsModalOpen(null);
+
+    try {
+      if (isModalOpen === 'assignment') {
+        // Validate file size if attachment exists
+        if (formData.attachment) {
+          const maxSize = 10 * 1024 * 1024; // 10MB
+          if (formData.attachment.size > maxSize) {
+            setToast({ message: 'File size must be less than 10MB', type: 'error' });
+            return;
+          }
+
+          // Validate file type
+          const allowedTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain',
+            'application/zip',
+          ];
+          if (!allowedTypes.includes(formData.attachment.type)) {
+            setToast({ message: 'Invalid file type. Only PDF, DOC, DOCX, TXT, and ZIP are allowed', type: 'error' });
+            return;
+          }
+        }
+
+        // Build payload - use FormData if attachment exists
+        let payload;
+        if (formData.attachment) {
+          payload = new FormData();
+          payload.append('title', formData.title);
+          payload.append('description', formData.description || '');
+          payload.append('due_date', formData.due_date);
+          payload.append('max_points', formData.max_points);
+          payload.append('course_id', id);
+          payload.append('status', formData.status || 'draft');
+          payload.append('attachment', formData.attachment);
+        } else {
+          payload = {
+            title: formData.title,
+            description: formData.description || '',
+            due_date: formData.due_date,
+            max_points: formData.max_points,
+            course_id: id,
+            status: formData.status || 'draft',
+          };
+        }
+
+        const response = await assignmentAPI.create(payload);
+        if (response && response.success) {
+          // Prepend or append the new assignment to the list so it's visible immediately
+          const created = response.assignment || response.data || response;
+          setAssignments((prev) => [created, ...prev]);
+          setToast({ message: 'Assignment created successfully!', type: 'success' });
+        } else {
+          setToast({ message: response.message || 'Failed to create assignment', type: 'error' });
+        }
+      } else if (isModalOpen === 'module') {
+        // existing placeholder behaviour for modules - can be extended to call moduleAPI
+        setToast({ message: 'Module saved successfully!', type: 'success' });
+      } else if (isModalOpen === 'grade') {
+        setToast({ message: 'Grade saved successfully!', type: 'success' });
+      }
+
+      setIsModalOpen(null);
+      setFormData({});
+    } catch (error) {
+      console.error('Error saving:', error);
+      setToast({ message: error?.response?.data?.message || 'An error occurred', type: 'error' });
+    }
   };
 
   const handleShareCourse = async () => {
@@ -172,6 +277,40 @@ export default function CourseManage() {
         type: 'error' 
       });
     }
+  };
+
+  // Filter and sort submissions
+  const getFilteredAndSortedSubmissions = () => {
+    let filtered = [...submissions];
+
+    // Apply filter
+    if (submissionFilter === 'submitted') {
+      filtered = filtered.filter(s => s.status === 'submitted');
+    } else if (submissionFilter === 'graded') {
+      filtered = filtered.filter(s => s.status === 'graded');
+    }
+
+    // Apply sort
+    filtered.sort((a, b) => {
+      switch (submissionSort) {
+        case 'student-asc':
+          return a.student_name.localeCompare(b.student_name);
+        case 'student-desc':
+          return b.student_name.localeCompare(a.student_name);
+        case 'date-asc':
+          return new Date(a.submitted_at) - new Date(b.submitted_at);
+        case 'date-desc':
+          return new Date(b.submitted_at) - new Date(a.submitted_at);
+        case 'grade-asc':
+          return (a.grade || 0) - (b.grade || 0);
+        case 'grade-desc':
+          return (b.grade || 0) - (a.grade || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
   };
 
   // Loading state
@@ -458,18 +597,34 @@ export default function CourseManage() {
                     </div>
                   </div>
                   <div className="pt-4 border-t border-gray-800">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="flex-1 bg-gray-800 rounded-full h-2.5 overflow-hidden">
                         <div 
                           className="bg-gradient-to-r from-green-500 to-green-400 h-full rounded-full transition-all"
-                          style={{ width: `${(assignment.submissions / assignment.total_students) * 100}%` }}
+                          style={{ width: `${assignment.total_students > 0 ? (assignment.submissions / assignment.total_students) * 100 : 0}%` }}
                         />
                       </div>
                       <span className="text-sm font-semibold text-gray-300 min-w-[50px] text-right">
-                        {Math.round((assignment.submissions / assignment.total_students) * 100)}%
+                        {assignment.total_students > 0 ? Math.round((assignment.submissions / assignment.total_students) * 100) : 0}%
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">Submission progress</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-500">Submission progress</p>
+                      {assignment.submission_list && assignment.submission_list.length > 0 && (
+                        <button
+                          onClick={() => {
+                            setActiveTab('submissions');
+                            setTimeout(() => {
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }, 100);
+                          }}
+                          className="text-xs text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1"
+                        >
+                          <Eye size={14} />
+                          View Submissions ({assignment.submission_list.length})
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
@@ -481,9 +636,75 @@ export default function CourseManage() {
       {/* Submissions Tab */}
       {activeTab === 'submissions' && (
         <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-1">Student Submissions</h2>
-            <p className="text-gray-400 text-sm">Review and grade student work</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Student Submissions</h2>
+              <p className="text-gray-400 text-sm">Review and grade student work</p>
+            </div>
+            <div className="flex gap-3">
+              {/* Filter dropdown */}
+              <div className="relative">
+                <select
+                  value={submissionFilter}
+                  onChange={(e) => setSubmissionFilter(e.target.value)}
+                  className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none pr-10 cursor-pointer"
+                >
+                  <option value="all">All Submissions</option>
+                  <option value="submitted">Pending Review</option>
+                  <option value="graded">Graded</option>
+                </select>
+              </div>
+              {/* Sort dropdown */}
+              <div className="relative">
+                <select
+                  value={submissionSort}
+                  onChange={(e) => setSubmissionSort(e.target.value)}
+                  className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none pr-10 cursor-pointer"
+                >
+                  <option value="date-desc">Latest First</option>
+                  <option value="date-asc">Oldest First</option>
+                  <option value="student-asc">Student A-Z</option>
+                  <option value="student-desc">Student Z-A</option>
+                  <option value="grade-desc">Highest Grade</option>
+                  <option value="grade-asc">Lowest Grade</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Submissions</p>
+                  <p className="text-2xl font-bold text-white mt-1">{submissions.length}</p>
+                </div>
+                <Upload className="h-8 w-8 text-blue-400" />
+              </div>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Pending Review</p>
+                  <p className="text-2xl font-bold text-yellow-400 mt-1">
+                    {submissions.filter(s => s.status === 'submitted').length}
+                  </p>
+                </div>
+                <Clock className="h-8 w-8 text-yellow-400" />
+              </div>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Graded</p>
+                  <p className="text-2xl font-bold text-green-400 mt-1">
+                    {submissions.filter(s => s.status === 'graded').length}
+                  </p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-400" />
+              </div>
+            </div>
           </div>
 
           <div className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg overflow-hidden border border-gray-800">
@@ -512,7 +733,7 @@ export default function CourseManage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {submissions.length === 0 ? (
+                  {getFilteredAndSortedSubmissions().length === 0 ? (
                     <tr>
                       <td colSpan="6" className="py-16 text-center">
                         <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -525,35 +746,31 @@ export default function CourseManage() {
                       </td>
                     </tr>
                   ) : (
-                    submissions.map((submission) => (
+                    getFilteredAndSortedSubmissions().map((submission) => (
                       <tr key={submission.id} className="hover:bg-gray-800/50 transition">
                         <td className="py-4 px-6">
                           <div>
                             <p className="text-sm font-semibold text-white">
-                              {submission.student}
+                              {submission.student_name}
                             </p>
                             <p className="text-xs text-gray-400">
-                              {submission.student_id}
+                              {submission.student_email}
                             </p>
                           </div>
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-300">
-                          {submission.assignment}
+                          {submission.assignment_title}
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-400">
-                          {new Date(submission.submitted_at).toLocaleString()}
+                          {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString() : 'N/A'}
                         </td>
                         <td className="py-4 px-6">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
                             submission.status === 'graded'
                               ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                              : submission.status === 'pending'
-                              ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                              : 'bg-red-500/10 text-red-400 border-red-500/20'
+                              : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
                           }`}>
-                            {submission.status === 'graded' && <CheckCircle size={14} />}
-                            {submission.status === 'pending' && <Clock size={14} />}
-                            {submission.status === 'rejected' && <XCircle size={14} />}
+                            {submission.status === 'graded' ? <CheckCircle size={14} /> : <Clock size={14} />}
                             {submission.status}
                           </span>
                         </td>
@@ -562,24 +779,23 @@ export default function CourseManage() {
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
-                            <button 
-                              className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
-                              title="Download"
-                            >
-                              <Download size={16} />
-                            </button>
+                            {submission.file_path && (
+                              <a
+                                href={`http://127.0.0.1:8000/storage/${submission.file_path}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                                title="Download"
+                              >
+                                <Download size={16} />
+                              </a>
+                            )}
                             <button 
                               onClick={() => handleGradeSubmission(submission)}
                               className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
                               title="Grade"
                             >
                               <Check size={16} />
-                            </button>
-                            <button 
-                              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
-                              title="Reject"
-                            >
-                              <X size={16} />
                             </button>
                           </div>
                         </td>
@@ -767,56 +983,89 @@ export default function CourseManage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Assignment Title *
             </label>
             <input
               type="text"
               value={formData.title || ''}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400"
+              placeholder="Enter assignment title"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Description
             </label>
             <textarea
               rows={4}
               value={formData.description || ''}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400 resize-none"
+              placeholder="Enter assignment description"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Due Date *
               </label>
               <input
                 type="date"
                 value={formData.due_date || ''}
                 onChange={(e) => setFormData({...formData, due_date: e.target.value})}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Max Points *
               </label>
               <input
                 type="number"
                 value={formData.max_points || 100}
                 onChange={(e) => setFormData({...formData, max_points: e.target.value})}
-                className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
+                placeholder="100"
                 required
               />
             </div>
           </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={() => setIsModalOpen(null)} className="flex-1 px-4 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Attachment (Optional)
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                onChange={(e) => setFormData({...formData, attachment: e.target.files[0]})}
+                className="hidden"
+                id="assignment-file"
+                accept=".pdf,.doc,.docx,.txt,.zip"
+              />
+              <label
+                htmlFor="assignment-file"
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition cursor-pointer text-center text-gray-300"
+              >
+                {formData.attachment ? formData.attachment.name : 'Choose File'}
+              </label>
+              {formData.attachment && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, attachment: null})}
+                  className="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-gray-300"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Supported formats: PDF, DOC, DOCX, TXT, ZIP (Max 10MB)</p>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={() => setIsModalOpen(null)} className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-white">
               Cancel
             </button>
             <button type="submit" className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition">
@@ -833,34 +1082,68 @@ export default function CourseManage() {
         title={`Grade Submission - ${formData.student}`}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Submission Details */}
+          {(formData.submission_text || formData.file_path) && (
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-3">
+              <h4 className="text-sm font-semibold text-gray-300">Submission Details</h4>
+              {formData.assignment && (
+                <div>
+                  <p className="text-xs text-gray-500">Assignment:</p>
+                  <p className="text-sm text-white">{formData.assignment}</p>
+                </div>
+              )}
+              {formData.submission_text && (
+                <div>
+                  <p className="text-xs text-gray-500">Student's Note:</p>
+                  <p className="text-sm text-gray-300">{formData.submission_text}</p>
+                </div>
+              )}
+              {formData.file_path && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">Submitted File:</p>
+                  <a
+                    href={`http://127.0.0.1:8000/storage/${formData.file_path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg transition text-sm"
+                  >
+                    <Download size={14} />
+                    Download Submission
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Grade (out of 100) *
             </label>
             <input
               type="number"
               min="0"
               max="100"
+              step="0.01"
               value={formData.grade || ''}
               onChange={(e) => setFormData({...formData, grade: e.target.value})}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Feedback
             </label>
             <textarea
               rows={4}
               value={formData.feedback || ''}
               onChange={(e) => setFormData({...formData, feedback: e.target.value})}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white resize-none"
               placeholder="Provide feedback to the student..."
             />
           </div>
           <div className="flex gap-3">
-            <button type="button" onClick={() => setIsModalOpen(null)} className="flex-1 px-4 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <button type="button" onClick={() => setIsModalOpen(null)} className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-white">
               Cancel
             </button>
             <button type="submit" className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">

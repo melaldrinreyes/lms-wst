@@ -64,8 +64,19 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        $course = Course::with(['enrollments.user', 'modules', 'assignments', 'faculty'])
-            ->findOrFail($id);
+        $course = Course::with([
+            'enrollments.user', 
+            'modules', 
+            'assignments.submissions.user',
+            'faculty'
+        ])->findOrFail($id);
+
+        // Debug logging
+        \Log::info("Course ID: {$id}");
+        \Log::info("Total assignments: " . $course->assignments->count());
+        foreach ($course->assignments as $assignment) {
+            \Log::info("Assignment '{$assignment->title}' has " . $assignment->submissions->count() . " submissions");
+        }
 
         return response()->json([
             'success' => true,
@@ -83,7 +94,46 @@ class CourseController extends Controller
                 'status' => $course->status,
                 'students' => $course->enrollments->count(),
                 'modules' => $course->modules,
-                'assignments' => $course->assignments,
+                'assignments' => $course->assignments->map(function ($assignment) use ($course) {
+                    // Check if current user has submitted this assignment
+                    $userSubmission = null;
+                    if (auth()->check() && auth()->user()->role_id === 3) { // Student role
+                        $userSubmission = $assignment->submissions->where('student_id', auth()->id())->first();
+                    }
+                    
+                    return [
+                        'id' => $assignment->id,
+                        'title' => $assignment->title,
+                        'description' => $assignment->description,
+                        'due_date' => $assignment->due_date,
+                        'max_points' => $assignment->max_points,
+                        'file_path' => $assignment->file_path,
+                        'status' => $assignment->status,
+                        'submissions' => $assignment->submissions->count(),
+                        'total_students' => $course->enrollments->count(),
+                        'user_submission' => $userSubmission ? [
+                            'id' => $userSubmission->id,
+                            'submitted_at' => $userSubmission->submitted_at,
+                            'grade' => $userSubmission->grade,
+                            'feedback' => $userSubmission->feedback,
+                            'status' => $userSubmission->grade !== null ? 'graded' : 'submitted',
+                        ] : null,
+                        'submission_list' => $assignment->submissions->map(function ($submission) {
+                            return [
+                                'id' => $submission->id,
+                                'student_id' => $submission->student_id,
+                                'student_name' => $submission->user->name,
+                                'student_email' => $submission->user->email,
+                                'submission_text' => $submission->submission_text,
+                                'file_path' => $submission->file_path,
+                                'submitted_at' => $submission->submitted_at,
+                                'grade' => $submission->grade,
+                                'feedback' => $submission->feedback,
+                                'status' => $submission->grade !== null ? 'graded' : 'submitted',
+                            ];
+                        }),
+                    ];
+                }),
                 'faculty' => $course->faculty ? [
                     'id' => $course->faculty->id,
                     'name' => $course->faculty->name,

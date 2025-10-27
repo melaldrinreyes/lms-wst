@@ -25,7 +25,8 @@ class AssignmentController extends Controller
                     'title' => $assignment->title,
                     'description' => $assignment->description,
                     'due_date' => $assignment->due_date,
-                    'points' => $assignment->points,
+                    'max_points' => $assignment->max_points,
+                    'file_path' => $assignment->file_path,
                     'status' => $assignment->status,
                     'total_submissions' => $assignment->submissions->count(),
                     'graded_submissions' => $assignment->submissions->whereNotNull('grade')->count(),
@@ -44,9 +45,21 @@ class AssignmentController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'required|date',
-            'points' => 'required|integer|min:0',
-            'status' => 'required|in:published,draft',
+            'max_points' => 'required|integer|min:0',
+            'status' => 'nullable|in:published,draft',
+            'attachment' => 'nullable|file|max:10240', // 10MB max
         ]);
+
+        // Default status to draft if not provided
+        $validated['status'] = $validated['status'] ?? 'draft';
+
+        // Handle file upload
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('assignments', $filename, 'public');
+            $validated['file_path'] = $path;
+        }
 
         $assignment = Assignment::create($validated);
 
@@ -68,9 +81,23 @@ class AssignmentController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'required|date',
-            'points' => 'required|integer|min:0',
-            'status' => 'required|in:published,draft',
+            'max_points' => 'required|integer|min:0',
+            'status' => 'nullable|in:published,draft',
+            'attachment' => 'nullable|file|max:10240', // 10MB max
         ]);
+
+        // Handle file upload
+        if ($request->hasFile('attachment')) {
+            // Delete old file if exists
+            if ($assignment->file_path) {
+                \Storage::disk('public')->delete($assignment->file_path);
+            }
+            
+            $file = $request->file('attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('assignments', $filename, 'public');
+            $validated['file_path'] = $path;
+        }
 
         $assignment->update($validated);
 
@@ -110,7 +137,8 @@ class AssignmentController extends Controller
                 'title' => $assignment->title,
                 'description' => $assignment->description,
                 'due_date' => $assignment->due_date,
-                'points' => $assignment->points,
+                'max_points' => $assignment->max_points,
+                'file_path' => $assignment->file_path,
                 'status' => $assignment->status,
                 'course' => [
                     'id' => $assignment->course->id,

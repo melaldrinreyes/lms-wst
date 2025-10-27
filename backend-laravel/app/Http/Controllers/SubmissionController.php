@@ -9,6 +9,80 @@ use Illuminate\Http\Request;
 class SubmissionController extends Controller
 {
     /**
+     * Submit an assignment (Student)
+     */
+    public function store(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Ensure user is a student
+            if ($user->role_id !== 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only students can submit assignments',
+                ], 403);
+            }
+
+            $validated = $request->validate([
+                'assignment_id' => 'required|exists:assignments,id',
+                'submission_text' => 'nullable|string',
+                'file' => 'nullable|file|max:10240', // 10MB max
+            ]);
+
+            // Check if assignment exists and is published
+            $assignment = Assignment::findOrFail($validated['assignment_id']);
+            if ($assignment->status !== 'published') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This assignment is not available for submission',
+                ], 400);
+            }
+
+            // Check if student already submitted
+            $existingSubmission = Submission::where('assignment_id', $validated['assignment_id'])
+                ->where('student_id', $user->id)
+                ->first();
+
+            if ($existingSubmission) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already submitted this assignment',
+                ], 400);
+            }
+
+            // Handle file upload
+            $filePath = null;
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $filename = time() . '_' . $user->id . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('submissions', $filename, 'public');
+            }
+
+            // Create submission
+            $submission = Submission::create([
+                'assignment_id' => $validated['assignment_id'],
+                'student_id' => $user->id,
+                'submission_text' => $validated['submission_text'] ?? null,
+                'file_path' => $filePath,
+                'submitted_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Assignment submitted successfully',
+                'submission' => $submission,
+            ], 201);
+        } catch (\Exception $e) {
+            \Log::error('Error submitting assignment: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error submitting assignment: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Get all submissions for faculty's assignments
      */
     public function index(Request $request)

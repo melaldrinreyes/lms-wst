@@ -25,6 +25,34 @@ Route::get('/test', function () {
     ]);
 });
 
+// Debug route to check submissions
+Route::get('/debug/submissions', function () {
+    $submissions = \App\Models\Submission::with(['assignment.course', 'user'])->get();
+    
+    $grouped = $submissions->groupBy('assignment.course.id')->map(function($subs, $courseId) {
+        $course = $subs->first()->assignment->course;
+        return [
+            'course_id' => $courseId,
+            'course_name' => $course->course_name,
+            'submissions_count' => $subs->count(),
+            'submissions' => $subs->map(function($sub) {
+                return [
+                    'id' => $sub->id,
+                    'assignment' => $sub->assignment->title,
+                    'student' => $sub->user->first_name . ' ' . $sub->user->last_name,
+                    'submitted_at' => $sub->submitted_at,
+                    'grade' => $sub->grade,
+                ];
+            }),
+        ];
+    });
+    
+    return response()->json([
+        'total_submissions' => $submissions->count(),
+        'by_course' => $grouped,
+    ]);
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Test protected route
@@ -92,6 +120,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Submission routes (Faculty and Admin can grade)
     Route::get('/submissions', [SubmissionController::class, 'index']);
     Route::get('/submissions/{id}', [SubmissionController::class, 'show']);
+    
+    // Student submission route (Students can submit)
+    Route::middleware(['check.role:3'])->group(function () {
+        Route::post('/submissions', [SubmissionController::class, 'store']);
+    });
     
     Route::middleware(['check.role:2,1'])->group(function () {
         Route::get('/submissions/pending/count', [SubmissionController::class, 'pendingCount']);
