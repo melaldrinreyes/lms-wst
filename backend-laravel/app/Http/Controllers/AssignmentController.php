@@ -63,6 +63,15 @@ class AssignmentController extends Controller
 
         $assignment = Assignment::create($validated);
 
+        // Notify enrolled students about new assignment
+        NotificationController::notifyStudents(
+            $validated['course_id'],
+            'assignment_added',
+            'New assignment posted: ' . $validated['title'],
+            $assignment->id,
+            'assignment'
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Assignment created successfully',
@@ -86,6 +95,14 @@ class AssignmentController extends Controller
             'attachment' => 'nullable|file|max:10240', // 10MB max
         ]);
 
+        // Check if significant fields have changed
+        $significantChange = 
+            $assignment->title !== $validated['title'] ||
+            $assignment->description !== ($validated['description'] ?? null) ||
+            $assignment->due_date !== $validated['due_date'] ||
+            $assignment->max_points !== $validated['max_points'] ||
+            $request->hasFile('attachment');
+
         // Handle file upload
         if ($request->hasFile('attachment')) {
             // Delete old file if exists
@@ -99,12 +116,38 @@ class AssignmentController extends Controller
             $validated['file_path'] = $path;
         }
 
+        // If significant changes detected, increment version and reactivate submissions
+        if ($significantChange) {
+            $newVersion = ($assignment->version ?? 1) + 1;
+            $validated['version'] = $newVersion;
+
+            // Reactivate all submissions for this assignment
+            $assignment->submissions()->update([
+                'can_resubmit' => true,
+                'assignment_version' => $assignment->version ?? 1, // Store old version
+            ]);
+
+            \Log::info("Assignment #{$id} updated to version {$newVersion}. Submissions reactivated.");
+        }
+
         $assignment->update($validated);
+
+        // Notify enrolled students about assignment update
+        if ($significantChange) {
+            NotificationController::notifyStudents(
+                $assignment->course_id,
+                'assignment_updated',
+                'Assignment updated - Resubmit available: ' . $validated['title'],
+                $assignment->id,
+                'assignment'
+            );
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Assignment updated successfully',
+            'message' => 'Assignment updated successfully' . ($significantChange ? '. Students can now resubmit.' : '.'),
             'assignment' => $assignment,
+            'submissions_reactivated' => $significantChange,
         ]);
     }
 

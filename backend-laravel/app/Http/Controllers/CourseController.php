@@ -129,6 +129,8 @@ class CourseController extends Controller
                             'grade' => $userSubmission->grade,
                             'feedback' => $userSubmission->feedback,
                             'status' => $userSubmission->grade !== null ? 'graded' : 'submitted',
+                            'can_resubmit' => $userSubmission->can_resubmit ?? false,
+                            'assignment_version' => $userSubmission->assignment_version ?? 1,
                         ] : null,
                         'submission_list' => $assignment->submissions->map(function ($submission) {
                             return [

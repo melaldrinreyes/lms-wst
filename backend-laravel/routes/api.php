@@ -11,6 +11,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EnrollmentRequestController;
+use App\Http\Controllers\NotificationController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -74,6 +75,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::put('/user/password', [AuthController::class, 'updatePassword']);
+    
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     
     // Course routes (All authenticated users can view courses)
     Route::get('/courses/statistics/all', [CourseController::class, 'statistics']);

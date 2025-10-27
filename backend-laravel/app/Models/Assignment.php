@@ -17,6 +17,7 @@ class Assignment extends Model
         'max_points',
         'file_path',
         'status',
+        'version',
     ];
 
     protected $casts = [

@@ -96,6 +96,63 @@ export default function CourseManage() {
     setIsModalOpen('module');
   };
 
+  const handleViewModule = (module) => {
+    setFormData({
+      id: module.id,
+      title: module.module_title || module.title,
+      description: module.description || '',
+      content: module.content || '',
+      order: module.module_order || module.order,
+      status: module.status,
+      file_path: module.file_path,
+      viewOnly: true
+    });
+    setIsModalOpen('view-module');
+  };
+
+  const handleEditModule = (module) => {
+    setFormData({
+      id: module.id,
+      title: module.module_title || module.title,
+      description: module.description || '',
+      content: module.content || '',
+      order: module.module_order || module.order,
+      status: module.status,
+      file_path: module.file_path,
+      currentFile: module.file_path
+    });
+    setIsModalOpen('edit-module');
+  };
+
+  const handleDeleteModule = async (moduleId, moduleTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${moduleTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await moduleAPI.delete(moduleId);
+      
+      if (response.success) {
+        setModules((prev) => prev.filter(m => m.id !== moduleId));
+        setToast({ 
+          message: 'Module deleted successfully!', 
+          type: 'success' 
+        });
+      } else {
+        setToast({ 
+          message: response.message || 'Failed to delete module', 
+          type: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting module:', error);
+      setToast({ 
+        message: 'Failed to delete module. Please try again.', 
+        type: 'error' 
+      });
+    }
+  };
+
   const handleAddAssignment = () => {
     setFormData({
       title: '',
@@ -105,6 +162,64 @@ export default function CourseManage() {
       status: 'draft'
     });
     setIsModalOpen('assignment');
+  };
+
+  const handleViewAssignment = (assignment) => {
+    setFormData({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description || '',
+      due_date: assignment.due_date,
+      max_points: assignment.max_points,
+      status: assignment.status,
+      attachment: assignment.attachment,
+      submissions: assignment.submissions || 0,
+      total_students: assignment.total_students || 0,
+      viewOnly: true
+    });
+    setIsModalOpen('view-assignment');
+  };
+
+  const handleEditAssignment = (assignment) => {
+    setFormData({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description || '',
+      due_date: assignment.due_date,
+      max_points: assignment.max_points,
+      status: assignment.status,
+      currentAttachment: assignment.attachment
+    });
+    setIsModalOpen('edit-assignment');
+  };
+
+  const handleDeleteAssignment = async (assignmentId, assignmentTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${assignmentTitle}"? This will also delete all student submissions. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await assignmentAPI.delete(assignmentId);
+      
+      if (response.success) {
+        setAssignments((prev) => prev.filter(a => a.id !== assignmentId));
+        setToast({ 
+          message: 'Assignment deleted successfully!', 
+          type: 'success' 
+        });
+      } else {
+        setToast({ 
+          message: response.message || 'Failed to delete assignment', 
+          type: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      setToast({ 
+        message: 'Failed to delete assignment. Please try again.', 
+        type: 'error' 
+      });
+    }
   };
 
   const handleGradeSubmission = (submission) => {
@@ -222,6 +337,86 @@ export default function CourseManage() {
         } else {
           console.error('Module creation failed:', response);
           setToast({ message: response.message || 'Failed to create module', type: 'error' });
+        }
+      } else if (isModalOpen === 'edit-module') {
+        // Validate file size if a new file is uploaded
+        if (formData.file) {
+          const maxSize = 10 * 1024 * 1024; // 10MB
+          if (formData.file.size > maxSize) {
+            setToast({ message: 'File size must be less than 10MB', type: 'error' });
+            return;
+          }
+        }
+
+        // Build payload with FormData
+        const payload = new FormData();
+        payload.append('title', formData.title);
+        payload.append('description', formData.description || '');
+        payload.append('content', formData.content || '');
+        payload.append('order', formData.order);
+        payload.append('status', formData.status);
+        
+        // Only append file if a new one was selected
+        if (formData.file) {
+          payload.append('file', formData.file);
+        }
+
+        const response = await moduleAPI.update(formData.id, payload);
+        if (response && response.success) {
+          // Update the module in the list
+          const updated = response.module || response.data || response;
+          setModules((prev) => 
+            prev.map(m => m.id === formData.id ? updated : m)
+              .sort((a, b) => (a.module_order || a.order) - (b.module_order || b.order))
+          );
+          setToast({ message: 'Module updated successfully!', type: 'success' });
+        } else {
+          setToast({ message: response.message || 'Failed to update module', type: 'error' });
+        }
+      } else if (isModalOpen === 'edit-assignment') {
+        // Validate file size if attachment exists
+        if (formData.attachment) {
+          const maxSize = 10 * 1024 * 1024; // 10MB
+          if (formData.attachment.size > maxSize) {
+            setToast({ message: 'File size must be less than 10MB', type: 'error' });
+            return;
+          }
+        }
+
+        // Build payload - use FormData if attachment exists
+        let payload;
+        if (formData.attachment) {
+          payload = new FormData();
+          payload.append('title', formData.title);
+          payload.append('description', formData.description || '');
+          payload.append('due_date', formData.due_date);
+          payload.append('max_points', formData.max_points);
+          payload.append('status', formData.status || 'draft');
+          payload.append('attachment', formData.attachment);
+        } else {
+          payload = {
+            title: formData.title,
+            description: formData.description || '',
+            due_date: formData.due_date,
+            max_points: formData.max_points,
+            status: formData.status || 'draft',
+          };
+        }
+
+        const response = await assignmentAPI.update(formData.id, payload);
+        if (response && response.success) {
+          // Update the assignment in the list
+          const updated = response.assignment || response.data || response;
+          setAssignments((prev) => prev.map(a => a.id === formData.id ? updated : a));
+          
+          // Show appropriate message based on whether submissions were reactivated
+          const message = response.submissions_reactivated 
+            ? 'Assignment updated successfully! Students can now resubmit their work.'
+            : 'Assignment updated successfully!';
+          
+          setToast({ message, type: 'success' });
+        } else {
+          setToast({ message: response.message || 'Failed to update assignment', type: 'error' });
         }
       } else if (isModalOpen === 'grade') {
         // Grade assignment submission
@@ -593,18 +788,21 @@ export default function CourseManage() {
                     </div>
                     <div className="flex gap-2 ml-4">
                       <button 
+                        onClick={() => handleViewModule(module)}
                         className="p-2.5 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-transparent hover:border-blue-500/20 rounded-lg transition-all"
                         title="View Module"
                       >
                         <Eye size={18} />
                       </button>
                       <button 
+                        onClick={() => handleEditModule(module)}
                         className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all"
                         title="Edit Module"
                       >
                         <Edit size={18} />
                       </button>
                       <button 
+                        onClick={() => handleDeleteModule(module.id, module.module_title || module.title)}
                         className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all"
                         title="Delete Module"
                       >
@@ -694,13 +892,25 @@ export default function CourseManage() {
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <button className="p-2.5 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-transparent hover:border-blue-500/20 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleViewAssignment(assignment)}
+                        className="p-2.5 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-transparent hover:border-blue-500/20 rounded-lg transition-all"
+                        title="View Assignment"
+                      >
                         <Eye size={18} />
                       </button>
-                      <button className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleEditAssignment(assignment)}
+                        className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all"
+                        title="Edit Assignment"
+                      >
                         <Edit size={18} />
                       </button>
-                      <button className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleDeleteAssignment(assignment.id, assignment.title)}
+                        className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all"
+                        title="Delete Assignment"
+                      >
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -1286,6 +1496,208 @@ export default function CourseManage() {
         </form>
       </Modal>
 
+      {/* View Assignment Modal */}
+      <Modal
+        isOpen={isModalOpen === 'view-assignment'}
+        onClose={() => setIsModalOpen(null)}
+        title="Assignment Details"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${
+              formData.status === 'published' 
+                ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+            }`}>
+              {formData.status === 'published' ? '✓ Published' : '◐ Draft'}
+            </span>
+            <span className="px-3 py-1 bg-blue-500/10 text-blue-300 rounded-lg text-xs font-bold border border-blue-500/30">
+              {formData.max_points} Points
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Title</label>
+            <p className="text-lg font-semibold text-white">{formData.title}</p>
+          </div>
+
+          {formData.description && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Description</label>
+              <p className="text-sm text-gray-300 whitespace-pre-wrap">{formData.description}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Due Date</label>
+              <div className="flex items-center gap-2 text-gray-300">
+                <Calendar size={16} className="text-orange-400" />
+                <p className="text-sm font-medium">{new Date(formData.due_date).toLocaleDateString()}</p>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Submissions</label>
+              <div className="flex items-center gap-2 text-gray-300">
+                <Users size={16} className="text-green-400" />
+                <p className="text-sm font-medium">{formData.submissions}/{formData.total_students} submitted</p>
+              </div>
+            </div>
+          </div>
+
+          {formData.attachment && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">Attached File</label>
+              <a
+                href={`http://127.0.0.1:8000/storage/${formData.attachment}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg transition"
+              >
+                <Download size={16} />
+                Download Attachment
+              </a>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={() => setIsModalOpen(null)}
+              className="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition font-medium"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Assignment Modal */}
+      <Modal
+        isOpen={isModalOpen === 'edit-assignment'}
+        onClose={() => setIsModalOpen(null)}
+        title="Edit Assignment"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Assignment Title *
+            </label>
+            <input
+              type="text"
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400"
+              placeholder="Enter assignment title"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Description
+            </label>
+            <textarea
+              rows={4}
+              value={formData.description || ''}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400 resize-none"
+              placeholder="Enter assignment description"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Due Date *
+              </label>
+              <input
+                type="date"
+                value={formData.due_date || ''}
+                onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Max Points *
+              </label>
+              <input
+                type="number"
+                value={formData.max_points || 100}
+                onChange={(e) => setFormData({...formData, max_points: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
+                placeholder="100"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Status *
+            </label>
+            <select
+              value={formData.status || 'draft'}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
+              required
+            >
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Update Attachment (Optional)
+            </label>
+            {formData.currentAttachment && (
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-400">
+                <FileText size={16} />
+                <span>Current file: {formData.currentAttachment.split('/').pop()}</span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="file"
+                onChange={(e) => setFormData({...formData, attachment: e.target.files[0]})}
+                className="hidden"
+                id="edit-assignment-file"
+                accept=".pdf,.doc,.docx,.txt,.zip"
+              />
+              <label
+                htmlFor="edit-assignment-file"
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition cursor-pointer text-center text-gray-300"
+              >
+                {formData.attachment ? formData.attachment.name : 'Choose New File (Optional)'}
+              </label>
+              {formData.attachment && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, attachment: null})}
+                  className="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-gray-300"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Supported formats: PDF, DOC, DOCX, TXT, ZIP (Max 10MB). Leave empty to keep current file.</p>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(null)} 
+              className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-white"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+            >
+              Update Assignment
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Grade Modal */}
       <Modal
         isOpen={isModalOpen === 'grade'}
@@ -1404,6 +1816,214 @@ export default function CourseManage() {
               className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
             >
               Update Status
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* View Module Modal */}
+      <Modal
+        isOpen={isModalOpen === 'view-module'}
+        onClose={() => setIsModalOpen(null)}
+        title="Module Details"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="px-3 py-1 bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-300 rounded-lg text-sm font-bold border border-orange-500/30">
+              Module {formData.order}
+            </span>
+            <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${
+              formData.status === 'published' 
+                ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+            }`}>
+              {formData.status === 'published' ? '✓ Published' : '◐ Draft'}
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Title</label>
+            <p className="text-lg font-semibold text-white">{formData.title}</p>
+          </div>
+
+          {formData.description && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Description</label>
+              <p className="text-sm text-gray-300">{formData.description}</p>
+            </div>
+          )}
+
+          {formData.content && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Content</label>
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 max-h-64 overflow-y-auto">
+                <p className="text-sm text-gray-300 whitespace-pre-wrap">{formData.content}</p>
+              </div>
+            </div>
+          )}
+
+          {formData.file_path && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">Attached File</label>
+              <a
+                href={`http://127.0.0.1:8000/storage/${formData.file_path}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg transition"
+              >
+                <Download size={16} />
+                Download File
+              </a>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={() => setIsModalOpen(null)}
+              className="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition font-medium"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Module Modal */}
+      <Modal
+        isOpen={isModalOpen === 'edit-module'}
+        onClose={() => setIsModalOpen(null)}
+        title="Edit Module"
+      >
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Module Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Module Title *
+            </label>
+            <input
+              type="text"
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-4 py-2.5 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400"
+              placeholder="e.g., Introduction to Programming"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Description
+            </label>
+            <textarea
+              rows={3}
+              value={formData.description || ''}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full px-4 py-2.5 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400 resize-none"
+              placeholder="Brief description of what this module covers..."
+            />
+          </div>
+
+          {/* Module Order and Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Module Order *
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={formData.order || ''}
+                onChange={(e) => setFormData({...formData, order: e.target.value})}
+                className="w-full px-4 py-2.5 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Status *
+              </label>
+              <select
+                value={formData.status || 'draft'}
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                className="w-full px-4 py-2.5 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white"
+                required
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Module Content
+            </label>
+            <textarea
+              rows={8}
+              value={formData.content || ''}
+              onChange={(e) => setFormData({...formData, content: e.target.value})}
+              className="w-full px-4 py-2.5 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-400 resize-none font-mono text-sm"
+              placeholder="Enter the main content, lessons, or learning materials for this module..."
+            />
+          </div>
+
+          {/* File Attachment */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Update Attachment (Optional)
+            </label>
+            {formData.currentFile && (
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-400">
+                <FileText size={16} />
+                <span>Current file: {formData.currentFile.split('/').pop()}</span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="file"
+                onChange={(e) => setFormData({...formData, file: e.target.files[0]})}
+                className="hidden"
+                id="edit-module-file"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip"
+              />
+              <label
+                htmlFor="edit-module-file"
+                className="flex-1 px-4 py-2.5 border border-gray-600 rounded-lg hover:bg-gray-700 transition cursor-pointer text-center text-gray-300 flex items-center justify-center gap-2"
+              >
+                <FileText size={18} />
+                {formData.file ? formData.file.name : 'Choose New File (Optional)'}
+              </label>
+              {formData.file && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, file: null})}
+                  className="px-4 py-2.5 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-gray-300"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              PDF, DOC, DOCX, PPT, PPTX, TXT, ZIP (Max 10MB). Leave empty to keep current file.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(null)} 
+              className="flex-1 px-4 py-2.5 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-white font-medium"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-medium shadow-lg shadow-orange-500/30"
+            >
+              Update Module
             </button>
           </div>
         </form>

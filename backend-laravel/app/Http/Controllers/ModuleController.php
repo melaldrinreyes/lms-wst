@@ -69,6 +69,15 @@ class ModuleController extends Controller
 
         $module = Module::create($moduleData);
 
+        // Notify enrolled students about new module
+        NotificationController::notifyStudents(
+            $validated['course_id'],
+            'module_added',
+            'New module added: ' . $validated['title'],
+            $module->id,
+            'module'
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Module created successfully',
@@ -115,6 +124,15 @@ class ModuleController extends Controller
         }
 
         $module->update($moduleData);
+
+        // Notify enrolled students about module update
+        NotificationController::notifyStudents(
+            $module->course_id,
+            'module_updated',
+            'Module updated: ' . $validated['title'],
+            $module->id,
+            'module'
+        );
 
         return response()->json([
             'success' => true,

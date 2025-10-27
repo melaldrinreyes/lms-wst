@@ -11,7 +11,8 @@ import {
   MessageSquare,
   Calendar,
   LogOut,
-  Upload
+  Upload,
+  RefreshCw
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { courseAPI, submissionAPI } from '../../services/api';
@@ -31,6 +32,7 @@ export default function CourseDetail() {
   const [toast, setToast] = useState(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   // Assignment submission states
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -59,6 +61,24 @@ export default function CourseDetail() {
       setToast({ message: 'Failed to load course data', type: 'error' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const response = await courseAPI.getOne(id);
+      if (response.success) {
+        setCourse(response.course);
+        setModules(response.course.modules || []);
+        setAssignments(response.course.assignments || []);
+        setToast({ message: 'Course data refreshed', type: 'success' });
+      }
+    } catch (error) {
+      console.error('Error refreshing course:', error);
+      setToast({ message: 'Failed to refresh course data', type: 'error' });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -227,13 +247,25 @@ export default function CourseDetail() {
             </div>
           </div>
 
-          <button 
-            onClick={() => setShowLeaveModal(true)}
-            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition flex items-center gap-2"
-          >
-            <LogOut size={18} />
-            <span>Leave Course</span>
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg transition flex items-center gap-2 disabled:opacity-50"
+              title="Refresh to see latest updates"
+            >
+              <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
+            <button 
+              onClick={() => setShowLeaveModal(true)}
+              className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition flex items-center gap-2"
+            >
+              <LogOut size={18} />
+              <span>Leave Course</span>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -399,6 +431,13 @@ export default function CourseDetail() {
                         }`}>
                           {assignment.status}
                         </span>
+                        {/* Resubmit Available Badge */}
+                        {assignment.user_submission && assignment.user_submission.can_resubmit && (
+                          <span className="px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1 bg-orange-500/10 text-orange-400 border border-orange-500/20 animate-pulse">
+                            <Upload size={12} />
+                            Resubmit Available
+                          </span>
+                        )}
                         {/* Submission Status Badge */}
                         {assignment.status === 'published' && (
                           assignment.user_submission ? (
@@ -457,12 +496,27 @@ export default function CourseDetail() {
                           )}
                         </div>
                       )}
+                      {/* Resubmission Notice */}
+                      {assignment.user_submission && assignment.user_submission.can_resubmit && (
+                        <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                          <p className="text-sm text-orange-400 font-medium flex items-center gap-2">
+                            <Upload size={14} />
+                            <strong>Assignment Updated!</strong>
+                          </p>
+                          <p className="text-sm text-gray-300 mt-1">
+                            The instructor has made changes to this assignment. You can now resubmit your work.
+                            Your previous submission will be replaced.
+                          </p>
+                        </div>
+                      )}
                     </div>
                     <button 
-                      onClick={() => assignment.status === 'published' && !assignment.user_submission && handleOpenSubmitModal(assignment)}
-                      disabled={assignment.status !== 'published' || assignment.user_submission}
+                      onClick={() => assignment.status === 'published' && (!assignment.user_submission || assignment.user_submission.can_resubmit) && handleOpenSubmitModal(assignment)}
+                      disabled={assignment.status !== 'published' || (assignment.user_submission && !assignment.user_submission.can_resubmit)}
                       className={`px-4 py-2 rounded-lg transition text-sm font-medium flex items-center gap-2 ${
-                        assignment.user_submission
+                        assignment.user_submission && assignment.user_submission.can_resubmit
+                          ? 'bg-orange-500 hover:bg-orange-600 text-white animate-pulse'
+                          : assignment.user_submission && !assignment.user_submission.can_resubmit
                           ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
                           : assignment.status === 'published'
                           ? 'bg-orange-500 hover:bg-orange-600 text-white'
@@ -470,10 +524,17 @@ export default function CourseDetail() {
                       }`}
                     >
                       {assignment.user_submission ? (
-                        <>
-                          <CheckCircle size={16} />
-                          <span>Submitted</span>
-                        </>
+                        assignment.user_submission.can_resubmit ? (
+                          <>
+                            <Upload size={16} />
+                            <span>Resubmit</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle size={16} />
+                            <span>Submitted</span>
+                          </>
+                        )
                       ) : assignment.status === 'published' ? (
                         <>
                           <Upload size={16} />

@@ -45,10 +45,44 @@ class SubmissionController extends Controller
                 ->first();
 
             if ($existingSubmission) {
+                // Check if resubmission is allowed
+                if (!$existingSubmission->can_resubmit) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You have already submitted this assignment',
+                    ], 400);
+                }
+
+                // Handle resubmission - delete old file if new one is uploaded
+                if ($request->hasFile('file') && $existingSubmission->file_path) {
+                    \Storage::disk('public')->delete($existingSubmission->file_path);
+                }
+
+                // Handle file upload for resubmission
+                $filePath = $existingSubmission->file_path;
+                if ($request->hasFile('file')) {
+                    $file = $request->file('file');
+                    $filename = time() . '_' . $user->id . '_' . $file->getClientOriginalName();
+                    $filePath = $file->storeAs('submissions', $filename, 'public');
+                }
+
+                // Update existing submission
+                $existingSubmission->update([
+                    'submission_text' => $validated['submission_text'] ?? null,
+                    'file_path' => $filePath,
+                    'submitted_at' => now(),
+                    'can_resubmit' => false, // Reset resubmit flag
+                    'assignment_version' => $assignment->version ?? 1, // Update to current version
+                    'grade' => null, // Reset grade
+                    'feedback' => null, // Reset feedback
+                    'graded_at' => null, // Reset graded timestamp
+                ]);
+
                 return response()->json([
-                    'success' => false,
-                    'message' => 'You have already submitted this assignment',
-                ], 400);
+                    'success' => true,
+                    'message' => 'Assignment resubmitted successfully',
+                    'submission' => $existingSubmission->fresh(),
+                ], 200);
             }
 
             // Handle file upload
@@ -66,6 +100,8 @@ class SubmissionController extends Controller
                 'submission_text' => $validated['submission_text'] ?? null,
                 'file_path' => $filePath,
                 'submitted_at' => now(),
+                'assignment_version' => $assignment->version ?? 1,
+                'can_resubmit' => false,
             ]);
 
             return response()->json([

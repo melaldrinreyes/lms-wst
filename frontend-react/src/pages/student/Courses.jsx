@@ -174,6 +174,16 @@ export default function Courses() {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent"></div>
+                
+                {/* NEW/UPDATED Badge */}
+                {course.has_unread_updates && (
+                  <div className="absolute top-4 right-4">
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
+                      NEW
+                    </span>
+                  </div>
+                )}
+                
                 <div className="absolute bottom-4 left-4 flex items-center gap-2 text-white text-sm">
                   <Clock size={16} className="text-orange-400" />
                   <span>{course.semester || 'Ongoing'}</span>

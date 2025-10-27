@@ -183,6 +183,13 @@ export default function AdminCourses() {
               <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(course.status)}`}>
                 {course.status}
               </span>
+              
+              {/* NEW/UPDATED Badge for recent activity */}
+              {course.has_recent_updates && (
+                <span className="absolute top-3 left-3 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
+                  UPDATED
+                </span>
+              )}
             </div>
 
             <div className="p-6">

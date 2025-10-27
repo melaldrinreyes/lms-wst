@@ -18,6 +18,8 @@ class Submission extends Model
         'grade',
         'feedback',
         'graded_at',
+        'can_resubmit',
+        'assignment_version',
     ];
 
     protected $casts = [

@@ -165,6 +165,18 @@ export const moduleAPI = {
   },
 
   update: async (id, data) => {
+    // Support JSON payload or FormData (for file uploads)
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      // Use POST with _method override for file uploads (Laravel limitation)
+      data.append('_method', 'PUT');
+      const response = await api.post(`/modules/${id}`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    }
+
     const response = await api.put(`/modules/${id}`, data);
     return response.data;
   },
@@ -204,6 +216,18 @@ export const assignmentAPI = {
   },
 
   update: async (id, data) => {
+    // Support JSON payload or FormData (for file uploads)
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      // Use POST with _method override for file uploads (Laravel limitation)
+      data.append('_method', 'PUT');
+      const response = await api.post(`/assignments/${id}`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    }
+
     const response = await api.put(`/assignments/${id}`, data);
     return response.data;
   },

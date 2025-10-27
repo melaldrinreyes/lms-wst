@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Enrollment;
 use App\Models\Submission;
 use App\Models\Assignment;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -250,8 +251,27 @@ class StudentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'classes' => $enrollments->map(function ($enrollment) {
+                'classes' => $enrollments->map(function ($enrollment) use ($user) {
                     $course = $enrollment->course;
+                    
+                    // Check if student has unread notifications for this course
+                    $hasUnreadUpdates = Notification::where('user_id', $user->id)
+                        ->where('is_read', false)
+                        ->where(function($query) use ($course) {
+                            $query->where('related_type', 'module')
+                                  ->orWhere('related_type', 'assignment');
+                        })
+                        ->whereIn('related_id', function($subQuery) use ($course) {
+                            $subQuery->select('id')
+                                     ->from('modules')
+                                     ->where('course_id', $course->id)
+                                     ->union(
+                                         \DB::table('assignments')
+                                             ->select('id')
+                                             ->where('course_id', $course->id)
+                                     );
+                        })
+                        ->exists();
                     
                     // Get modules and assignments
                     $modules = $course->modules ?? collect([]);
@@ -303,6 +323,7 @@ class StudentController extends Controller
                             'email' => $course->faculty->email,
                             'profile_image' => $course->faculty->profile_image,
                         ] : null,
+                        'has_unread_updates' => $hasUnreadUpdates,
                     ];
                 }),
             ]);
