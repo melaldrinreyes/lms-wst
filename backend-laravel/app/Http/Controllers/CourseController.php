@@ -271,40 +271,51 @@ class CourseController extends Controller
                 ], 400);
             }
 
-            // Check if already have a pending request
-            $pendingRequest = EnrollmentRequest::where('student_id', $user->id)
+            // Check if there's any previous request
+            $existingRequest = EnrollmentRequest::where('student_id', $user->id)
                 ->where('course_id', $id)
-                ->where('status', 'pending')
                 ->first();
 
-            if ($pendingRequest) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You already have a pending enrollment request for this course.',
-                ], 400);
+            if ($existingRequest) {
+                // If it's pending, inform user
+                if ($existingRequest->status === 'pending') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You already have a pending enrollment request for this course.',
+                    ], 400);
+                }
+                
+                // If approved or rejected, update it to pending instead of creating new
+                \Log::info('Updating existing enrollment request', [
+                    'request_id' => $existingRequest->id,
+                    'old_status' => $existingRequest->status
+                ]);
+                
+                $existingRequest->update([
+                    'status' => 'pending',
+                    'message' => $request->input('message', null),
+                    'requested_at' => now(),
+                    'responded_at' => null,
+                    'responded_by' => null,
+                ]);
+                
+                $enrollmentRequest = $existingRequest;
+            } else {
+                // Create new enrollment request
+                \Log::info('Creating enrollment request', [
+                    'student_id' => $user->id,
+                    'course_id' => $id
+                ]);
+                
+                $enrollmentRequest = EnrollmentRequest::create([
+                    'student_id' => $user->id,
+                    'course_id' => $id,
+                    'status' => 'pending',
+                    'message' => $request->input('message', null),
+                ]);
+                
+                \Log::info('Enrollment request created', ['request_id' => $enrollmentRequest->id]);
             }
-
-            // If student previously had a request (rejected or approved), delete it to allow re-enrollment
-            // This handles cases where student left a course and wants to rejoin
-            EnrollmentRequest::where('student_id', $user->id)
-                ->where('course_id', $id)
-                ->whereIn('status', ['rejected', 'approved'])
-                ->delete();
-
-            // Create enrollment request
-            \Log::info('Creating enrollment request', [
-                'student_id' => $user->id,
-                'course_id' => $id
-            ]);
-            
-            $enrollmentRequest = EnrollmentRequest::create([
-                'student_id' => $user->id,
-                'course_id' => $id,
-                'status' => 'pending',
-                'message' => $request->input('message', null),
-            ]);
-            
-            \Log::info('Enrollment request created', ['request_id' => $enrollmentRequest->id]);
 
             return response()->json([
                 'success' => true,

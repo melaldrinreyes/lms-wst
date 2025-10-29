@@ -28,8 +28,11 @@ class CheckRole
             $roles = explode(',', $roles[0]);
         }
 
+        // Convert roles to integers for comparison
+        $roles = array_map('intval', $roles);
+
         // Check if user's role is in allowed roles
-        if (!in_array($user->role_id, $roles)) {
+        if (!in_array((int)$user->role_id, $roles, true)) {
             \Log::warning('Unauthorized access attempt', [
                 'user_id' => $user->id,
                 'user_role' => $user->role_id,

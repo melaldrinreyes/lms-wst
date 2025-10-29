@@ -74,8 +74,6 @@ export default function ChatbotPage() {
       patterns: ['help', 'support', 'assist', 'guide', 'how', 'what', 'explain'],
       response: '🆘 **I can help you with:**\n\n✓ Submitting assignments\n✓ Viewing grades\n✓ Contacting instructors\n✓ Course schedules\n✓ Account settings\n✓ Password resets\n✓ Technical issues\n✓ Navigation tips\n\n💡 Use the quick action buttons below for common questions!\n\nWhat would you like to know more about?'
     },
-    navigation: {
-    },
     thanks: {
       patterns: ['thank', 'thanks', 'appreciate', 'helpful', 'great', 'awesome', 'perfect'],
       responses: [
@@ -88,8 +86,6 @@ export default function ChatbotPage() {
     navigation: {
       patterns: ['where', 'find', 'locate', 'navigate', 'go to', 'access'],
       response: '🧭 **Navigation help:**\n\n**Main sections:**\n• Dashboard - Overview and quick access\n• Courses - All your enrolled courses\n• Assignments - Pending and completed tasks\n• Profile - Your account settings\n\n💡 Use the sidebar menu to navigate quickly!\n\nWhat are you trying to find?'
-    },
-    thanks: {
     },
     technical: {
       patterns: ['error', 'bug', 'problem', 'issue', 'not working', 'broken', 'crash'],
