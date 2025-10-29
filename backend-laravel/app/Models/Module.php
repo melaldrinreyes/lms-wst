@@ -11,17 +11,35 @@ class Module extends Model
 
     protected $fillable = [
         'course_id',
-        'title',
+        'module_title',
         'description',
         'content',
-        'order',
+        'module_order',
         'status',
         'file_path',
     ];
 
     protected $casts = [
-        'order' => 'integer',
+        'module_order' => 'integer',
     ];
+
+    protected $appends = ['title', 'order'];
+
+    /**
+     * Accessor for title (maps module_title)
+     */
+    public function getTitleAttribute()
+    {
+        return $this->module_title;
+    }
+
+    /**
+     * Accessor for order (maps module_order)
+     */
+    public function getOrderAttribute()
+    {
+        return $this->module_order;
+    }
 
     /**
      * Get the course for the module

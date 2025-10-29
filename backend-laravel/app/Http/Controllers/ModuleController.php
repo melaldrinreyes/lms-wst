@@ -13,7 +13,7 @@ class ModuleController extends Controller
     public function index($courseId)
     {
         $modules = Module::where('course_id', $courseId)
-            ->orderBy('order')
+            ->orderBy('module_order')
             ->get();
 
         return response()->json([
@@ -36,7 +36,17 @@ class ModuleController extends Controller
             'status' => 'required|in:published,draft',
         ]);
 
-        $module = Module::create($validated);
+        // Map frontend field names to database column names
+        $moduleData = [
+            'course_id' => $validated['course_id'],
+            'module_title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'content' => $validated['content'] ?? null,
+            'module_order' => $validated['order'],
+            'status' => $validated['status'],
+        ];
+
+        $module = Module::create($moduleData);
 
         return response()->json([
             'success' => true,
@@ -60,7 +70,16 @@ class ModuleController extends Controller
             'status' => 'required|in:published,draft',
         ]);
 
-        $module->update($validated);
+        // Map frontend field names to database column names
+        $moduleData = [
+            'module_title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'content' => $validated['content'] ?? null,
+            'module_order' => $validated['order'],
+            'status' => $validated['status'],
+        ];
+
+        $module->update($moduleData);
 
         return response()->json([
             'success' => true,
