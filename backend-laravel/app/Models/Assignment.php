@@ -17,24 +17,20 @@ class Assignment extends Model
         'max_points',
         'file_path',
         'status',
+        'updated_by_faculty_at',
     ];
 
     protected $casts = [
         'due_date' => 'datetime',
         'max_points' => 'integer',
+        'updated_by_faculty_at' => 'datetime',
     ];
 
-    /**
-     * Get the course for the assignment
-     */
     public function course()
     {
         return $this->belongsTo(Course::class);
     }
 
-    /**
-     * Get the submissions for the assignment
-     */
     public function submissions()
     {
         return $this->hasMany(Submission::class);

@@ -5,197 +5,193 @@ namespace App\Http\Controllers;
 use App\Models\Submission;
 use App\Models\Assignment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SubmissionController extends Controller
 {
     /**
-     * Get all submissions for faculty's assignments
+     * Submit an assignment (Student only)
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'assignment_id' => 'required|exists:assignments,id',
+            'submission_text' => 'nullable|string',
+            'file' => 'nullable|file|max:512000', // 500MB
+        ]);
+
+        $assignment = Assignment::findOrFail($validated['assignment_id']);
+        $user = $request->user();
+        
+        // Check if student already submitted
+        $existingSubmission = Submission::where('assignment_id', $assignment->id)
+            ->where('student_id', $user->id)
+            ->first();
+        
+        // Check if can resubmit
+        if ($existingSubmission) {
+            if (!$assignment->updated_by_faculty_at || $assignment->updated_by_faculty_at <= $existingSubmission->submitted_at) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already submitted this assignment',
+                ], 422);
+            }
+            
+            // Delete old submission file if exists
+            if ($existingSubmission->file_path && Storage::disk('public')->exists($existingSubmission->file_path)) {
+                Storage::disk('public')->delete($existingSubmission->file_path);
+            }
+        }
+
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = time() . '_' . $user->id . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('submissions', $filename, 'public');
+        }
+
+        $data = [
+            'assignment_id' => $assignment->id,
+            'student_id' => $user->id,
+            'submission_text' => $validated['submission_text'] ?? null,
+            'file_path' => $filePath,
+            'submitted_at' => now(),
+            'status' => 'submitted',
+            'grade' => null, // Reset grade on resubmission
+            'feedback' => null, // Reset feedback on resubmission
+            'graded_at' => null, // Reset graded_at on resubmission
+        ];
+
+        if ($existingSubmission) {
+            $existingSubmission->update($data);
+            $submission = $existingSubmission;
+        } else {
+            $submission = Submission::create($data);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Assignment submitted successfully',
+            'submission' => $submission,
+        ], 201);
+    }
+
+    /**
+     * Get all submissions for an assignment (Faculty only)
      */
     public function index(Request $request)
     {
-        try {
-            $user = $request->user();
-            
-            $query = Submission::with(['user', 'assignment.course']);
-            
-            // If faculty, filter by their courses
-            if ($user->role_id == 2) {
-                $query->whereHas('assignment', function ($q) use ($user) {
-                    $q->whereHas('course', function ($q2) use ($user) {
-                        $q2->where('faculty_id', $user->id);
-                    });
-                });
-            }
+        $assignmentId = $request->query('assignment_id');
+        
+        $query = Submission::with(['user', 'assignment']);
+        
+        if ($assignmentId) {
+            $query->where('assignment_id', $assignmentId);
+        }
+        
+        $submissions = $query->orderBy('submitted_at', 'desc')->get();
 
-            // Filter by status if provided
-            if ($request->has('status')) {
-                if ($request->status === 'submitted') {
-                    // Submitted but not graded
-                    $query->whereNull('grade');
-                } elseif ($request->status === 'graded') {
-                    // Graded submissions
-                    $query->whereNotNull('grade');
+        return response()->json([
+            'success' => true,
+            'submissions' => $submissions->map(function ($submission) {
+                // Determine status based on grading
+                $status = $submission->status ?? 'submitted';
+                if ($submission->grade !== null && $submission->graded_at) {
+                    $status = 'graded';
                 }
-                // For 'all' or other values, don't filter
-            }
-
-            // Filter by course if provided
-            if ($request->has('course_id')) {
-                $query->whereHas('assignment', function ($q) use ($request) {
-                    $q->where('course_id', $request->course_id);
-                });
-            }
-
-            $submissions = $query->orderBy('submitted_at', 'desc')->get();
-
-            return response()->json([
-                'success' => true,
-                'submissions' => $submissions->map(function ($submission) {
-                    $status = $submission->grade !== null ? 'graded' : 'submitted';
-                    return [
-                        'id' => $submission->id,
-                        'assignment_id' => $submission->assignment_id,
-                        'assignment_title' => $submission->assignment->title,
-                        'course_name' => $submission->assignment->course->course_name,
-                        'student_id' => $submission->user->id,
-                        'student_name' => $submission->user->name,
-                        'student_email' => $submission->user->email,
-                        'student_image' => $submission->user->profile_image,
-                        'file_path' => $submission->file_path,
-                        'submission_text' => $submission->submission_text,
-                        'submitted_at' => $submission->submitted_at,
-                        'grade' => $submission->grade,
-                        'feedback' => $submission->feedback,
-                        'status' => $status,
-                        'graded_at' => $submission->graded_at,
-                    ];
-                }),
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error in submissions index: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error fetching submissions: ' . $e->getMessage(),
-                'submissions' => [],
-            ], 500);
-        }
-    }
-
-    /**
-     * Get pending submissions count
-     */
-    public function pendingCount(Request $request)
-    {
-        try {
-            $user = $request->user();
-            
-            // Pending means submitted but not graded (grade is null)
-            $query = Submission::whereNull('grade');
-            
-            // If faculty, filter by their courses
-            if ($user->role_id == 2) {
-                $query->whereHas('assignment', function ($q) use ($user) {
-                    $q->whereHas('course', function ($q2) use ($user) {
-                        $q2->where('faculty_id', $user->id);
-                    });
-                });
-            }
-            
-            $count = $query->count();
-
-            return response()->json([
-                'success' => true,
-                'pending_count' => $count,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error in pendingCount: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error fetching pending submissions: ' . $e->getMessage(),
-                'pending_count' => 0,
-            ], 500);
-        }
-    }
-
-    /**
-     * Grade a submission
-     */
-    public function grade(Request $request, $id)
-    {
-        try {
-            $submission = Submission::findOrFail($id);
-
-            $validated = $request->validate([
-                'grade' => 'required|numeric|min:0|max:100',
-                'feedback' => 'nullable|string',
-            ]);
-
-            $submission->update([
-                'grade' => $validated['grade'],
-                'feedback' => $validated['feedback'] ?? null,
-                'graded_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Submission graded successfully',
-                'submission' => $submission,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error grading submission: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error grading submission: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Get submission details
-     */
-    public function show($id)
-    {
-        try {
-            $submission = Submission::with(['user', 'assignment.course'])->findOrFail($id);
-            $status = $submission->grade !== null ? 'graded' : 'submitted';
-
-            return response()->json([
-                'success' => true,
-                'submission' => [
+                
+                return [
                     'id' => $submission->id,
-                    'assignment' => [
-                        'id' => $submission->assignment->id,
-                        'title' => $submission->assignment->title,
-                        'description' => $submission->assignment->description,
-                        'points' => $submission->assignment->points,
-                        'due_date' => $submission->assignment->due_date,
-                    ],
-                    'course' => [
-                        'id' => $submission->assignment->course->id,
-                        'name' => $submission->assignment->course->course_name,
-                        'code' => $submission->assignment->course->course_code,
-                    ],
-                    'student' => [
-                        'id' => $submission->user->id,
-                        'name' => $submission->user->name,
-                        'email' => $submission->user->email,
-                        'student_id' => $submission->user->student_id,
-                        'profile_image' => $submission->user->profile_image,
-                    ],
-                    'file_path' => $submission->file_path,
+                    'assignment_id' => $submission->assignment_id,
+                    'assignment_title' => $submission->assignment->title ?? null,
+                    'student_id' => $submission->student_id,
+                    'student_name' => $submission->user->name ?? null,
                     'submission_text' => $submission->submission_text,
+                    'file_path' => $submission->file_path,
                     'submitted_at' => $submission->submitted_at,
                     'grade' => $submission->grade,
                     'feedback' => $submission->feedback,
-                    'status' => $status,
                     'graded_at' => $submission->graded_at,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error fetching submission: ' . $e->getMessage(),
-            ], 500);
+                    'status' => $status,
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Get a specific submission
+     */
+    public function show($id)
+    {
+        $submission = Submission::with(['user', 'assignment'])->findOrFail($id);
+
+        // Determine status
+        $status = $submission->status ?? 'submitted';
+        if ($submission->grade !== null && $submission->graded_at) {
+            $status = 'graded';
         }
+
+        return response()->json([
+            'success' => true,
+            'submission' => [
+                'id' => $submission->id,
+                'assignment_id' => $submission->assignment_id,
+                'assignment_title' => $submission->assignment->title ?? null,
+                'student_id' => $submission->student_id,
+                'student_name' => $submission->user->name ?? null,
+                'submission_text' => $submission->submission_text,
+                'file_path' => $submission->file_path,
+                'submitted_at' => $submission->submitted_at,
+                'grade' => $submission->grade,
+                'feedback' => $submission->feedback,
+                'graded_at' => $submission->graded_at,
+                'status' => $status,
+            ],
+        ]);
+    }
+
+    /**
+     * Download submission file
+     */
+    public function download($id)
+    {
+        $submission = Submission::findOrFail($id);
+        
+        if (!$submission->file_path) {
+            return response()->json(['error' => 'No file attached'], 404);
+        }
+
+        if (!Storage::disk('public')->exists($submission->file_path)) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+
+        $path = storage_path('app/public/' . $submission->file_path);
+        return response()->download($path);
+    }
+
+    /**
+     * Grade a submission (Faculty only)
+     */
+    public function grade(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'grade' => 'required|numeric|min:0',
+            'feedback' => 'nullable|string',
+        ]);
+
+        $submission = Submission::findOrFail($id);
+        
+        $submission->update([
+            'grade' => $validated['grade'],
+            'feedback' => $validated['feedback'] ?? null,
+            'graded_at' => now(),
+            'status' => 'graded',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Submission graded successfully',
+            'submission' => $submission,
+        ]);
     }
 }

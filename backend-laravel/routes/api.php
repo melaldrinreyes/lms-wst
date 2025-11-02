@@ -5,12 +5,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ModuleController;
-use App\Http\Controllers\AssignmentController;
-use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EnrollmentRequestController;
+use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\SubmissionController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -81,22 +81,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/modules/{id}', [ModuleController::class, 'destroy']);
     });
     
-    // Assignment routes (Faculty and Admin can manage, all can view)
+    // Assignment routes
     Route::get('/courses/{courseId}/assignments', [AssignmentController::class, 'index']);
     Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
+    Route::get('/assignments/{id}/download', [AssignmentController::class, 'download']);
     
+    // Assignment management (Faculty and Admin only)
     Route::middleware(['check.role:2,1'])->group(function () {
         Route::post('/assignments', [AssignmentController::class, 'store']);
         Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
+        Route::post('/assignments/{id}', [AssignmentController::class, 'update']); // For FormData with _method=PUT
         Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy']);
     });
     
-    // Submission routes (Faculty and Admin can grade)
-    Route::get('/submissions', [SubmissionController::class, 'index']);
+    // Submission routes
+    Route::get('/submissions', [SubmissionController::class, 'index']); // Faculty view all submissions
     Route::get('/submissions/{id}', [SubmissionController::class, 'show']);
+    Route::get('/submissions/{id}/download', [SubmissionController::class, 'download']);
     
+    // Student submissions (Students only)
+    Route::middleware(['check.role:3'])->group(function () {
+        Route::post('/submissions', [SubmissionController::class, 'store']);
+    });
+    
+    // Grade submissions (Faculty and Admin only)
     Route::middleware(['check.role:2,1'])->group(function () {
-        Route::get('/submissions/pending/count', [SubmissionController::class, 'pendingCount']);
         Route::post('/submissions/{id}/grade', [SubmissionController::class, 'grade']);
     });
     
@@ -110,7 +119,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Student-specific routes (role_id = 3)
     Route::middleware(['check.role:3'])->group(function () {
         Route::get('/student/classes', [StudentController::class, 'myClasses']);
-        Route::get('/student/assignments', [StudentController::class, 'myAssignments']);
+        Route::get('/student/assignments', [AssignmentController::class, 'studentAssignments']);
     });
     
     // Faculty routes (role_id = 2)

@@ -40,6 +40,7 @@ export default function FacultySubmissions() {
       if (filterCourse !== 'all') params.course_id = filterCourse;
       
       const submissionsData = await submissionAPI.getAll(params);
+      console.log('Fetched submissions:', submissionsData);
       setSubmissions(submissionsData.submissions || []);
       
       const coursesData = await courseAPI.getAll();
@@ -50,6 +51,22 @@ export default function FacultySubmissions() {
       setToast({ message: 'Failed to load submissions', type: 'error' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadSubmission = async (submissionId, studentName) => {
+    try {
+      await submissionAPI.download(submissionId);
+      setToast({ 
+        message: `Downloaded ${studentName}'s submission successfully!`, 
+        type: 'success' 
+      });
+    } catch (error) {
+      console.error('Error downloading submission:', error);
+      setToast({ 
+        message: 'Failed to download submission file.', 
+        type: 'error' 
+      });
     }
   };
 
@@ -105,9 +122,9 @@ export default function FacultySubmissions() {
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Grade Submissions</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Student Submissions</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Review and grade student assignments
+          Review and grade student work
         </p>
       </div>
 
@@ -188,7 +205,23 @@ export default function FacultySubmissions() {
 
       {/* Submissions Table */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+              <p className="mt-4 text-gray-400">Loading submissions...</p>
+            </div>
+          </div>
+        ) : filteredSubmissions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <FileText size={48} className="text-gray-400 mb-4" />
+            <p className="text-gray-600 dark:text-gray-400 text-lg">No submissions found</p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+              {searchTerm ? 'Try adjusting your search or filters' : 'Students will appear here once they submit assignments'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
               <tr>
@@ -199,16 +232,13 @@ export default function FacultySubmissions() {
                   Assignment
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Course
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                   Submitted
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Grade
+                  Status
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Status
+                  Grade
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                   Actions
@@ -227,9 +257,12 @@ export default function FacultySubmissions() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <img
-                        src={submission.student_image}
+                        src={submission.student_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(submission.student_name || 'Student')}&background=f97316&color=fff`}
                         alt={submission.student_name}
-                        className="w-10 h-10 rounded-full"
+                        className="w-10 h-10 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(submission.student_name || 'Student')}&background=f97316&color=fff`;
+                        }}
                       />
                       <div>
                         <div className="font-medium text-gray-900 dark:text-white">
@@ -244,11 +277,13 @@ export default function FacultySubmissions() {
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                     {submission.assignment_title}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                    {submission.course_name}
-                  </td>
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(submission.submitted_at).toLocaleDateString()}
+                    {submission.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(submission.status)}`}>
+                      {submission.status}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     {submission.grade !== null ? (
@@ -260,11 +295,6 @@ export default function FacultySubmissions() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(submission.status)}`}>
-                      {submission.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openGradingModal(submission)}
@@ -274,14 +304,13 @@ export default function FacultySubmissions() {
                         <Check className="w-4 h-4" />
                       </button>
                       {submission.file_path && (
-                        <a
-                          href={submission.file_path}
-                          download
+                        <button
+                          onClick={() => handleDownloadSubmission(submission.id, submission.student_name)}
                           className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                          title="Download"
+                          title="Download Submission"
                         >
                           <Download className="w-4 h-4" />
-                        </a>
+                        </button>
                       )}
                     </div>
                   </td>
@@ -290,6 +319,7 @@ export default function FacultySubmissions() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       {/* Grading Modal */}
@@ -314,6 +344,35 @@ export default function FacultySubmissions() {
                   {selectedSubmission.assignment_title}
                 </p>
               </div>
+
+              {selectedSubmission.submission_text && (
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Student's Response</p>
+                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                    {selectedSubmission.submission_text}
+                  </p>
+                </div>
+              )}
+
+              {selectedSubmission.file_path && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      <p className="text-sm text-gray-900 dark:text-white font-medium">
+                        Attachment included
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDownloadSubmission(selectedSubmission.id, selectedSubmission.student_name)}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

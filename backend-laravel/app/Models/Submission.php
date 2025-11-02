@@ -18,6 +18,7 @@ class Submission extends Model
         'grade',
         'feedback',
         'graded_at',
+        'status',
     ];
 
     protected $casts = [
@@ -26,38 +27,13 @@ class Submission extends Model
         'grade' => 'decimal:2',
     ];
 
-    /**
-     * Get the assignment for the submission
-     */
     public function assignment()
     {
         return $this->belongsTo(Assignment::class);
     }
 
-    /**
-     * Get the user (student) for the submission
-     */
     public function user()
     {
         return $this->belongsTo(User::class, 'student_id');
-    }
-
-    /**
-     * Get the student for the submission (alias)
-     */
-    public function student()
-    {
-        return $this->belongsTo(User::class, 'student_id');
-    }
-
-    /**
-     * Check if submission is graded
-     */
-    public function getStatusAttribute()
-    {
-        if ($this->grade !== null) {
-            return 'graded';
-        }
-        return 'submitted';
     }
 }

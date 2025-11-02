@@ -217,18 +217,63 @@ export const assignmentAPI = {
   },
 
   create: async (data) => {
-    const response = await api.post('/assignments', data);
+    const response = await api.post('/assignments', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
   update: async (id, data) => {
-    const response = await api.put(`/assignments/${id}`, data);
+    // Add _method field for Laravel to recognize PUT request with FormData
+    data.append('_method', 'PUT');
+    
+    const response = await api.post(`/assignments/${id}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
   delete: async (id) => {
     const response = await api.delete(`/assignments/${id}`);
     return response.data;
+  },
+
+  download: async (id) => {
+    try {
+      const response = await api.get(`/assignments/${id}/download`, {
+        responseType: 'blob',
+      });
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'assignment-download';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Download error:', error);
+      throw error;
+    }
   },
 };
 
@@ -241,6 +286,15 @@ export const submissionAPI = {
 
   getOne: async (id) => {
     const response = await api.get(`/submissions/${id}`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/submissions', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -259,6 +313,40 @@ export const submissionAPI = {
   grade: async (id, data) => {
     const response = await api.post(`/submissions/${id}/grade`, data);
     return response.data;
+  },
+
+  download: async (id) => {
+    try {
+      const response = await api.get(`/submissions/${id}/download`, {
+        responseType: 'blob',
+      });
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'submission-download';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Download error:', error);
+      throw error;
+    }
   },
 };
 
@@ -288,6 +376,28 @@ export const studentAPI = {
 
   getMyAssignments: async () => {
     const response = await api.get('/student/assignments');
+    return response.data;
+  },
+
+  downloadAssignment: async (assignmentId) => {
+    const response = await api.get(`/assignments/${assignmentId}/download`, {
+      responseType: 'blob',
+    });
+    return response;
+  },
+
+  submitAssignment: async (data) => {
+    const formData = new FormData();
+    formData.append('assignment_id', data.assignment_id);
+    if (data.submission_text) {
+      formData.append('submission_text', data.submission_text);
+    }
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+    const response = await api.post('/submissions', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 

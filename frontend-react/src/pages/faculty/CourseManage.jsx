@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
-import { courseAPI, moduleAPI, assignmentAPI } from '../../services/api';
+import { courseAPI, moduleAPI, assignmentAPI, submissionAPI } from '../../services/api';
 
 export default function CourseManage() {
   const { id } = useParams();
@@ -21,9 +21,15 @@ export default function CourseManage() {
   const [submissions, setSubmissions] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newSubmissionsCount, setNewSubmissionsCount] = useState(0);
+  const [lastCheckedTime, setLastCheckedTime] = useState(new Date());
 
   useEffect(() => {
-    fetchCourseData();
+    if (id) {
+      fetchCourseData();
+      fetchAssignments();
+      fetchAllSubmissions();
+    }
   }, [id]);
 
   const fetchCourseData = async () => {
@@ -33,8 +39,6 @@ export default function CourseManage() {
       if (response.success) {
         setCourse(response.course);
         setModules(response.course.modules || []);
-        setAssignments(response.course.assignments || []);
-        setSubmissions(response.submissions || []);
         setStudents(response.course.enrolled_students || []);
       }
     } catch (error) {
@@ -44,6 +48,77 @@ export default function CourseManage() {
       setLoading(false);
     }
   };
+
+  const fetchAssignments = async () => {
+    try {
+      console.log('Fetching assignments for course:', id);
+      const response = await assignmentAPI.getByCourse(id);
+      console.log('Assignments API response:', response);
+      if (response.success) {
+        setAssignments(response.assignments || []);
+        console.log('✅ Loaded', response.assignments?.length || 0, 'assignments');
+      }
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      console.error('Error details:', error.response?.data);
+    }
+  };
+
+  const fetchAllSubmissions = async () => {
+    try {
+      console.log('Fetching submissions for course:', id);
+      // Fetch ALL submissions for this specific course
+      const response = await submissionAPI.getAll({ course_id: id });
+      console.log('Submissions API response:', response);
+      console.log('Submissions data:', response.submissions);
+      
+      const newSubmissions = response.submissions || [];
+      
+      // Check for new submissions since last check
+      if (lastCheckedTime && newSubmissions.length > 0) {
+        const recentSubmissions = newSubmissions.filter(sub => {
+          const submittedDate = new Date(sub.submitted_at);
+          return submittedDate > new Date(lastCheckedTime);
+        });
+        
+        if (recentSubmissions.length > 0 && activeTab !== 'submissions') {
+          setNewSubmissionsCount(recentSubmissions.length);
+          console.log(`🔔 ${recentSubmissions.length} new submissions detected!`);
+        }
+      }
+      
+      setSubmissions(newSubmissions);
+      
+      if (newSubmissions.length > 0) {
+        console.log('✅ Found', newSubmissions.length, 'submissions');
+      } else {
+        console.log('⚠️ No submissions found for this course');
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      console.error('Error details:', error.response?.data);
+      // Don't show error toast for submissions, just log it
+    }
+  };
+
+  // Auto-refresh submissions every 30 seconds
+  useEffect(() => {
+    if (!id) return;
+    
+    const interval = setInterval(() => {
+      fetchAllSubmissions();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [id]); // Only depend on id
+
+  // Clear notification when user views submissions tab
+  useEffect(() => {
+    if (activeTab === 'submissions') {
+      setNewSubmissionsCount(0);
+      setLastCheckedTime(new Date());
+    }
+  }, [activeTab]);
 
   const handleAddModule = () => {
     setFormData({
@@ -116,14 +191,92 @@ export default function CourseManage() {
     setIsModalOpen('assignment');
   };
 
+  const handleEditAssignment = (assignment) => {
+    setFormData({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description || '',
+      due_date: assignment.due_date ? new Date(assignment.due_date).toISOString().split('T')[0] : '',
+      max_points: assignment.max_points || assignment.points || 100,
+      status: assignment.status,
+      files: [],
+      existingFile: assignment.file_path || null
+    });
+    setIsModalOpen('assignment');
+  };
+
+  const handleDeleteAssignment = async (assignmentId, assignmentTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${assignmentTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await assignmentAPI.delete(assignmentId);
+      setToast({ message: 'Assignment deleted successfully!', type: 'success' });
+      await fetchAssignments(); // Refresh to show updated list
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      setToast({ 
+        message: error.response?.data?.message || 'Failed to delete assignment. Please try again.', 
+        type: 'error' 
+      });
+    }
+  };
+
+  const handleDownloadSubmission = async (submissionId, studentName) => {
+    try {
+      await submissionAPI.download(submissionId);
+      setToast({ 
+        message: `Downloaded ${studentName}'s submission successfully!`, 
+        type: 'success' 
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      setToast({ 
+        message: 'Failed to download submission. Please try again.', 
+        type: 'error' 
+      });
+    }
+  };
+
   const handleGradeSubmission = (submission) => {
     setFormData({
       id: submission.id,
       student: submission.student,
+      submission_text: submission.submission_text || '',
+      file_path: submission.file_path || null,
       grade: submission.grade || '',
       feedback: submission.feedback || ''
     });
     setIsModalOpen('grade');
+  };
+
+  const handleRejectSubmission = async (submissionId, studentName) => {
+    if (!window.confirm(`Are you sure you want to reject ${studentName}'s submission? This action can be undone by grading it later.`)) {
+      return;
+    }
+
+    try {
+      // You can implement a reject endpoint or use the grade endpoint with 0 points
+      await submissionAPI.grade(submissionId, {
+        grade: 0,
+        feedback: 'Submission rejected. Please resubmit your work.'
+      });
+      
+      setToast({ 
+        message: `${studentName}'s submission has been rejected`, 
+        type: 'success' 
+      });
+      
+      // Refresh submissions
+      await fetchAllSubmissions();
+    } catch (error) {
+      console.error('Reject error:', error);
+      setToast({ 
+        message: 'Failed to reject submission. Please try again.', 
+        type: 'error' 
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -180,31 +333,84 @@ export default function CourseManage() {
         await fetchCourseData();
         
       } else if (isModalOpen === 'assignment') {
-        const assignmentData = {
-          title: formData.title,
-          description: formData.description || '',
-          course_id: id,
-          due_date: formData.due_date,
-          max_points: formData.max_points || 100,
-          status: formData.status || 'draft'
-        };
+        // Validate required fields
+        if (!formData.title || formData.title.trim() === '') {
+          setToast({ message: 'Assignment title is required', type: 'error' });
+          return;
+        }
+
+        if (!formData.due_date) {
+          setToast({ message: 'Due date is required', type: 'error' });
+          return;
+        }
+
+        // Create FormData for file upload
+        const submitData = new FormData();
+        submitData.append('title', formData.title.trim());
+        submitData.append('description', formData.description || '');
+        submitData.append('due_date', formData.due_date);
+        submitData.append('max_points', parseInt(formData.max_points) || 100);
+        submitData.append('status', formData.status || 'draft');
+        
+        // Only add course_id for new assignments
+        if (!formData.id) {
+          submitData.append('course_id', id);
+        }
+        
+        // Append file if any
+        if (formData.files && formData.files.length > 0) {
+          const file = formData.files[0];
+          console.log('Appending file:', file.name, file.size, file.type);
+          
+          // Check file size (500MB = 524288000 bytes)
+          if (file.size > 524288000) {
+            setToast({ message: 'File size exceeds 500MB limit. Please choose a smaller file.', type: 'error' });
+            return;
+          }
+          
+          submitData.append('file', file);
+        } else {
+          console.log('No files to upload for assignment');
+        }
+
+        // Debug: Log FormData contents
+        console.log('Assignment FormData contents:');
+        for (let [key, value] of submitData.entries()) {
+          console.log(key, value);
+        }
 
         if (formData.id) {
           // Update existing assignment
-          await assignmentAPI.update(formData.id, assignmentData);
+          await assignmentAPI.update(formData.id, submitData);
           setToast({ message: 'Assignment updated successfully!', type: 'success' });
         } else {
           // Create new assignment
-          await assignmentAPI.create(assignmentData);
+          await assignmentAPI.create(submitData);
           setToast({ message: 'Assignment created successfully!', type: 'success' });
         }
         
         // Refresh assignments list
-        await fetchCourseData();
+        await fetchAssignments();
         
       } else if (isModalOpen === 'grade') {
         // Handle grading submission
-        setToast({ message: 'Grade saved successfully!', type: 'success' });
+        try {
+          await submissionAPI.grade(formData.id, {
+            grade: parseInt(formData.grade),
+            feedback: formData.feedback || ''
+          });
+          
+          setToast({ 
+            message: 'Grade submitted successfully!', 
+            type: 'success' 
+          });
+          
+          // Refresh submissions to show updated grade
+          await fetchAllSubmissions();
+        } catch (error) {
+          console.error('Grading error:', error);
+          throw error; // Let the outer catch handle it
+        }
       }
       
       setIsModalOpen(null);
@@ -223,6 +429,12 @@ export default function CourseManage() {
         if (data.errors) {
           const firstError = Object.values(data.errors)[0];
           errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+          
+          // Add helpful hints for common errors
+          if (errorMessage.includes('file')) {
+            errorMessage += '\n\n💡 Tip: Make sure Apache is restarted after changing PHP limits.';
+            errorMessage += '\nVisit: http://localhost/lms-app/backend-laravel/public/check-upload-limits.php';
+          }
         } 
         // Handle general message
         else if (data.message) {
@@ -231,7 +443,7 @@ export default function CourseManage() {
         
         // Add file size hint for upload errors
         if (errorMessage.includes('file') || errorMessage.includes('upload')) {
-          errorMessage += ' (Max file size: 2MB)';
+          errorMessage += '\n\nCurrent limit: 500MB. Check FIX_UPLOAD_ERROR.md for help.';
         }
       }
       
@@ -433,7 +645,7 @@ export default function CourseManage() {
           </button>
           <button
             onClick={() => setActiveTab('submissions')}
-            className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 relative ${
               activeTab === 'submissions'
                 ? 'border-orange-500 bg-orange-500/10 text-orange-400'
                 : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
@@ -441,6 +653,11 @@ export default function CourseManage() {
           >
             <Upload size={20} />
             <span>Submissions</span>
+            {newSubmissionsCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-bounce">
+                {newSubmissionsCount}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('students')}
@@ -607,13 +824,18 @@ export default function CourseManage() {
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <button className="p-2.5 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-transparent hover:border-blue-500/20 rounded-lg transition-all">
-                        <Eye size={18} />
-                      </button>
-                      <button className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleEditAssignment(assignment)}
+                        className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all"
+                        title="Edit assignment"
+                      >
                         <Edit size={18} />
                       </button>
-                      <button className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleDeleteAssignment(assignment.id, assignment.title)}
+                        className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all"
+                        title="Delete assignment"
+                      >
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -642,6 +864,31 @@ export default function CourseManage() {
       {/* Submissions Tab */}
       {activeTab === 'submissions' && (
         <div className="space-y-6">
+          {/* New Submissions Notification Banner */}
+          {newSubmissionsCount > 0 && (
+            <div className="bg-gradient-to-r from-green-900/30 to-green-800/20 border-l-4 border-green-500 rounded-lg p-4 flex items-center justify-between animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-500 rounded-full p-2">
+                  <Upload className="text-white" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">
+                    {newSubmissionsCount} New Submission{newSubmissionsCount > 1 ? 's' : ''}!
+                  </h3>
+                  <p className="text-green-300 text-sm">
+                    Student{newSubmissionsCount > 1 ? 's have' : ' has'} submitted {newSubmissionsCount > 1 ? 'assignments' : 'an assignment'} while you were away
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setNewSubmissionsCount(0)}
+                className="text-green-400 hover:text-green-300 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          )}
+
           <div>
             <h2 className="text-2xl font-bold text-white mb-1">Student Submissions</h2>
             <p className="text-gray-400 text-sm">Review and grade student work</p>
@@ -724,21 +971,33 @@ export default function CourseManage() {
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
                             <button 
-                              className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
-                              title="Download"
+                              onClick={() => handleDownloadSubmission(submission.id, submission.student)}
+                              disabled={!submission.file_path}
+                              className={`p-2 rounded-lg transition ${
+                                submission.file_path
+                                  ? 'text-blue-400 hover:bg-blue-900/30'
+                                  : 'text-gray-600 cursor-not-allowed opacity-50'
+                              }`}
+                              title={submission.file_path ? "Download submission file" : "No file attached"}
                             >
                               <Download size={16} />
                             </button>
                             <button 
                               onClick={() => handleGradeSubmission(submission)}
-                              className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
-                              title="Grade"
+                              className="p-2 text-green-400 hover:bg-green-900/30 rounded-lg transition"
+                              title={submission.status === 'graded' ? "Edit grade" : "Grade submission"}
                             >
-                              <Check size={16} />
+                              {submission.status === 'graded' ? <Edit size={16} /> : <Check size={16} />}
                             </button>
                             <button 
-                              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
-                              title="Reject"
+                              onClick={() => handleRejectSubmission(submission.id, submission.student)}
+                              disabled={submission.status === 'rejected'}
+                              className={`p-2 rounded-lg transition ${
+                                submission.status === 'rejected'
+                                  ? 'text-gray-600 cursor-not-allowed opacity-50'
+                                  : 'text-red-400 hover:bg-red-900/30'
+                              }`}
+                              title={submission.status === 'rejected' ? "Already rejected" : "Reject submission"}
                             >
                               <X size={16} />
                             </button>
@@ -780,31 +1039,31 @@ export default function CourseManage() {
             <div className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg overflow-hidden border border-gray-800">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-700/50">
+                  <thead className="bg-gray-800/50 border-b border-gray-700">
                     <tr>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
                         Student
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
                         Student ID
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
                         Email
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
                         Enrolled Date
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
                         Status
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y dark:divide-gray-700">
+                  <tbody className="divide-y divide-gray-800">
                     {students.map((student) => (
-                      <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <tr key={student.id} className="hover:bg-gray-800/50 transition">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -813,28 +1072,28 @@ export default function CourseManage() {
                               </span>
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                              <p className="text-sm font-medium text-white">
                                 {student.name}
                               </p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">
+                        <td className="py-4 px-6 text-sm text-gray-300">
                           {student.student_id || 'N/A'}
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">
+                        <td className="py-4 px-6 text-sm text-gray-300">
                           {student.email}
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">
+                        <td className="py-4 px-6 text-sm text-gray-400">
                           {student.enrolled_date ? new Date(student.enrolled_date).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="py-4 px-6">
                           <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
                             student.status === 'enrolled'
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                               : student.status === 'completed'
-                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                              : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400'
+                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                              : 'bg-gray-700 text-gray-300 border border-gray-600'
                           }`}>
                             {student.status === 'enrolled' && <CheckCircle size={12} />}
                             {student.status || 'enrolled'}
@@ -844,14 +1103,14 @@ export default function CourseManage() {
                           <div className="flex items-center gap-2">
                             <button 
                               onClick={() => handleUpdateStudentStatus(student)}
-                              className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
+                              className="p-2 text-orange-400 hover:bg-orange-900/30 rounded-lg transition"
                               title="Update Status"
                             >
                               <Edit size={16} />
                             </button>
                             <button 
                               onClick={() => handleDeleteStudent(student.id, student.name)}
-                              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                              className="p-2 text-red-400 hover:bg-red-900/30 rounded-lg transition"
                               title="Remove Student"
                             >
                               <Trash2 size={16} />
@@ -877,10 +1136,11 @@ export default function CourseManage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="module-title" className="block text-sm font-semibold text-gray-200 mb-2">
               Module Title <span className="text-red-500">*</span>
             </label>
             <input
+              id="module-title"
               type="text"
               value={formData.title || ''}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
@@ -892,10 +1152,11 @@ export default function CourseManage() {
 
           {/* Description Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="module-description" className="block text-sm font-semibold text-gray-200 mb-2">
               Short Description
             </label>
             <input
+              id="module-description"
               type="text"
               value={formData.description || ''}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -909,10 +1170,11 @@ export default function CourseManage() {
 
           {/* Content Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="module-content" className="block text-sm font-semibold text-gray-200 mb-2">
               Module Content
             </label>
             <textarea
+              id="module-content"
               rows={8}
               value={formData.content || ''}
               onChange={(e) => setFormData({...formData, content: e.target.value})}
@@ -926,9 +1188,9 @@ export default function CourseManage() {
 
           {/* File Upload Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-200 mb-2">
+            <div className="block text-sm font-semibold text-gray-200 mb-2">
               📎 Attachments (Videos, PDFs, Documents, etc.)
-            </label>
+            </div>
             <div className="space-y-3">
               {/* File Upload Input */}
               <div className="flex items-center gap-3">
@@ -939,7 +1201,7 @@ export default function CourseManage() {
                       <span className="text-orange-400 font-semibold">Click to upload</span> or drag and drop
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Videos (MP4, MOV, AVI), PDFs, Documents, Images (up to 100MB each)
+                      Videos (MP4, MOV, AVI), PDFs, Documents, Images (up to 500MB each)
                     </p>
                   </div>
                   <input
@@ -1011,6 +1273,27 @@ export default function CourseManage() {
             </p>
           </div>
 
+          {/* Warning Message - No File Uploaded */}
+          {!formData.files?.length && !formData.id && (
+            <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-yellow-300 mb-1">
+                    ⚠️ No file attached
+                  </p>
+                  <p className="text-xs text-yellow-400/80">
+                    Consider uploading learning materials or adding content/links in the module content field to provide students with resources.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4 border-t border-gray-700">
             <button 
@@ -1039,10 +1322,11 @@ export default function CourseManage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="assignment-title" className="block text-sm font-semibold text-gray-200 mb-2">
               Assignment Title <span className="text-red-500">*</span>
             </label>
             <input
+              id="assignment-title"
               type="text"
               value={formData.title || ''}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
@@ -1054,10 +1338,11 @@ export default function CourseManage() {
 
           {/* Description Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="assignment-description" className="block text-sm font-semibold text-gray-200 mb-2">
               Instructions & Description
             </label>
             <textarea
+              id="assignment-description"
               rows={5}
               value={formData.description || ''}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -1072,10 +1357,11 @@ export default function CourseManage() {
           {/* Due Date and Points Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-200 mb-2">
+              <label htmlFor="assignment-due-date" className="block text-sm font-semibold text-gray-200 mb-2">
                 📅 Due Date <span className="text-red-500">*</span>
               </label>
               <input
+                id="assignment-due-date"
                 type="date"
                 value={formData.due_date || ''}
                 onChange={(e) => setFormData({...formData, due_date: e.target.value})}
@@ -1084,10 +1370,11 @@ export default function CourseManage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-200 mb-2">
+              <label htmlFor="assignment-max-points" className="block text-sm font-semibold text-gray-200 mb-2">
                 🎯 Maximum Points <span className="text-red-500">*</span>
               </label>
               <input
+                id="assignment-max-points"
                 type="number"
                 min="1"
                 max="1000"
@@ -1103,10 +1390,124 @@ export default function CourseManage() {
             </div>
           </div>
 
-          {/* Optional: File Attachments Info */}
+          {/* Status Dropdown */}
+          <div>
+            <label htmlFor="assignment-status" className="block text-sm font-semibold text-gray-200 mb-2">
+              📢 Status <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="assignment-status"
+              value={formData.status || 'draft'}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+              required
+            >
+              <option value="draft">Draft (Not visible to students)</option>
+              <option value="published">Published (Visible to students)</option>
+              <option value="closed">Closed (No new submissions)</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-400">
+              Set to "Published" to make this assignment visible to students
+            </p>
+          </div>
+
+          {/* File Upload Section */}
+          <div>
+            <div className="block text-sm font-semibold text-gray-200 mb-2">
+              📎 Attach File (Optional)
+            </div>
+            <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center bg-gray-800/50 hover:border-orange-500/50 transition">
+              <Upload className="mx-auto text-gray-500 mb-3" size={32} />
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+                id="assignment-file-upload"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.mkv,.zip,.rar,.xls,.xlsx"
+              />
+              <label 
+                htmlFor="assignment-file-upload"
+                className="cursor-pointer inline-block px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+              >
+                Choose File
+              </label>
+              <p className="mt-2 text-xs text-gray-400">
+                PDF, DOC, PPT, images, videos, ZIP, Excel (Max 500MB)
+              </p>
+            </div>
+
+            {/* Existing File Display (for edit mode) */}
+            {formData.existingFile && !formData.files?.length && (
+              <div className="mt-3 bg-gray-800 border border-gray-700 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <FileText size={18} className="text-blue-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-300 truncate">
+                      Current file: {formData.existingFile.split('/').pop()}
+                    </span>
+                  </div>
+                  <span className="ml-2 px-2 py-1 bg-green-900/30 border border-green-800 text-green-400 text-xs rounded">
+                    Uploaded
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Show selected files */}
+            {formData.files && formData.files.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <div className="text-xs text-gray-400 font-medium mb-1">Selected File:</div>
+                {formData.files.map((file, index) => (
+                  <div key={index} className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <FileText size={18} className="text-orange-400 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-white truncate">{file.name}</p>
+                          <p className="text-xs text-gray-400">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        className="flex-shrink-0 p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Warning Message - No File and No Link */}
+          {!formData.files?.length && !formData.existingFile && (
+            <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-yellow-300 mb-1">
+                    ⚠️ No file or instructions attached
+                  </p>
+                  <p className="text-xs text-yellow-400/80">
+                    Consider uploading assignment materials or adding detailed instructions in the description field above to help students understand the requirements.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Info Tip */}
           <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
             <p className="text-sm text-blue-300">
-              <span className="font-semibold">💡 Tip:</span> Students can upload their submissions after you create this assignment.
+              <span className="font-semibold">💡 Tip:</span> Students will be able to download attached files and upload their submissions after you create this assignment.
             </p>
           </div>
 
@@ -1133,41 +1534,122 @@ export default function CourseManage() {
       <Modal
         isOpen={isModalOpen === 'grade'}
         onClose={() => setIsModalOpen(null)}
-        title={`Grade Submission - ${formData.student}`}
+        title={formData.grade !== null && formData.grade !== '' ? `Edit Grade - ${formData.student}` : `Grade Submission - ${formData.student}`}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Student's Response */}
+          {formData.submission_text && (
+            <div>
+              <div className="block text-sm font-semibold text-gray-200 mb-2">
+                📝 Student's Response
+              </div>
+              <div className="w-full px-4 py-3 border border-gray-700 bg-gray-800/50 rounded-lg">
+                <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                  {formData.submission_text}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Submitted File */}
+          {formData.file_path && (
+            <div>
+              <div className="block text-sm font-semibold text-gray-200 mb-2">
+                📎 Submitted File
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-900/20 to-blue-800/20 border border-blue-700/50 rounded-lg hover:border-blue-600/50 transition">
+                <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText size={20} className="text-blue-400" />
+                </div>
+                <span className="text-sm text-gray-300 flex-1 font-medium truncate">
+                  {formData.file_path.split('/').pop()}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSubmission(formData.id, formData.student)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium shadow-sm hover:shadow-md"
+                >
+                  <Download size={16} />
+                  Download
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Grade Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Grade (out of 100) *
+            <label htmlFor="grade-input" className="block text-sm font-semibold text-gray-200 mb-2">
+              🎯 Grade (out of 100) <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={formData.grade || ''}
-              onChange={(e) => setFormData({...formData, grade: e.target.value})}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              required
-            />
+            <div className="relative">
+              <input
+                id="grade-input"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.grade || ''}
+                onChange={(e) => setFormData({...formData, grade: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-white text-lg font-semibold transition"
+                placeholder="Enter grade (0-100)"
+                required
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                / 100
+              </div>
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>90-100: Excellent</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>80-89: Good</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span>70-79: Fair</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span>&lt;70: Needs Improvement</span>
+              </div>
+            </div>
           </div>
+
+          {/* Feedback */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Feedback
+            <label htmlFor="grade-feedback" className="block text-sm font-semibold text-gray-200 mb-2">
+              💬 Feedback for Student
             </label>
             <textarea
-              rows={4}
+              id="grade-feedback"
+              rows={5}
               value={formData.feedback || ''}
               onChange={(e) => setFormData({...formData, feedback: e.target.value})}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-              placeholder="Provide feedback to the student..."
+              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-white resize-none transition"
+              placeholder="Provide constructive feedback to help the student improve..."
             />
+            <p className="mt-2 text-xs text-gray-400">
+              💡 Clear feedback helps students understand their strengths and areas for improvement
+            </p>
           </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={() => setIsModalOpen(null)} className="flex-1 px-4 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-700">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(null)} 
+              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+            >
               Cancel
             </button>
-            <button type="submit" className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-              Submit Grade
+            <button 
+              type="submit" 
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium shadow-lg shadow-green-900/30 flex items-center justify-center gap-2"
+            >
+              <Check size={18} />
+              {formData.grade !== null && formData.grade !== '' ? 'Update Grade' : 'Submit Grade'}
             </button>
           </div>
         </form>
@@ -1179,39 +1661,117 @@ export default function CourseManage() {
         onClose={() => setIsModalOpen(null)}
         title={`Update Status - ${formData.studentName}`}
       >
-        <form onSubmit={handleUpdateStudent} className="space-y-4">
+        <form onSubmit={handleUpdateStudent} className="space-y-6">
+          {/* Status Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Enrollment Status *
-            </label>
-            <select
-              value={formData.currentStatus || 'enrolled'}
-              onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              required
-            >
-              <option value="enrolled">Enrolled</option>
-              <option value="completed">Completed</option>
-              <option value="dropped">Dropped</option>
-            </select>
+            <div className="block text-sm font-semibold text-gray-200 mb-3">
+              📊 Enrollment Status <span className="text-red-500">*</span>
+            </div>
+            <div className="space-y-3">
+              {/* Enrolled Option */}
+              <label className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.currentStatus === 'enrolled'
+                  ? 'border-green-500 bg-green-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="status"
+                  value="enrolled"
+                  checked={formData.currentStatus === 'enrolled'}
+                  onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
+                  className="w-5 h-5 text-green-600 focus:ring-green-500"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={18} className="text-green-400" />
+                    <span className="font-semibold text-white">Enrolled</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Student has active access to the course</p>
+                </div>
+              </label>
+
+              {/* Completed Option */}
+              <label className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.currentStatus === 'completed'
+                  ? 'border-blue-500 bg-blue-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="status"
+                  value="completed"
+                  checked={formData.currentStatus === 'completed'}
+                  onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
+                  className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={18} className="text-blue-400" />
+                    <span className="font-semibold text-white">Completed</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Student has finished the course</p>
+                </div>
+              </label>
+
+              {/* Dropped Option */}
+              <label className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.currentStatus === 'dropped'
+                  ? 'border-red-500 bg-red-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="status"
+                  value="dropped"
+                  checked={formData.currentStatus === 'dropped'}
+                  onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
+                  className="w-5 h-5 text-red-600 focus:ring-red-500"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <XCircle size={18} className="text-red-400" />
+                    <span className="font-semibold text-white">Dropped</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Student will lose access to the course</p>
+                </div>
+              </label>
+            </div>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Note:</strong> Changing the status will affect the student's access to this course.
-            </p>
+
+          {/* Warning Notice */}
+          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-blue-300 mb-1">
+                  Important Note
+                </p>
+                <p className="text-xs text-blue-200">
+                  Changing the enrollment status will immediately affect the student's access to this course and all its materials.
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-3">
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-700">
             <button 
               type="button" 
               onClick={() => setIsModalOpen(null)} 
-              className="flex-1 px-4 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition font-medium shadow-lg shadow-orange-900/30 flex items-center justify-center gap-2"
             >
+              <Check size={18} />
               Update Status
             </button>
           </div>
