@@ -57,6 +57,37 @@ export default function CourseManage() {
     setIsModalOpen('module');
   };
 
+  const handleEditModule = (module) => {
+    setFormData({
+      id: module.id,
+      title: module.title,
+      description: module.description || '',
+      content: module.content || '',
+      files: [],
+      order: module.order,
+      status: module.status
+    });
+    setIsModalOpen('module');
+  };
+
+  const handleDeleteModule = async (moduleId, moduleTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${moduleTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await moduleAPI.delete(moduleId);
+      setToast({ message: 'Module deleted successfully!', type: 'success' });
+      await fetchCourseData(); // Refresh to show updated list
+    } catch (error) {
+      console.error('Error deleting module:', error);
+      setToast({ 
+        message: error.response?.data?.message || 'Failed to delete module. Please try again.', 
+        type: 'error' 
+      });
+    }
+  };
+
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
     setFormData({
@@ -100,20 +131,39 @@ export default function CourseManage() {
     
     try {
       if (isModalOpen === 'module') {
+        // Validate required fields
+        if (!formData.title || formData.title.trim() === '') {
+          setToast({ message: 'Module title is required', type: 'error' });
+          return;
+        }
+
         // Create FormData for file upload
         const submitData = new FormData();
-        submitData.append('title', formData.title);
+        submitData.append('title', formData.title.trim());
         submitData.append('description', formData.description || '');
         submitData.append('content', formData.content || '');
-        submitData.append('course_id', id);
+        
+        // Only add course_id for new modules
+        if (!formData.id) {
+          submitData.append('course_id', id);
+        }
+        
         submitData.append('order', formData.order || modules.length + 1);
         submitData.append('status', formData.status || 'draft');
         
-        // Append files if any
+        // Append file (single file, not array)
         if (formData.files && formData.files.length > 0) {
-          formData.files.forEach((file, index) => {
-            submitData.append(`files[${index}]`, file);
-          });
+          const file = formData.files[0]; // Get first file
+          console.log('Appending file:', file.name, file.size, file.type);
+          submitData.append('file', file); // Send as 'file' not 'files[0]'
+        } else {
+          console.log('No files to upload');
+        }
+
+        // Debug: Log FormData contents
+        console.log('FormData contents:');
+        for (let [key, value] of submitData.entries()) {
+          console.log(key, value);
         }
 
         if (formData.id) {
@@ -162,8 +212,31 @@ export default function CourseManage() {
       
     } catch (error) {
       console.error('Error saving:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Failed to save. Please try again.';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        
+        // Handle validation errors
+        if (data.errors) {
+          const firstError = Object.values(data.errors)[0];
+          errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+        } 
+        // Handle general message
+        else if (data.message) {
+          errorMessage = data.message;
+        }
+        
+        // Add file size hint for upload errors
+        if (errorMessage.includes('file') || errorMessage.includes('upload')) {
+          errorMessage += ' (Max file size: 2MB)';
+        }
+      }
+      
       setToast({ 
-        message: error.response?.data?.message || 'Failed to save. Please try again.', 
+        message: errorMessage, 
         type: 'error' 
       });
     }
@@ -446,13 +519,18 @@ export default function CourseManage() {
                       </p>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <button className="p-2.5 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 border border-transparent hover:border-blue-500/20 rounded-lg transition-all">
-                        <Eye size={18} />
-                      </button>
-                      <button className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleEditModule(module)}
+                        className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all"
+                        title="Edit module"
+                      >
                         <Edit size={18} />
                       </button>
-                      <button className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all">
+                      <button 
+                        onClick={() => handleDeleteModule(module.id, module.title)}
+                        className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all"
+                        title="Delete module"
+                      >
                         <Trash2 size={18} />
                       </button>
                     </div>

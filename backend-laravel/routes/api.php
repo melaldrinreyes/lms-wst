@@ -72,10 +72,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Module routes (Faculty and Admin can manage, all can view)
     Route::get('/courses/{courseId}/modules', [ModuleController::class, 'index']);
+    Route::get('/modules/{id}/download', [ModuleController::class, 'download']);
     
     Route::middleware(['check.role:2,1'])->group(function () {
         Route::post('/modules', [ModuleController::class, 'store']);
         Route::put('/modules/{id}', [ModuleController::class, 'update']);
+        Route::post('/modules/{id}', [ModuleController::class, 'update']); // For FormData with _method=PUT
         Route::delete('/modules/{id}', [ModuleController::class, 'destroy']);
     });
     

@@ -10,10 +10,11 @@ import {
   FileText,
   MessageSquare,
   Calendar,
-  LogOut
+  LogOut,
+  Download
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { courseAPI } from '../../services/api';
+import { courseAPI, moduleAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
@@ -30,6 +31,31 @@ export default function CourseDetail() {
   const [toast, setToast] = useState(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaving, setLeaving] = useState(false);
+
+  // Helper: format relative time (simple, no extra dependency)
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    const then = new Date(dateString).getTime();
+    const now = Date.now();
+    const diff = Math.floor((now - then) / 1000); // seconds
+
+    if (diff < 5) return 'just now';
+    if (diff < 60) return `${diff} sec${diff > 1 ? 's' : ''} ago`;
+    if (diff < 3600) {
+      const m = Math.floor(diff / 60);
+      return `${m} min${m > 1 ? 's' : ''} ago`;
+    }
+    if (diff < 86400) {
+      const h = Math.floor(diff / 3600);
+      return `${h} hour${h > 1 ? 's' : ''} ago`;
+    }
+    if (diff < 2592000) {
+      const d = Math.floor(diff / 86400);
+      return `${d} day${d > 1 ? 's' : ''} ago`;
+    }
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
 
   useEffect(() => {
     fetchCourseData();
@@ -78,6 +104,44 @@ export default function CourseDetail() {
       setLeaving(false);
       setShowLeaveModal(false);
     }
+  };
+
+  const handleDownloadModule = async (moduleId, moduleTitle) => {
+    // Use direct URL download instead of API call
+    const downloadUrl = `http://127.0.0.1:8000/api/modules/${moduleId}/download`;
+    const token = localStorage.getItem('token');
+    
+    // Create a temporary link and click it
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', '');
+    link.setAttribute('target', '_blank');
+    
+    // Add authorization header by opening in new window with fetch
+    fetch(downloadUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(response => response.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = moduleTitle || 'download';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      setToast({ message: 'Module downloaded successfully!', type: 'success' });
+    })
+    .catch(error => {
+      console.error('Error downloading module:', error);
+      setToast({ 
+        message: 'Failed to download module. Please try again.', 
+        type: 'error' 
+      });
+    });
   };
 
   if (loading) {
@@ -271,17 +335,60 @@ export default function CourseDetail() {
                             <BookOpen size={14} />
                             Order: {module.order}
                           </span>
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            module.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-gray-800 text-gray-400'
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            module.status === 'published' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-800 text-gray-400'
                           }`}>
-                            {module.status}
+                            {module.status === 'published' ? 'Posted' : 'Draft'}
                           </span>
+                          {/* Show updated indicator when module was modified after creation */}
+                          {module.updated_at && module.created_at && module.updated_at !== module.created_at && (
+                            <span className="flex items-center gap-1 text-yellow-400 text-xs" title={new Date(module.updated_at).toLocaleString()}>
+                              <Clock size={12} />
+                              Updated {formatRelativeTime(module.updated_at)}
+                            </span>
+                          )}
+                          {module.file_path && (
+                            <span className="flex items-center gap-1 text-blue-400">
+                              <FileText size={14} />
+                              File attached
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium">
-                      {module.status === 'published' ? 'View' : 'Coming Soon'}
-                    </button>
+                    <div className="flex gap-2">
+                      {module.file_path ? (
+                        module.status === 'published' ? (
+                          <div className="relative">
+                            <button 
+                              onClick={() => handleDownloadModule(module.id, module.title)}
+                              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium flex items-center gap-2"
+                            >
+                              <Download size={16} />
+                              Download
+                            </button>
+                            {/* Show "Updated" badge on download button if file was modified */}
+                            {module.updated_at && module.created_at && module.updated_at !== module.created_at && (
+                              <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-yellow-500 text-black text-[10px] font-bold rounded-full animate-pulse">
+                                NEW
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <button 
+                            disabled
+                            className="px-4 py-2 bg-gray-700 text-gray-400 rounded-lg transition text-sm font-medium flex items-center gap-2 cursor-not-allowed"
+                          >
+                            <Download size={16} />
+                            Not Available
+                          </button>
+                        )
+                      ) : (
+                        <div className="px-4 py-2 text-gray-500 text-sm italic">
+                          No file uploaded
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))

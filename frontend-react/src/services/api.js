@@ -144,18 +144,63 @@ export const moduleAPI = {
   },
 
   create: async (data) => {
-    const response = await api.post('/modules', data);
+    const response = await api.post('/modules', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
   update: async (id, data) => {
-    const response = await api.put(`/modules/${id}`, data);
+    // Add _method field for Laravel to recognize PUT request with FormData
+    data.append('_method', 'PUT');
+    
+    const response = await api.post(`/modules/${id}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
   delete: async (id) => {
     const response = await api.delete(`/modules/${id}`);
     return response.data;
+  },
+
+  download: async (id) => {
+    try {
+      const response = await api.get(`/modules/${id}/download`, {
+        responseType: 'blob',
+      });
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'module-download';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Download error:', error);
+      throw error;
+    }
   },
 };
 
