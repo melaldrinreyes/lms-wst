@@ -10,6 +10,7 @@ const api = axios.create({
     'Accept': 'application/json',
   },
   withCredentials: false, // Changed to false for token-based auth
+  timeout: 300000, // 5 minutes timeout for large file uploads
 });
 
 // Add token to requests if it exists
@@ -143,16 +144,18 @@ export const moduleAPI = {
     return response.data;
   },
 
-  create: async (data) => {
+  create: async (data, onUploadProgress) => {
     const response = await api.post('/modules', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 600000, // 10 minutes for large file uploads
+      onUploadProgress: onUploadProgress, // Progress tracking
     });
     return response.data;
   },
 
-  update: async (id, data) => {
+  update: async (id, data, onUploadProgress) => {
     // Add _method field for Laravel to recognize PUT request with FormData
     data.append('_method', 'PUT');
     
@@ -160,6 +163,8 @@ export const moduleAPI = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 600000, // 10 minutes for large file uploads
+      onUploadProgress: onUploadProgress, // Progress tracking
     });
     return response.data;
   },
@@ -289,11 +294,13 @@ export const submissionAPI = {
     return response.data;
   },
 
-  create: async (data) => {
+  create: async (data, onUploadProgress) => {
     const response = await api.post('/submissions', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 600000, // 10 minutes for large file uploads
+      onUploadProgress: onUploadProgress, // Progress tracking
     });
     return response.data;
   },

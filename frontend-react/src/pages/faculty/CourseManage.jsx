@@ -7,6 +7,7 @@ import {
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
 import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
+import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
 export default function CourseManage() {
   const { id } = useParams();
@@ -1041,9 +1042,24 @@ export default function CourseManage() {
                       <h3 className="text-lg font-bold text-white mb-2 group-hover:text-orange-400 transition">
                         {module.title}
                       </h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-400 mb-3">
                         {module.description}
                       </p>
+                      {module.file_path && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(module.file_path).bgColor} ${getFileTypeInfo(module.file_path).borderColor}`}>
+                            <span className="text-lg">{getFileTypeInfo(module.file_path).icon}</span>
+                            <div className="flex flex-col">
+                              <span className={`text-xs font-semibold ${getFileTypeInfo(module.file_path).color}`}>
+                                {getFileTypeInfo(module.file_path).category}
+                              </span>
+                              <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                                {getFileName(module.file_path)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2 ml-4">
                       <button 
@@ -1118,6 +1134,21 @@ export default function CourseManage() {
                       <p className="text-sm text-gray-400 mb-4">
                         {assignment.description}
                       </p>
+                      {assignment.file_path && (
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
+                            <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span>
+                            <div className="flex flex-col">
+                              <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}>
+                                {getFileTypeInfo(assignment.file_path).category}
+                              </span>
+                              <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                                {getFileName(assignment.file_path)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex flex-wrap gap-4 text-sm">
                         <div className="flex items-center gap-2 text-gray-300">
                           <Calendar size={16} className="text-orange-400" />

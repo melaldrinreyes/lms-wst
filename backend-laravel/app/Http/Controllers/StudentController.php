@@ -97,7 +97,7 @@ class StudentController extends Controller
                 $query->where('created_by', $user->id);
             }
 
-            $students = $query->get();
+            $students = $query->orderBy('created_at', 'desc')->get();
 
             return response()->json([
                 'success' => true,
@@ -199,6 +199,7 @@ class StudentController extends Controller
         try {
             $enrollments = Enrollment::where('course_id', $courseId)
                 ->with('user')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
@@ -246,6 +247,7 @@ class StudentController extends Controller
             $enrollments = Enrollment::where('student_id', $user->id)
                 ->where('status', 'enrolled') // Only show active enrollments
                 ->with(['course.faculty', 'course.modules', 'course.assignments'])
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
@@ -330,7 +332,7 @@ class StudentController extends Controller
             // Get all assignments from those courses with submission status
             $assignments = Assignment::whereIn('course_id', $enrolledCourseIds)
                 ->with(['course'])
-                ->orderBy('due_date', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([

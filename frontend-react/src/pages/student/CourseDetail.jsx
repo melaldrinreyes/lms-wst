@@ -24,6 +24,7 @@ import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, an
 import { useAuth } from '../../contexts/AuthContext';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
+import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -282,6 +283,18 @@ export default function CourseDetail() {
       return;
     }
 
+    // Check file size on frontend (500MB limit)
+    if (submissionFile) {
+      const maxSize = 500 * 1024 * 1024; // 500MB in bytes
+      if (submissionFile.size > maxSize) {
+        setToast({
+          message: `File is too large! Maximum file size is 500MB. Your file is ${(submissionFile.size / 1024 / 1024).toFixed(2)}MB.`,
+          type: 'error'
+        });
+        return;
+      }
+    }
+
     setSubmitting(true);
     
     try {
@@ -298,7 +311,7 @@ export default function CourseDetail() {
         assignment_id: currentAssignment.id,
         has_text: !!submissionText,
         has_file: !!submissionFile,
-        file_size: submissionFile?.size
+        file_size: submissionFile ? `${(submissionFile.size / 1024 / 1024).toFixed(2)}MB` : 'N/A'
       });
 
       const response = await submissionAPI.create(formData);
@@ -315,7 +328,22 @@ export default function CourseDetail() {
       
     } catch (error) {
       console.error('Error submitting assignment:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to submit assignment. Please try again.';
+      
+      let errorMessage = 'Failed to submit assignment. Please try again.';
+      
+      // Check for specific error types
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Validation errors
+        const errors = Object.values(error.response.data.errors).flat();
+        errorMessage = errors.join('. ');
+      } else if (error.message === 'Network Error') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Upload timeout. File may be too large or connection too slow.';
+      }
+      
       setToast({
         message: errorMessage,
         type: 'error'
@@ -734,13 +762,22 @@ export default function CourseDetail() {
                               Updated {formatRelativeTime(module.updated_at)}
                             </span>
                           )}
-                          {module.file_path && (
-                            <span className="flex items-center gap-1 text-blue-400">
-                              <FileText size={14} />
-                              File attached
-                            </span>
-                          )}
                         </div>
+                        {module.file_path && (
+                          <div className="flex items-center gap-2 mt-3">
+                            <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(module.file_path).bgColor} ${getFileTypeInfo(module.file_path).borderColor}`}>
+                              <span className="text-lg">{getFileTypeInfo(module.file_path).icon}</span>
+                              <div className="flex flex-col">
+                                <span className={`text-xs font-semibold ${getFileTypeInfo(module.file_path).color}`}>
+                                  {getFileTypeInfo(module.file_path).category}
+                                </span>
+                                <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                                  {getFileName(module.file_path)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -820,13 +857,22 @@ export default function CourseDetail() {
                           <FileText size={14} className="group-hover:text-orange-400 transition-colors" />
                           Max Points: {assignment.max_points || 100}
                         </span>
-                        {assignment.file_path && (
-                          <span className="flex items-center gap-1 text-blue-400 group-hover:text-blue-300 transition-colors">
-                            <Download size={14} />
-                            File attached
-                          </span>
-                        )}
                       </div>
+                      {assignment.file_path && (
+                        <div className="flex items-center gap-2 mt-3">
+                          <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
+                            <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span>
+                            <div className="flex flex-col">
+                              <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}>
+                                {getFileTypeInfo(assignment.file_path).category}
+                              </span>
+                              <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                                {getFileName(assignment.file_path)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       {/* Download button - always show if file exists, regardless of status */}

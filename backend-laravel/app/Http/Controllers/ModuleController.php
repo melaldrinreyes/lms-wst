@@ -28,11 +28,21 @@ class ModuleController extends Controller
      */
     public function store(Request $request)
     {
+        // Check PHP upload errors
+        $phpFileError = $_FILES['file']['error'] ?? 'no file in $_FILES';
+        
         // Debug: Log incoming request
         \Log::info('Module Store Request:', [
             'all_data' => $request->all(),
             'has_file' => $request->hasFile('file'),
             'has_files' => $request->hasFile('files'),
+            'file_input' => $request->input('file'),
+            'file_object' => $request->file('file'),
+            'request_files' => $request->allFiles(),
+            'php_files_array' => $_FILES,
+            'php_file_error' => $phpFileError,
+            'php_upload_max_filesize' => ini_get('upload_max_filesize'),
+            'php_post_max_size' => ini_get('post_max_size'),
         ]);
 
         try {
@@ -43,14 +53,66 @@ class ModuleController extends Controller
                 'content' => 'nullable|string',
                 'order' => 'nullable|integer',
                 'status' => 'nullable|in:published,draft',
-                'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png,gif,mp4,mov,avi,mkv,zip,rar|max:512000', // 500MB max
+                'file' => [
+                    'nullable',
+                    'file',
+                    'max:512000', // 500MB max
+                    function ($attribute, $value, $fail) {
+                        if (!$value) return;
+                        
+                        $allowedMimes = [
+                            // Documents
+                            'application/pdf', 'application/msword', 
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            'application/vnd.ms-powerpoint',
+                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                            'text/plain',
+                            // Images
+                            'image/jpeg', 'image/png', 'image/gif',
+                            // Videos
+                            'video/mp4', 'video/quicktime', 'video/x-msvideo', 
+                            'video/x-matroska', 'video/webm', 'video/x-flv', 'video/x-ms-wmv',
+                            'application/octet-stream', // For some video files
+                            // Archives
+                            'application/zip', 'application/x-rar-compressed', 'application/x-rar',
+                        ];
+                        
+                        $allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 
+                                             'jpg', 'jpeg', 'png', 'gif', 
+                                             'mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 
+                                             'zip', 'rar'];
+                        
+                        $extension = strtolower($value->getClientOriginalExtension());
+                        $mimeType = $value->getMimeType();
+                        
+                        \Log::info('File validation check:', [
+                            'extension' => $extension,
+                            'mime_type' => $mimeType,
+                            'size' => $value->getSize(),
+                        ]);
+                        
+                        if (!in_array($extension, $allowedExtensions) && !in_array($mimeType, $allowedMimes)) {
+                            $fail('The file must be a valid document, image, video, or archive file.');
+                        }
+                    }
+                ],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation failed:', [
+            \Log::error('Module validation failed:', [
                 'errors' => $e->errors(),
                 'file_present' => $request->hasFile('file'),
+                'file_info' => $request->hasFile('file') ? [
+                    'name' => $request->file('file')->getClientOriginalName(),
+                    'mime' => $request->file('file')->getMimeType(),
+                    'size' => $request->file('file')->getSize(),
+                ] : null,
             ]);
-            throw $e;
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'The file failed to upload.',
+                'errors' => $e->errors(),
+            ], 422);
         }
 
         // Handle file upload
@@ -62,6 +124,8 @@ class ModuleController extends Controller
                 'size' => $file->getSize(),
                 'mime' => $file->getMimeType(),
                 'valid' => $file->isValid(),
+                'error' => $file->getError(),
+                'error_message' => $file->getErrorMessage(),
             ]);
             
             if ($file->isValid()) {
@@ -127,11 +191,41 @@ class ModuleController extends Controller
                 'content' => 'nullable|string',
                 'order' => 'nullable|integer',
                 'status' => 'nullable|in:published,draft',
-                'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png,gif,mp4,mov,avi,mkv,zip,rar|max:512000',
+                'file' => [
+                    'nullable',
+                    'file',
+                    'max:512000',
+                    function ($attribute, $value, $fail) {
+                        if (!$value) return;
+                        
+                        $allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 
+                                             'jpg', 'jpeg', 'png', 'gif', 
+                                             'mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 
+                                             'zip', 'rar'];
+                        
+                        $extension = strtolower($value->getClientOriginalExtension());
+                        
+                        if (!in_array($extension, $allowedExtensions)) {
+                            $fail('The file must be a valid document, image, video, or archive file.');
+                        }
+                    }
+                ],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Update validation failed:', ['errors' => $e->errors()]);
-            throw $e;
+            \Log::error('Update validation failed:', [
+                'errors' => $e->errors(),
+                'file_info' => $request->hasFile('file') ? [
+                    'name' => $request->file('file')->getClientOriginalName(),
+                    'mime' => $request->file('file')->getMimeType(),
+                    'size' => $request->file('file')->getSize(),
+                ] : null,
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'The file failed to upload.',
+                'errors' => $e->errors(),
+            ], 422);
         }
 
         // Handle file upload

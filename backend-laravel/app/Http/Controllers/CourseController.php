@@ -25,10 +25,13 @@ class CourseController extends Controller
             if ($user->role_id == 2) { // Faculty
                 $courses = Course::where('faculty_id', $user->id)
                     ->withCount(['enrollments', 'modules', 'assignments', 'announcements'])
+                    ->orderBy('created_at', 'desc')
                     ->get();
             } else {
                 // Admin can see all courses
-                $courses = Course::withCount(['enrollments', 'modules', 'assignments', 'announcements'])->get();
+                $courses = Course::withCount(['enrollments', 'modules', 'assignments', 'announcements'])
+                    ->orderBy('created_at', 'desc')
+                    ->get();
             }
 
             return response()->json([

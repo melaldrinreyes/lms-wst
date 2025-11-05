@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
 import { studentAPI } from '../../services/api';
+import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
 export default function Assignments() {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
@@ -243,6 +244,16 @@ export default function Assignments() {
                       <p className="font-semibold text-sm text-white group-hover:text-orange-400 transition-colors duration-300">
                         {assignment.title}
                       </p>
+                      {assignment.file_path && (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className={`px-2 py-0.5 rounded border flex items-center gap-1 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
+                            <span className="text-xs">{getFileTypeInfo(assignment.file_path).icon}</span>
+                            <span className={`text-[10px] font-semibold ${getFileTypeInfo(assignment.file_path).color}`}>
+                              {getFileTypeInfo(assignment.file_path).category}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       {assignment.status === 'pending' && (
                         <p className="text-xs text-orange-400 mt-1 flex items-center gap-1 group-hover:text-orange-300 transition-colors">
                           <Clock size={12} className="inline" />

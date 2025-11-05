@@ -95,6 +95,7 @@ class SuperAdminController extends Controller
             }
 
             $instructors = User::where('role_id', 2)
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($instructor) {
                     // Get classes taught
@@ -449,6 +450,7 @@ class SuperAdminController extends Controller
         try {
             $instructors = User::where('role_id', 2)
                 ->where('status', 'active')
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($instructor) {
                     $coursesCount = Course::where('faculty_id', $instructor->id)->count();

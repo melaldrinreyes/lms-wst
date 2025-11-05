@@ -14,11 +14,47 @@ class SubmissionController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'assignment_id' => 'required|exists:assignments,id',
-            'submission_text' => 'nullable|string',
-            'file' => 'nullable|file|max:512000', // 500MB
+        // Check PHP upload limits
+        $maxUpload = (int)(ini_get('upload_max_filesize'));
+        $maxPost = (int)(ini_get('post_max_size'));
+        $memoryLimit = (int)(ini_get('memory_limit'));
+        
+        \Log::info('PHP Upload Limits:', [
+            'upload_max_filesize' => ini_get('upload_max_filesize'),
+            'post_max_size' => ini_get('post_max_size'),
+            'memory_limit' => ini_get('memory_limit'),
+            'max_execution_time' => ini_get('max_execution_time'),
         ]);
+        
+        try {
+            $validated = $request->validate([
+                'assignment_id' => 'required|exists:assignments,id',
+                'submission_text' => 'nullable|string',
+                'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png,gif,mp4,mov,avi,mkv,webm,flv,wmv,zip,rar,7z|max:512000', // 500MB
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Submission validation failed:', [
+                'errors' => $e->errors(),
+                'file_size' => $request->hasFile('file') ? $request->file('file')->getSize() : 'No file',
+                'file_mime' => $request->hasFile('file') ? $request->file('file')->getMimeType() : 'N/A',
+            ]);
+            
+            // Check if it's a file size issue
+            if ($request->hasFile('file')) {
+                $fileSize = $request->file('file')->getSize();
+                $maxAllowed = 512000 * 1024; // 500MB in bytes
+                
+                if ($fileSize > $maxAllowed) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File is too large. Maximum file size is 500MB. Your file is ' . round($fileSize / 1024 / 1024, 2) . 'MB',
+                        'errors' => ['file' => ['File exceeds maximum size of 500MB']],
+                    ], 422);
+                }
+            }
+            
+            throw $e;
+        }
 
         $assignment = Assignment::findOrFail($validated['assignment_id']);
         $user = $request->user();
@@ -46,8 +82,51 @@ class SubmissionController extends Controller
         $filePath = null;
         if ($request->hasFile('file')) {
             $file = $request->file('file');
-            $filename = time() . '_' . $user->id . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('submissions', $filename, 'public');
+            
+            \Log::info('Processing file upload:', [
+                'name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime' => $file->getMimeType(),
+                'is_valid' => $file->isValid(),
+                'error' => $file->getError(),
+            ]);
+            
+            if (!$file->isValid()) {
+                $errorMessages = [
+                    UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize in php.ini',
+                    UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE in HTML form',
+                    UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+                    UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
+                    UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                    UPLOAD_ERR_EXTENSION => 'File upload stopped by extension',
+                ];
+                
+                $error = $file->getError();
+                $message = $errorMessages[$error] ?? 'Unknown upload error';
+                
+                \Log::error('File upload error:', ['code' => $error, 'message' => $message]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File upload failed: ' . $message,
+                    'error_code' => $error,
+                ], 422);
+            }
+            
+            try {
+                $filename = time() . '_' . $user->id . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('submissions', $filename, 'public');
+                
+                \Log::info('File stored successfully:', ['path' => $filePath]);
+            } catch (\Exception $e) {
+                \Log::error('File storage failed:', ['error' => $e->getMessage()]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save file: ' . $e->getMessage(),
+                ], 500);
+            }
         }
 
         $data = [
