@@ -11,6 +11,8 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EnrollmentRequestController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AnnouncementCommentController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -95,18 +97,21 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Submission routes
+    // Note: Specific routes must come before parameterized routes
     Route::get('/submissions', [SubmissionController::class, 'index']); // Faculty view all submissions
+    
+    // Grade submissions and stats (Faculty and Admin only)
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::get('/submissions/pending/count', [SubmissionController::class, 'getPendingCount']);
+        Route::post('/submissions/{id}/grade', [SubmissionController::class, 'grade']);
+    });
+    
     Route::get('/submissions/{id}', [SubmissionController::class, 'show']);
     Route::get('/submissions/{id}/download', [SubmissionController::class, 'download']);
     
     // Student submissions (Students only)
     Route::middleware(['check.role:3'])->group(function () {
         Route::post('/submissions', [SubmissionController::class, 'store']);
-    });
-    
-    // Grade submissions (Faculty and Admin only)
-    Route::middleware(['check.role:2,1'])->group(function () {
-        Route::post('/submissions/{id}/grade', [SubmissionController::class, 'grade']);
     });
     
     // Student routes (Faculty and Admin can view all students)
@@ -120,7 +125,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(['check.role:3'])->group(function () {
         Route::get('/student/classes', [StudentController::class, 'myClasses']);
         Route::get('/student/assignments', [AssignmentController::class, 'studentAssignments']);
+        Route::get('/student/announcements', [AnnouncementController::class, 'studentAnnouncements']);
     });
+    
+    // Announcement routes (All authenticated users can view)
+    Route::get('/announcements', [AnnouncementController::class, 'index']);
+    Route::get('/announcements/{id}', [AnnouncementController::class, 'show']);
+    
+    // Announcement management (Faculty and Admin only)
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::post('/announcements', [AnnouncementController::class, 'store']);
+        Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
+    });
+    
+    // Announcement comments (All authenticated users)
+    Route::get('/announcements/{announcementId}/comments', [AnnouncementCommentController::class, 'index']);
+    Route::post('/announcement-comments', [AnnouncementCommentController::class, 'store']);
+    Route::put('/announcement-comments/{id}', [AnnouncementCommentController::class, 'update']);
+    Route::delete('/announcement-comments/{id}', [AnnouncementCommentController::class, 'destroy']);
     
     // Faculty routes (role_id = 2)
     Route::middleware(['check.role:2'])->group(function () {
@@ -144,6 +167,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/faculty/enrollment-requests/{id}/approve', [EnrollmentRequestController::class, 'approve']);
         Route::post('/faculty/enrollment-requests/{id}/reject', [EnrollmentRequestController::class, 'reject']);
         Route::delete('/faculty/enrollment-requests/{id}', [EnrollmentRequestController::class, 'destroy']);
+        
+        // Announcement management routes
+        Route::get('/faculty/announcements', [AnnouncementController::class, 'facultyAnnouncements']);
+        Route::get('/faculty/courses/{courseId}/announcements', [AnnouncementController::class, 'byCourse']);
     });
     
     // Super Admin routes (role_id = 1)

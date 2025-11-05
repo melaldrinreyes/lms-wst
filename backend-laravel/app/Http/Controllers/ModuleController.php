@@ -14,7 +14,7 @@ class ModuleController extends Controller
     public function index($courseId)
     {
         $modules = Module::where('course_id', $courseId)
-            ->orderBy('module_order')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
@@ -43,7 +43,7 @@ class ModuleController extends Controller
                 'content' => 'nullable|string',
                 'order' => 'nullable|integer',
                 'status' => 'nullable|in:published,draft',
-                'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png,gif,mp4,mov,avi,mkv,zip,rar|max:10240', // 10MB max
+                'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png,gif,mp4,mov,avi,mkv,zip,rar|max:512000', // 500MB max
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed:', [
@@ -127,7 +127,7 @@ class ModuleController extends Controller
                 'content' => 'nullable|string',
                 'order' => 'nullable|integer',
                 'status' => 'nullable|in:published,draft',
-                'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png,gif,mp4,mov,avi,mkv,zip,rar|max:10240',
+                'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png,gif,mp4,mov,avi,mkv,zip,rar|max:512000',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Update validation failed:', ['errors' => $e->errors()]);

@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Edit, Trash2, FileText, Calendar, Users, 
-  CheckCircle, XCircle, Clock, Upload, Download, Eye, Check, X, Share2, Copy, BookOpen, BarChart
+  CheckCircle, XCircle, Clock, Upload, Download, Eye, Check, X, Share2, Copy, BookOpen, BarChart, Megaphone, MessageCircle, Send, Reply
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
-import { courseAPI, moduleAPI, assignmentAPI, submissionAPI } from '../../services/api';
+import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
 
 export default function CourseManage() {
   const { id } = useParams();
@@ -20,6 +20,12 @@ export default function CourseManage() {
   const [assignments, setAssignments] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [students, setStudents] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [announcementComments, setAnnouncementComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
   const [loading, setLoading] = useState(true);
   const [newSubmissionsCount, setNewSubmissionsCount] = useState(0);
   const [lastCheckedTime, setLastCheckedTime] = useState(new Date());
@@ -29,6 +35,7 @@ export default function CourseManage() {
       fetchCourseData();
       fetchAssignments();
       fetchAllSubmissions();
+      fetchAnnouncements();
     }
   }, [id]);
 
@@ -98,6 +105,21 @@ export default function CourseManage() {
       console.error('Error fetching submissions:', error);
       console.error('Error details:', error.response?.data);
       // Don't show error toast for submissions, just log it
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      console.log('Fetching announcements for course:', id);
+      const response = await announcementAPI.getByCourse(id);
+      console.log('Announcements API response:', response);
+      if (response.success) {
+        setAnnouncements(response.announcements || []);
+        console.log('✅ Loaded', response.announcements?.length || 0, 'announcements');
+      }
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
@@ -186,7 +208,7 @@ export default function CourseManage() {
       description: '',
       due_date: '',
       max_points: 100,
-      status: 'draft'
+      status: 'published'
     });
     setIsModalOpen('assignment');
   };
@@ -279,6 +301,155 @@ export default function CourseManage() {
     }
   };
 
+  const handleAddAnnouncement = () => {
+    setFormData({
+      title: '',
+      content: '',
+      priority: 'normal',
+      status: 'published'
+    });
+    setIsModalOpen('announcement');
+  };
+
+  const handleEditAnnouncement = (announcement) => {
+    setFormData({
+      id: announcement.id,
+      title: announcement.title,
+      content: announcement.content,
+      priority: announcement.priority,
+      status: announcement.status
+    });
+    setIsModalOpen('announcement');
+  };
+
+  const handleDeleteAnnouncement = async (announcementId, announcementTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${announcementTitle}"? This will also delete all comments.`)) {
+      return;
+    }
+
+    try {
+      await announcementAPI.delete(announcementId);
+      setToast({ message: 'Announcement deleted successfully!', type: 'success' });
+      await fetchAnnouncements();
+    } catch (error) {
+      console.error('Error deleting announcement:', error);
+      setToast({ 
+        message: error.response?.data?.message || 'Failed to delete announcement. Please try again.', 
+        type: 'error' 
+      });
+    }
+  };
+
+  // Announcement detail and comments handlers
+  const handleViewAnnouncement = async (announcement) => {
+    setSelectedAnnouncement(announcement);
+    await fetchAnnouncementComments(announcement.id);
+  };
+
+  const handleCloseAnnouncementDetail = () => {
+    setSelectedAnnouncement(null);
+    setAnnouncementComments([]);
+    setNewComment('');
+    setReplyingTo(null);
+    setReplyText('');
+  };
+
+  const fetchAnnouncementComments = async (announcementId) => {
+    try {
+      const response = await announcementCommentAPI.getByAnnouncement(announcementId);
+      if (response.success) {
+        setAnnouncementComments(response.comments || []);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      const response = await announcementCommentAPI.create({
+        announcement_id: selectedAnnouncement.id,
+        comment: newComment.trim()
+      });
+
+      if (response.success) {
+        setToast({ message: 'Comment added successfully!', type: 'success' });
+        setNewComment('');
+        await fetchAnnouncementComments(selectedAnnouncement.id);
+        // Update comments count
+        setAnnouncements(announcements.map(a => 
+          a.id === selectedAnnouncement.id 
+            ? { ...a, comments_count: (a.comments_count || 0) + 1 }
+            : a
+        ));
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      setToast({ message: 'Failed to add comment', type: 'error' });
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      await announcementCommentAPI.delete(commentId);
+      setToast({ message: 'Comment deleted successfully!', type: 'success' });
+      await fetchAnnouncementComments(selectedAnnouncement.id);
+      // Update comments count
+      setAnnouncements(announcements.map(a => 
+        a.id === selectedAnnouncement.id 
+          ? { ...a, comments_count: Math.max(0, (a.comments_count || 0) - 1) }
+          : a
+      ));
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      setToast({ message: 'Failed to delete comment', type: 'error' });
+    }
+  };
+
+  const handleReplyComment = (comment) => {
+    setReplyingTo(comment);
+    setReplyText('');
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+    setReplyText('');
+  };
+
+  const handleSubmitReply = async (e) => {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+
+    try {
+      const response = await announcementCommentAPI.create({
+        announcement_id: selectedAnnouncement.id,
+        parent_id: replyingTo.id,
+        comment: replyText.trim()
+      });
+
+      if (response.success) {
+        setToast({ message: 'Reply added successfully!', type: 'success' });
+        setReplyText('');
+        setReplyingTo(null);
+        await fetchAnnouncementComments(selectedAnnouncement.id);
+        // Update comments count
+        setAnnouncements(announcements.map(a => 
+          a.id === selectedAnnouncement.id 
+            ? { ...a, comments_count: (a.comments_count || 0) + 1 }
+            : a
+        ));
+      }
+    } catch (error) {
+      console.error('Error adding reply:', error);
+      setToast({ message: 'Failed to add reply', type: 'error' });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -350,7 +521,7 @@ export default function CourseManage() {
         submitData.append('description', formData.description || '');
         submitData.append('due_date', formData.due_date);
         submitData.append('max_points', parseInt(formData.max_points) || 100);
-        submitData.append('status', formData.status || 'draft');
+        submitData.append('status', formData.status || 'published');
         
         // Only add course_id for new assignments
         if (!formData.id) {
@@ -391,6 +562,43 @@ export default function CourseManage() {
         
         // Refresh assignments list
         await fetchAssignments();
+        
+      } else if (isModalOpen === 'announcement') {
+        // Validate required fields
+        if (!formData.title || formData.title.trim() === '') {
+          setToast({ message: 'Announcement title is required', type: 'error' });
+          return;
+        }
+
+        if (!formData.content || formData.content.trim() === '') {
+          setToast({ message: 'Announcement content is required', type: 'error' });
+          return;
+        }
+
+        const submitData = {
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          priority: formData.priority || 'normal',
+          status: formData.status || 'published'
+        };
+
+        // Only add course_id for new announcements
+        if (!formData.id) {
+          submitData.course_id = id;
+        }
+
+        if (formData.id) {
+          // Update existing announcement
+          await announcementAPI.update(formData.id, submitData);
+          setToast({ message: 'Announcement updated successfully!', type: 'success' });
+        } else {
+          // Create new announcement
+          await announcementAPI.create(submitData);
+          setToast({ message: 'Announcement created successfully!', type: 'success' });
+        }
+        
+        // Refresh announcements list
+        await fetchAnnouncements();
         
       } else if (isModalOpen === 'grade') {
         // Handle grading submission
@@ -542,6 +750,97 @@ export default function CourseManage() {
     }
   };
 
+  // Recursive function to render comments and their replies
+  const renderComment = (comment, depth = 0) => {
+    const marginLeft = depth > 0 ? 'ml-8' : '';
+    const avatarSize = depth === 0 ? 'w-8 h-8' : 'w-6 h-6';
+    const avatarColor = depth === 0 
+      ? 'from-blue-400 to-blue-600' 
+      : 'from-green-400 to-green-600';
+    const textSize = depth === 0 ? 'text-sm' : 'text-xs';
+    
+    return (
+      <div key={comment.id} className={`${marginLeft} space-y-2`}>
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2 flex-1">
+              <div className={`${avatarSize} bg-gradient-to-br ${avatarColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                <span className="text-white font-semibold text-xs">
+                  {comment.user?.name?.charAt(0) || 'U'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`font-medium text-gray-200 ${depth > 0 ? 'text-sm' : ''}`}>
+                    {comment.user?.name || 'Unknown User'}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(comment.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <p className={`${textSize} text-gray-300 leading-relaxed`}>
+                  {comment.comment}
+                </p>
+                <button
+                  onClick={() => handleReplyComment(comment)}
+                  className="mt-1.5 text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 transition"
+                >
+                  <Reply size={10} />
+                  Reply
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={() => handleDeleteComment(comment.id)}
+              className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition"
+              title="Delete comment"
+            >
+              <Trash2 size={12} />
+            </button>
+          </div>
+
+          {/* Reply Form */}
+          {replyingTo?.id === comment.id && (
+            <form onSubmit={handleSubmitReply} className="mt-2 ml-8 space-y-2">
+              <input
+                type="text"
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder={`Reply to ${comment.user?.name}...`}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={!replyText.trim()}
+                  className="px-3 py-1.5 bg-orange-600 text-white text-xs rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <Send size={12} />
+                  Reply
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelReply}
+                  className="px-3 py-1.5 bg-gray-700 text-gray-300 text-xs rounded-lg hover:bg-gray-600 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* Recursively render all nested replies */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="space-y-2">
+            {comment.replies.map((reply) => renderComment(reply, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -669,6 +968,17 @@ export default function CourseManage() {
           >
             <Users size={20} />
             <span>Students</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('announcements')}
+            className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
+              activeTab === 'announcements'
+                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+            }`}
+          >
+            <Megaphone size={20} />
+            <span>Announcements</span>
           </button>
         </div>
       </div>
@@ -1127,6 +1437,131 @@ export default function CourseManage() {
         </div>
       )}
 
+      {/* Announcements Tab */}
+      {activeTab === 'announcements' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Course Announcements</h2>
+              <p className="text-gray-400 text-sm">Share important updates with your students</p>
+            </div>
+            <button
+              onClick={handleAddAnnouncement}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+            >
+              <Plus size={20} />
+              New Announcement
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {announcements.length === 0 ? (
+              <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Megaphone className="h-10 w-10 text-gray-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">No announcements yet</h3>
+                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                  Create your first announcement to communicate important updates to your students
+                </p>
+                <button
+                  onClick={handleAddAnnouncement}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+                >
+                  <Plus size={20} />
+                  Create Announcement
+                </button>
+              </div>
+            ) : (
+              announcements.map((announcement) => {
+                const priorityConfig = {
+                  high: { emoji: '🔴', label: 'High Priority', color: 'text-red-400 bg-red-900/20 border-red-700' },
+                  normal: { emoji: '🟡', label: 'Normal', color: 'text-yellow-400 bg-yellow-900/20 border-yellow-700' },
+                  low: { emoji: '🟢', label: 'Low Priority', color: 'text-green-400 bg-green-900/20 border-green-700' }
+                };
+                const priority = priorityConfig[announcement.priority] || priorityConfig.normal;
+
+                return (
+                  <div 
+                    key={announcement.id} 
+                    className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-all"
+                  >
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => handleViewAnnouncement(announcement)}
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-bold text-white hover:text-orange-400 transition">{announcement.title}</h3>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${priority.color}`}>
+                              {priority.emoji} {priority.label}
+                            </span>
+                            {announcement.status === 'draft' && (
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold border text-gray-400 bg-gray-800 border-gray-700">
+                                ○ Draft
+                              </span>
+                            )}
+                            {announcement.status === 'published' && (
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold border text-green-400 bg-green-900/20 border-green-700">
+                                ✓ Published
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-300 whitespace-pre-wrap mb-3 line-clamp-3">{announcement.content}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-400">
+                            <div className="flex items-center gap-2">
+                              <MessageCircle size={16} />
+                              <span>{announcement.comments_count || 0} {announcement.comments_count === 1 ? 'comment' : 'comments'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock size={16} />
+                              <span>{new Date(announcement.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewAnnouncement(announcement);
+                            }}
+                            className="p-2 text-blue-400 hover:bg-blue-900/30 rounded-lg transition"
+                            title="View Details & Comments"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditAnnouncement(announcement);
+                            }}
+                            className="p-2 text-orange-400 hover:bg-orange-900/30 rounded-lg transition"
+                            title="Edit Announcement"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAnnouncement(announcement.id, announcement.title);
+                            }}
+                            className="p-2 text-red-400 hover:bg-red-900/30 rounded-lg transition"
+                            title="Delete Announcement"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Module Modal */}
       <Modal
         isOpen={isModalOpen === 'module'}
@@ -1543,7 +1978,7 @@ export default function CourseManage() {
               <div className="block text-sm font-semibold text-gray-200 mb-2">
                 📝 Student's Response
               </div>
-              <div className="w-full px-4 py-3 border border-gray-700 bg-gray-800/50 rounded-lg">
+              <div className="w-full px-4 py-3 border border-gray-700 bg-gray-800/50 rounded-lg max-h-96 overflow-y-auto">
                 <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
                   {formData.submission_text}
                 </p>
@@ -1777,6 +2212,275 @@ export default function CourseManage() {
           </div>
         </form>
       </Modal>
+
+      {/* Announcement Modal */}
+      <Modal
+        isOpen={isModalOpen === 'announcement'}
+        onClose={() => setIsModalOpen(null)}
+        title={formData.id ? "Edit Announcement" : "Create New Announcement"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
+          <div>
+            <label htmlFor="announcement-title" className="block text-sm font-semibold text-gray-200 mb-2">
+              📢 Announcement Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="announcement-title"
+              type="text"
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+              placeholder="Enter announcement title"
+              required
+            />
+          </div>
+
+          {/* Content */}
+          <div>
+            <label htmlFor="announcement-content" className="block text-sm font-semibold text-gray-200 mb-2">
+              📝 Content <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="announcement-content"
+              rows={6}
+              value={formData.content || ''}
+              onChange={(e) => setFormData({...formData, content: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white resize-none transition"
+              placeholder="Write your announcement here..."
+              required
+            />
+          </div>
+
+          {/* Priority */}
+          <div>
+            <div className="block text-sm font-semibold text-gray-200 mb-3">
+              🎯 Priority Level <span className="text-red-500">*</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.priority === 'high'
+                  ? 'border-red-500 bg-red-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="priority"
+                  value="high"
+                  checked={formData.priority === 'high'}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="sr-only"
+                />
+                <span className="text-2xl">🔴</span>
+                <span className="text-sm font-medium text-gray-200">High</span>
+              </label>
+              
+              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.priority === 'normal'
+                  ? 'border-yellow-500 bg-yellow-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="priority"
+                  value="normal"
+                  checked={formData.priority === 'normal'}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="sr-only"
+                />
+                <span className="text-2xl">🟡</span>
+                <span className="text-sm font-medium text-gray-200">Normal</span>
+              </label>
+              
+              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.priority === 'low'
+                  ? 'border-green-500 bg-green-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="priority"
+                  value="low"
+                  checked={formData.priority === 'low'}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="sr-only"
+                />
+                <span className="text-2xl">🟢</span>
+                <span className="text-sm font-medium text-gray-200">Low</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Status */}
+          <div>
+            <div className="block text-sm font-semibold text-gray-200 mb-3">
+              📊 Status <span className="text-red-500">*</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.status === 'published'
+                  ? 'border-green-500 bg-green-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="status"
+                  value="published"
+                  checked={formData.status === 'published'}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="sr-only"
+                />
+                <CheckCircle className={formData.status === 'published' ? 'text-green-400' : 'text-gray-600'} size={20} />
+                <div>
+                  <div className="text-sm font-medium text-gray-200">Published</div>
+                  <div className="text-xs text-gray-400">Visible to students</div>
+                </div>
+              </label>
+              
+              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
+                formData.status === 'draft'
+                  ? 'border-orange-500 bg-orange-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+              }`}>
+                <input
+                  type="radio"
+                  name="status"
+                  value="draft"
+                  checked={formData.status === 'draft'}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="sr-only"
+                />
+                <XCircle className={formData.status === 'draft' ? 'text-orange-400' : 'text-gray-600'} size={20} />
+                <div>
+                  <div className="text-sm font-medium text-gray-200">Draft</div>
+                  <div className="text-xs text-gray-400">Only visible to you</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-700">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(null)} 
+              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition font-medium shadow-lg shadow-orange-900/30 flex items-center justify-center gap-2"
+            >
+              <Check size={18} />
+              {formData.id ? 'Update' : 'Create'} Announcement
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Announcement Detail Modal with Comments */}
+      {selectedAnnouncement && (
+        <Modal
+          isOpen={true}
+          onClose={handleCloseAnnouncementDetail}
+          title={selectedAnnouncement.title}
+        >
+          <div className="space-y-6">
+            {/* Announcement Header */}
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                {(() => {
+                  const priorityConfig = {
+                    high: { emoji: '🔴', label: 'High Priority', color: 'bg-red-900/20 border-red-700 text-red-400' },
+                    normal: { emoji: '🟡', label: 'Normal', color: 'bg-yellow-900/20 border-yellow-700 text-yellow-400' },
+                    low: { emoji: '🟢', label: 'Low Priority', color: 'bg-green-900/20 border-green-700 text-green-400' }
+                  };
+                  const priority = priorityConfig[selectedAnnouncement.priority] || priorityConfig.normal;
+                  return (
+                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg border ${priority.color}`}>
+                      {priority.emoji} {priority.label}
+                    </span>
+                  );
+                })()}
+                {selectedAnnouncement.status === 'draft' && (
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-lg border text-gray-400 bg-gray-800 border-gray-700">
+                    ○ Draft
+                  </span>
+                )}
+                {selectedAnnouncement.status === 'published' && (
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-lg border text-green-400 bg-green-900/20 border-green-700">
+                    ✓ Published
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+                <div className="flex items-center gap-2">
+                  <Clock size={14} />
+                  <span>Posted {new Date(selectedAnnouncement.created_at).toLocaleString()}</span>
+                </div>
+                {selectedAnnouncement.updated_at !== selectedAnnouncement.created_at && (
+                  <div className="flex items-center gap-2">
+                    <Edit size={14} />
+                    <span>Updated {new Date(selectedAnnouncement.updated_at).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Announcement Content */}
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-6">
+                <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                  {selectedAnnouncement.content}
+                </p>
+              </div>
+            </div>
+
+            {/* Comments Section */}
+            <div className="border-t border-gray-700 pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <MessageCircle size={20} className="text-orange-400" />
+                  Student Comments ({announcementComments.length})
+                </h3>
+              </div>
+
+              {/* Add Comment Form (Faculty can also comment) */}
+              <form onSubmit={handleAddComment} className="mb-6">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newComment.trim()}
+                    className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition font-medium shadow-lg shadow-orange-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <Send size={16} />
+                    Send
+                  </button>
+                </div>
+              </form>
+
+              {/* Comments List */}
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {announcementComments.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <MessageCircle size={32} className="mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No comments yet</p>
+                  </div>
+                ) : (
+                  announcementComments.map((comment) => renderComment(comment, 0))
+                )}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

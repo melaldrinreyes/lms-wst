@@ -236,41 +236,41 @@ export default function Assignments() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 transition"
+                  className="hover:bg-gray-800/60 hover:shadow-lg hover:shadow-orange-500/5 transition-all duration-300 group"
                 >
                   <td className="py-5 px-6">
                     <div>
-                      <p className="font-semibold text-sm text-white">
+                      <p className="font-semibold text-sm text-white group-hover:text-orange-400 transition-colors duration-300">
                         {assignment.title}
                       </p>
                       {assignment.status === 'pending' && (
-                        <p className="text-xs text-orange-400 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-orange-400 mt-1 flex items-center gap-1 group-hover:text-orange-300 transition-colors">
                           <Clock size={12} className="inline" />
                           {getDaysRemaining(assignment.due_date)}
                         </p>
                       )}
                     </div>
                   </td>
-                  <td className="py-5 px-6 text-sm text-gray-400">
+                  <td className="py-5 px-6 text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
                     {assignment.course?.name || assignment.course}
                   </td>
-                  <td className="py-5 px-6 text-sm text-gray-300">
+                  <td className="py-5 px-6 text-sm text-gray-300 group-hover:text-white transition-colors">
                     <div className="flex items-center gap-1">
-                      <Calendar size={14} className="text-gray-500" />
+                      <Calendar size={14} className="text-gray-500 group-hover:text-orange-400 transition-colors" />
                       {new Date(assignment.due_date).toLocaleDateString()}
                     </div>
                   </td>
                   <td className="py-5 px-6 text-sm text-white font-semibold">
                     {assignment.status === 'graded' ? (
-                      <span className="text-green-400">
+                      <span className="text-green-400 group-hover:text-green-300 transition-colors">
                         {assignment.grade}/{assignment.max_points}
                       </span>
                     ) : (
-                      <span>{assignment.max_points}</span>
+                      <span className="group-hover:text-orange-400 transition-colors">{assignment.max_points}</span>
                     )}
                   </td>
                   <td className="py-5 px-6">
-                    <span className={`inline-block px-3 py-1 rounded-lg text-xs font-medium ${getStatusBadge(assignment)}`}>
+                    <span className={`inline-block px-3 py-1 rounded-lg text-xs font-medium transition-all ${getStatusBadge(assignment)}`}>
                       {assignment.status === 'pending' && 'Pending'}
                       {assignment.status === 'submitted' && 'Submitted'}
                       {assignment.status === 'updated' && 'Updated - Resubmit'}
@@ -284,7 +284,7 @@ export default function Assignments() {
                       {assignment.file_path && (
                         <button
                           onClick={() => handleDownloadAssignment(assignment.id, assignment.title)}
-                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold transition flex items-center gap-1"
+                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:scale-105 hover:shadow-md text-sm font-semibold transition-all duration-300 flex items-center gap-1"
                           title="Download Assignment"
                         >
                           <Download size={16} />
@@ -299,7 +299,7 @@ export default function Assignments() {
                             setSelectedAssignment(assignment);
                             setIsModalOpen(true);
                           }}
-                          className={`px-4 py-2 text-white rounded-lg text-sm font-semibold transition ${
+                          className={`px-4 py-2 text-white rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-md ${
                             assignment.status === 'updated' 
                               ? 'bg-purple-600 hover:bg-purple-700' 
                               : 'bg-orange-500 hover:bg-orange-600'
@@ -309,14 +309,14 @@ export default function Assignments() {
                         </button>
                       )}
                       {assignment.status === 'submitted' && (
-                        <span className="text-sm text-gray-500 font-medium">
+                        <span className="text-sm text-gray-500 font-medium group-hover:text-gray-400 transition-colors">
                           Submitted
                         </span>
                       )}
                       {assignment.status === 'graded' && (
                         <button 
                           onClick={() => handleViewResults(assignment)}
-                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 text-sm font-semibold transition shadow-lg shadow-green-900/30"
+                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 hover:scale-105 text-sm font-semibold transition-all duration-300 shadow-lg shadow-green-900/30 hover:shadow-green-900/50"
                         >
                           View Results
                         </button>

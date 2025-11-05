@@ -110,4 +110,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(User::class, 'created_by')->where('role_id', 3);
     }
+
+    /**
+     * Get the announcements created by the user.
+     */
+    public function announcements()
+    {
+        return $this->hasMany(Announcement::class, 'created_by');
+    }
+
+    /**
+     * Get the announcement comments by the user.
+     */
+    public function announcementComments()
+    {
+        return $this->hasMany(AnnouncementComment::class);
+    }
 }

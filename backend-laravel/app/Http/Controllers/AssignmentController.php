@@ -74,6 +74,8 @@ class AssignmentController extends Controller
                     'can_resubmit' => $canResubmit,
                     'assignment_updated' => $assignmentUpdated,
                     'updated_by_faculty_at' => $assignment->updated_by_faculty_at,
+                    'created_at' => $assignment->created_at,
+                    'updated_at' => $assignment->updated_at,
                 ];
                 
                 // Add submission details if graded

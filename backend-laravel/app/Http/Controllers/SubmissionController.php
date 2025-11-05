@@ -194,4 +194,28 @@ class SubmissionController extends Controller
             'submission' => $submission,
         ]);
     }
+
+    /**
+     * Get count of pending submissions (Faculty only)
+     * Submissions that haven't been graded yet
+     */
+    public function getPendingCount(Request $request)
+    {
+        $user = $request->user();
+        
+        // Get assignments created by this faculty member
+        $facultyAssignmentIds = Assignment::whereHas('course', function ($query) use ($user) {
+            $query->where('faculty_id', $user->id);
+        })->pluck('id');
+        
+        // Count submissions that are not graded
+        $pendingCount = Submission::whereIn('assignment_id', $facultyAssignmentIds)
+            ->whereNull('grade')
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'count' => $pendingCount,
+        ]);
+    }
 }

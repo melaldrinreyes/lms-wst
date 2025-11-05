@@ -7,6 +7,7 @@ use App\Models\Module;
 use App\Models\Assignment;
 use App\Models\Enrollment;
 use App\Models\EnrollmentRequest;
+use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,11 +24,11 @@ class CourseController extends Controller
             // If faculty, get only their courses
             if ($user->role_id == 2) { // Faculty
                 $courses = Course::where('faculty_id', $user->id)
-                    ->with(['enrollments', 'modules', 'assignments'])
+                    ->withCount(['enrollments', 'modules', 'assignments', 'announcements'])
                     ->get();
             } else {
                 // Admin can see all courses
-                $courses = Course::with(['enrollments', 'modules', 'assignments'])->get();
+                $courses = Course::withCount(['enrollments', 'modules', 'assignments', 'announcements'])->get();
             }
 
             return response()->json([
@@ -45,9 +46,10 @@ class CourseController extends Controller
                         'academic_year' => $course->academic_year,
                         'thumbnail' => $course->thumbnail,
                         'status' => $course->status,
-                        'students' => $course->enrollments->count(),
-                        'modules' => $course->modules->count(),
-                        'assignments' => $course->assignments->count(),
+                        'students' => $course->enrollments_count,
+                        'modules' => $course->modules_count,
+                        'assignments' => $course->assignments_count,
+                        'announcements' => $course->announcements_count,
                     ];
                 }),
             ]);
@@ -64,8 +66,25 @@ class CourseController extends Controller
      */
     public function show($id)
     {
+        $user = request()->user();
+        
         $course = Course::with(['enrollments.user', 'modules', 'assignments', 'faculty'])
             ->findOrFail($id);
+
+        // Get announcements for this course
+        $announcementsQuery = Announcement::with('creator')
+            ->where('course_id', $id)
+            ->withCount('comments');
+        
+        // Students only see published announcements
+        if ($user && $user->role_id == 3) {
+            $announcementsQuery->where('status', 'published');
+        }
+        
+        $announcements = $announcementsQuery
+            ->orderBy('priority', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -83,7 +102,33 @@ class CourseController extends Controller
                 'status' => $course->status,
                 'students' => $course->enrollments->count(),
                 'modules' => $course->modules,
-                'assignments' => $course->assignments,
+                'assignments' => $course->assignments->map(function ($assignment) use ($course) {
+                    return [
+                        'id' => $assignment->id,
+                        'title' => $assignment->title,
+                        'description' => $assignment->description,
+                        'due_date' => $assignment->due_date,
+                        'max_points' => $assignment->max_points,
+                        'status' => $assignment->status,
+                        'file_path' => $assignment->file_path,
+                        'submissions' => $assignment->submissions->count(),
+                        'total_students' => $course->enrollments->count(),
+                        'graded_submissions' => $assignment->submissions->whereNotNull('grade')->count(),
+                    ];
+                }),
+                'announcements' => $announcements->map(function ($announcement) {
+                    return [
+                        'id' => $announcement->id,
+                        'title' => $announcement->title,
+                        'content' => $announcement->content,
+                        'priority' => $announcement->priority,
+                        'status' => $announcement->status,
+                        'created_at' => $announcement->created_at,
+                        'updated_at' => $announcement->updated_at,
+                        'comments_count' => $announcement->comments_count,
+                        'creator' => $announcement->creator,
+                    ];
+                }),
                 'faculty' => $course->faculty ? [
                     'id' => $course->faculty->id,
                     'name' => $course->faculty->name,

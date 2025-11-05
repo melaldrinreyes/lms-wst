@@ -423,9 +423,9 @@ export default function CourseManage() {
                           <button 
                             onClick={() => handleGradeSubmission(submission)}
                             className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
-                            title="Grade"
+                            title={submission.status === 'graded' ? "Edit grade" : "Grade submission"}
                           >
-                            <Check size={16} />
+                            {submission.status === 'graded' ? <Edit size={16} /> : <Check size={16} />}
                           </button>
                           <button 
                             className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
@@ -582,7 +582,7 @@ export default function CourseManage() {
       <Modal
         isOpen={isModalOpen === 'grade'}
         onClose={() => setIsModalOpen(null)}
-        title={`Grade Submission - ${formData.student}`}
+        title={formData.grade !== null && formData.grade !== '' ? `Edit Grade - ${formData.student}` : `Grade Submission - ${formData.student}`}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -616,7 +616,7 @@ export default function CourseManage() {
               Cancel
             </button>
             <button type="submit" className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-              Submit Grade
+              {formData.grade !== null && formData.grade !== '' ? 'Update Grade' : 'Submit Grade'}
             </button>
           </div>
         </form>

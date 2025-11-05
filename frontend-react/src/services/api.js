@@ -489,6 +489,72 @@ export const classAPI = {
   },
 };
 
+// Announcement API calls
+export const announcementAPI = {
+  getAll: async () => {
+    const response = await api.get('/announcements');
+    return response.data;
+  },
+
+  getOne: async (id) => {
+    const response = await api.get(`/announcements/${id}`);
+    return response.data;
+  },
+
+  getByCourse: async (courseId) => {
+    const response = await api.get(`/faculty/courses/${courseId}/announcements`);
+    return response.data;
+  },
+
+  getStudentAnnouncements: async () => {
+    const response = await api.get('/student/announcements');
+    return response.data;
+  },
+
+  getFacultyAnnouncements: async () => {
+    const response = await api.get('/faculty/announcements');
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/announcements', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/announcements/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/announcements/${id}`);
+    return response.data;
+  },
+};
+
+// Announcement Comment API calls
+export const announcementCommentAPI = {
+  getByAnnouncement: async (announcementId) => {
+    const response = await api.get(`/announcements/${announcementId}/comments`);
+    return response.data;
+  },
+
+  create: async (data) => {
+    const response = await api.post('/announcement-comments', data);
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/announcement-comments/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/announcement-comments/${id}`);
+    return response.data;
+  },
+};
+
 // Super Admin API calls
 export const superAdminAPI = {
   getDashboard: async () => {

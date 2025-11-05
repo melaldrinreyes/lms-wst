@@ -66,4 +66,12 @@ class Course extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+    /**
+     * Get the announcements for the course
+     */
+    public function announcements()
+    {
+        return $this->hasMany(Announcement::class);
+    }
 }

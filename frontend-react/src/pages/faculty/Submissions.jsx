@@ -348,9 +348,11 @@ export default function FacultySubmissions() {
               {selectedSubmission.submission_text && (
                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Student's Response</p>
-                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
-                    {selectedSubmission.submission_text}
-                  </p>
+                  <div className="max-h-96 overflow-y-auto">
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                      {selectedSubmission.submission_text}
+                    </p>
+                  </div>
                 </div>
               )}
 
