@@ -25,7 +25,7 @@ import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, an
 import { useAuth } from '../../contexts/AuthContext';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
-import CourseContent from '../../components/CourseContent';
+import LectureContent from '../../components/LectureContent';
 import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
 export default function CourseDetail() {
@@ -799,7 +799,7 @@ export default function CourseDetail() {
                     <p className="text-sm text-gray-400">Important course information and guidelines</p>
                   </div>
                 </div>
-                <CourseContent 
+                <LectureContent 
                   courseId={id}
                   isTeacher={false}
                 />

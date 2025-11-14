@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
-import CourseContent from '../../components/CourseContent';
+import LectureContent from '../../components/LectureContent';
 import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
 import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
@@ -2554,12 +2554,12 @@ export default function CourseManage() {
           </div>
           
           <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-            <CourseContent 
+            <LectureContent 
               courseId={id}
               isTeacher={true}
               onSave={(content) => {
                 setToast({ 
-                  message: 'Course content saved successfully!', 
+                  message: 'Lecture content saved successfully!', 
                   type: 'success' 
                 });
               }}

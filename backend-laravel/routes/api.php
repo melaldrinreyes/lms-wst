@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseContentController;
+use App\Http\Controllers\CourseLectureController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SuperAdminController;
@@ -83,6 +84,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(['check.role:2,1'])->group(function () {
         Route::post('/courses/{courseId}/content', [CourseContentController::class, 'store']);
         Route::delete('/courses/{courseId}/content', [CourseContentController::class, 'destroy']);
+    });
+    
+    // Course lectures routes (Faculty and Admin can manage, all can view)
+    // Important: Specific routes must come before parameterized routes
+    Route::get('/courses/{courseId}/lectures/view', [CourseLectureController::class, 'view']);
+    Route::get('/courses/{courseId}/lectures', [CourseLectureController::class, 'index']);
+    
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::post('/courses/{courseId}/lectures', [CourseLectureController::class, 'store']);
+        Route::delete('/courses/{courseId}/lectures/{lectureId}', [CourseLectureController::class, 'destroy']);
     });
     
     // Enrollment management (Faculty and Admin)
