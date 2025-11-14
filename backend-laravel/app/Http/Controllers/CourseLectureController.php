@@ -110,7 +110,7 @@ class CourseLectureController extends Controller
                         // Create new lecture with hierarchical support
                         $lecture = CourseLecture::create([
                             'course_id' => $courseId,
-                            'parent_lecture_id' => $lectureData['parent_lecture_id'] ?? null,
+                            'parent_lecture_id' => isset($lectureData['parent_lecture_id']) && $lectureData['parent_lecture_id'] ? $lectureData['parent_lecture_id'] : null,
                             'title' => $lectureData['title'],
                             'content' => $lectureData['content'] ?? '',
                             'order' => $lectureData['order'] ?? 0,
@@ -125,27 +125,44 @@ class CourseLectureController extends Controller
                             ->first();
 
                         if ($lecture) {
-                            $lecture->update([
-                                'parent_lecture_id' => $lectureData['parent_lecture_id'] ?? $lecture->parent_lecture_id,
+                            $updateData = [
                                 'title' => $lectureData['title'],
                                 'content' => $lectureData['content'] ?? '',
                                 'order' => $lectureData['order'] ?? $lecture->order,
                                 'level' => $lectureData['level'] ?? $lecture->level,
-                            ]);
+                            ];
+                            
+                            // Only update parent_lecture_id if provided
+                            if (isset($lectureData['parent_lecture_id'])) {
+                                $updateData['parent_lecture_id'] = $lectureData['parent_lecture_id'] ? $lectureData['parent_lecture_id'] : null;
+                            }
+                            
+                            $lecture->update($updateData);
                             $existingDbIds[] = $lecture->id;
                         }
                     }
                 }
 
-                // Delete lectures from this course that were not in the request
-                CourseLecture::where('course_id', $courseId)
-                    ->whereNotIn('id', $existingDbIds)
-                    ->delete();
+                // Only delete if all lectures were sent (batch delete)
+                // If updating single lecture, don't delete others
+                if (count($lecturesData) >= 2) {
+                    // Get only root lectures from request
+                    $rootLecturesInRequest = array_filter($existingDbIds, function($id) {
+                        return CourseLecture::find($id)->parent_lecture_id === null;
+                    });
+                    
+                    // Only delete root lectures not in request to preserve sub-lectures
+                    CourseLecture::where('course_id', $courseId)
+                        ->whereNull('parent_lecture_id')
+                        ->whereNotIn('id', $rootLecturesInRequest)
+                        ->delete();
+                }
 
                 DB::commit();
 
                 // Reload and return all lectures
                 $allLectures = CourseLecture::where('course_id', $courseId)
+                    ->orderBy('level')
                     ->orderBy('parent_lecture_id')
                     ->orderBy('order')
                     ->get();
