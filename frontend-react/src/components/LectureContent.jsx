@@ -99,21 +99,24 @@ export default function LectureContent({ courseId, isTeacher = false, onSave }) 
       updatedLectures[editingLectureId].updated_at = new Date().toISOString();
 
       // Save to backend
-      await api.post(`/courses/${courseId}/lectures`, {
+      const response = await api.post(`/courses/${courseId}/lectures`, {
         lectures: updatedLectures,
       });
 
-      setLectures(updatedLectures);
-      setIsEditing(false);
-      setEditingLectureId(null);
-      setCurrentContent('');
-      setToast({ message: 'Lecture saved successfully!', type: 'success' });
+      if (response.data.success) {
+        setLectures(response.data.lectures || updatedLectures);
+        setIsEditing(false);
+        setEditingLectureId(null);
+        setCurrentContent('');
+        setToast({ message: 'Lecture saved successfully!', type: 'success' });
 
-      if (onSave) {
-        onSave(updatedLectures);
+        if (onSave) {
+          onSave(response.data.lectures || updatedLectures);
+        }
       }
     } catch (error) {
-      setToast({ message: error.message || 'Failed to save lecture', type: 'error' });
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to save lecture';
+      setToast({ message: `Error: ${errorMsg}`, type: 'error' });
       console.error('Error saving lecture:', error);
     } finally {
       setIsSaving(false);
@@ -126,19 +129,22 @@ export default function LectureContent({ courseId, isTeacher = false, onSave }) 
       const updatedLectures = lectures.filter((_, i) => i !== index);
       
       // Save to backend
-      await api.post(`/courses/${courseId}/lectures`, {
+      const response = await api.post(`/courses/${courseId}/lectures`, {
         lectures: updatedLectures,
       });
 
-      setLectures(updatedLectures);
-      setShowDeleteConfirm(null);
-      setToast({ message: 'Lecture deleted successfully!', type: 'success' });
+      if (response.data.success) {
+        setLectures(response.data.lectures || updatedLectures);
+        setShowDeleteConfirm(null);
+        setToast({ message: 'Lecture deleted successfully!', type: 'success' });
 
-      if (onSave) {
-        onSave(updatedLectures);
+        if (onSave) {
+          onSave(response.data.lectures || updatedLectures);
+        }
       }
     } catch (error) {
-      setToast({ message: error.message || 'Failed to delete lecture', type: 'error' });
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to delete lecture';
+      setToast({ message: `Error: ${errorMsg}`, type: 'error' });
       console.error('Error deleting lecture:', error);
     } finally {
       setIsSaving(false);

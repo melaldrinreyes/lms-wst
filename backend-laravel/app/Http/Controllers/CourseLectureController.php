@@ -89,41 +89,43 @@ class CourseLectureController extends Controller
                 return response()->json(['success' => false, 'message' => 'You cannot edit this course'], 403);
             }
 
-            $lectures = $request->input('lectures', []);
+            $lecturesData = $request->input('lectures', []);
+
+            if (!is_array($lecturesData)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lectures must be an array',
+                ], 400);
+            }
 
             DB::beginTransaction();
 
             try {
-                // Get existing lecture IDs from request
-                $existingIds = collect($lectures)
-                    ->filter(fn($l) => isset($l['id']) && is_numeric($l['id']))
-                    ->pluck('id')
-                    ->toArray();
-
-                // Delete lectures not in the request (except temporary ones with timestamps as ID)
-                CourseLecture::where('course_id', $courseId)
-                    ->whereNotIn('id', $existingIds)
-                    ->whereNull('temp_id') // Don't delete if they have temp_id
-                    ->delete();
-
                 // Process each lecture
                 $order = 1;
-                $savedLectures = [];
+                $existingDbIds = [];
 
-                foreach ($lectures as $lectureData) {
+                foreach ($lecturesData as $lectureData) {
+                    // Skip if no title
+                    if (empty($lectureData['title'])) {
+                        continue;
+                    }
+
                     $id = $lectureData['id'] ?? null;
-                    $isNewLecture = !is_numeric($id) || $id > 2147483647; // Temporary ID from frontend
+                    
+                    // Check if it's a temporary ID (from frontend Date.now() or very large number)
+                    $isTemporaryId = !is_numeric($id) || $id > 2147483647 || $id < 1;
 
-                    if ($isNewLecture) {
+                    if ($isTemporaryId) {
                         // Create new lecture
                         $lecture = CourseLecture::create([
                             'course_id' => $courseId,
-                            'title' => $lectureData['title'] ?? 'Untitled',
+                            'title' => $lectureData['title'],
                             'content' => $lectureData['content'] ?? '',
                             'order' => $order,
                             'created_by' => $user->id,
                         ]);
-                        $savedLectures[] = $lecture;
+                        $existingDbIds[] = $lecture->id;
                     } else {
                         // Update existing lecture
                         $lecture = CourseLecture::where('course_id', $courseId)
@@ -132,16 +134,21 @@ class CourseLectureController extends Controller
 
                         if ($lecture) {
                             $lecture->update([
-                                'title' => $lectureData['title'] ?? $lecture->title,
-                                'content' => $lectureData['content'] ?? $lecture->content,
+                                'title' => $lectureData['title'],
+                                'content' => $lectureData['content'] ?? '',
                                 'order' => $order,
                             ]);
-                            $savedLectures[] = $lecture;
+                            $existingDbIds[] = $lecture->id;
                         }
                     }
 
                     $order++;
                 }
+
+                // Delete lectures from this course that were not in the request
+                CourseLecture::where('course_id', $courseId)
+                    ->whereNotIn('id', $existingDbIds)
+                    ->delete();
 
                 DB::commit();
 
