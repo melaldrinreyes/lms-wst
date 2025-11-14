@@ -116,13 +116,29 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       return;
     }
 
+    // Find the parent lecture
+    const parentLecture = lectures.find(l => l.id === parentId);
+    if (!parentLecture) {
+      setToast({ message: 'Parent lecture not found', type: 'error' });
+      return;
+    }
+
+    // Check if parent has a temporary ID (not yet saved)
+    const parentHasTemporaryId = !Number.isInteger(parentId) || parentId > 2147483647 || parentId < 1;
+    
+    if (parentHasTemporaryId) {
+      // Parent hasn't been saved yet
+      setToast({ message: 'Please save the parent module first by clicking "Save All"', type: 'warning' });
+      return;
+    }
+
     const newLecture = {
       id: Date.now(),
       parent_lecture_id: parentId,
       title: subLectureTitle,
       content: '',
       order: getChildren(parentId).length + 1,
-      level: 1,
+      level: parentLecture.level + 1,
       created_at: new Date().toISOString(),
     };
 
@@ -193,15 +209,23 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     try {
       setIsSaving(true);
       
+      // Sort lectures by level to ensure parents are saved before children
+      // This prevents foreign key constraint violations
+      const sortedLectures = [...lectures].sort((a, b) => {
+        const levelA = typeof a.level !== 'undefined' ? a.level : 0;
+        const levelB = typeof b.level !== 'undefined' ? b.level : 0;
+        return levelA - levelB;
+      });
+
       // Ensure all lectures have required fields
-      const lecturesWithDefaults = lectures.map(l => ({
+      const lecturesWithDefaults = sortedLectures.map(l => ({
         ...l,
         parent_lecture_id: l.parent_lecture_id || null,
         level: typeof l.level !== 'undefined' ? l.level : 0,
         content: l.content || '',
       }));
 
-      console.log('Sending all lectures to backend:', lecturesWithDefaults);
+      console.log('Sending all lectures to backend (sorted by level):', lecturesWithDefaults);
 
       const response = await api.post(`/courses/${courseId}/lectures`, {
         lectures: lecturesWithDefaults,
