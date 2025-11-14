@@ -179,24 +179,25 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
   const LectureItem = ({ lecture, isChild = false }) => {
     const children = getChildren(lecture.id);
     const hasChildren = children.length > 0;
+    const isExpanded = expandedLectures[lecture.id];
 
     return (
       <div key={lecture.id} className={isChild ? 'ml-6' : ''}>
         <div className="bg-gray-900 rounded-lg border border-gray-800 mb-2 overflow-hidden hover:border-orange-500/50 transition">
           <div
-            onClick={() => hasChildren && toggleLecture(lecture.id)}
+            onClick={() => toggleLecture(lecture.id)}
             className={`px-4 py-3 flex items-center gap-3 ${
-              hasChildren ? 'cursor-pointer hover:bg-gray-800' : ''
+              'cursor-pointer hover:bg-gray-800'
             } transition`}
           >
             {hasChildren ? (
-              <button className="flex-shrink-0">
-                {expandedLectures[lecture.id] ? (
+              <div className="flex-shrink-0">
+                {isExpanded ? (
                   <ChevronDown size={18} className="text-orange-500" />
                 ) : (
                   <ChevronRight size={18} className="text-gray-500" />
                 )}
-              </button>
+              </div>
             ) : (
               <Indent size={18} className="text-gray-500" />
             )}
@@ -215,14 +216,20 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             {isTeacher && (
               <div className="flex gap-2">
                 <button
-                  onClick={() => editLecture(lecture)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    editLecture(lecture);
+                  }}
                   className="p-1.5 hover:bg-blue-600/20 rounded text-blue-400 transition"
                   title="Edit"
                 >
                   <Edit size={16} />
                 </button>
                 <button
-                  onClick={() => setShowDeleteConfirm(lecture.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(lecture.id);
+                  }}
                   className="p-1.5 hover:bg-red-600/20 rounded text-red-400 transition"
                   title="Delete"
                 >
@@ -232,8 +239,33 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             )}
           </div>
 
-          {/* Render children */}
-          {hasChildren && expandedLectures[lecture.id] && (
+          {/* Show content if expanded and this is a leaf node (no children) */}
+          {isExpanded && !hasChildren && lecture.content && (
+            <div className="border-t border-gray-700 p-4 bg-gray-800/30">
+              <style>{`
+                .lecture-content h1 { font-size: 2.25rem; font-weight: bold; margin: 1.5rem 0 0.75rem 0; color: #f97316; line-height: 1.2; }
+                .lecture-content h2 { font-size: 1.875rem; font-weight: bold; margin: 1.25rem 0 0.75rem 0; color: #fb923c; line-height: 1.3; }
+                .lecture-content h3 { font-size: 1.5rem; font-weight: bold; margin: 1rem 0 0.5rem 0; color: #fdba74; line-height: 1.4; }
+                .lecture-content p { margin: 0.75rem 0; line-height: 1.8; color: #e5e7eb; }
+                .lecture-content ul { list-style-type: disc; margin-left: 2rem; margin: 0.75rem 0 0.75rem 2rem; }
+                .lecture-content ol { list-style-type: decimal; margin-left: 2rem; margin: 0.75rem 0 0.75rem 2rem; }
+                .lecture-content li { margin: 0.5rem 0; color: #d1d5db; }
+                .lecture-content blockquote { border-left: 4px solid #f97316; padding-left: 1.5rem; margin: 1rem 0; color: #d1d5db; font-style: italic; background: linear-gradient(90deg, #f97316 0%, rgba(249, 115, 22, 0.1) 10%, transparent 20%); padding: 1rem; border-radius: 0.5rem; }
+                .lecture-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+                .lecture-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; background: #111827; border: 2px solid #4b5563; border-radius: 0.75rem; }
+                .lecture-content table th { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); font-weight: bold; color: white; padding: 1rem; }
+                .lecture-content table td { border: 1px solid #4b5563; padding: 1rem; color: #d1d5db; background: #1f2937; }
+                .lecture-content iframe { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; aspect-ratio: 16 / 9; border: 2px solid #4b5563; }
+              `}</style>
+              <div 
+                className="lecture-content prose prose-invert max-w-none text-gray-300"
+                dangerouslySetInnerHTML={{ __html: lecture.content }}
+              />
+            </div>
+          )}
+
+          {/* Render children if expanded */}
+          {hasChildren && isExpanded && (
             <div className="border-t border-gray-700 p-3 bg-gray-900/50">
               {children.map(child => (
                 <LectureItem key={child.id} lecture={child} isChild={true} />
