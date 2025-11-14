@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Edit, X, Eye, Loader, Trash2 } from 'lucide-react';
+import { Save, Edit, X, Eye, Loader, Trash2, Eye as EyeOff } from 'lucide-react';
 import RichTextEditor from './Editor/RichTextEditor';
 import Toast from './ui/Toast';
 import axios from 'axios';
@@ -31,6 +31,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
   const [toast, setToast] = useState(null);
   const [originalContent, setOriginalContent] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
 
   useEffect(() => {
     fetchContent();
@@ -137,14 +138,71 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Edit Course Content</h2>
-            <RichTextEditor value={content} onChange={setContent} />
-            
-            <div className="flex gap-3 mt-4 justify-end">
+          <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-1">Create Course Content</h2>
+                  <p className="text-sm text-gray-400">Build engaging course materials with our WYSIWYG editor</p>
+                </div>
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 rounded-lg hover:bg-blue-600/30 transition"
+                  title={showPreview ? "Hide preview" : "Show preview"}
+                >
+                  <Eye size={18} />
+                  {showPreview ? 'Hide' : 'Show'} Preview
+                </button>
+              </div>
+            </div>
+
+            {/* Editor and Preview Layout */}
+            <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-700">
+              {/* Editor Section */}
+              <div className="flex-1 p-6">
+                <div className="mb-3">
+                  <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                    📝 Editor
+                  </label>
+                </div>
+                <RichTextEditor value={content} onChange={setContent} />
+              </div>
+
+              {/* Preview Section */}
+              {showPreview && (
+                <div className="flex-1 p-6 bg-gradient-to-b from-gray-800/50 to-gray-900/50">
+                  <div className="mb-3">
+                    <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                      👁️ Live Preview (Student View)
+                    </label>
+                  </div>
+                  <div className="bg-gray-900 rounded-xl border border-gray-700 p-4 max-h-[600px] overflow-y-auto">
+                    {content ? (
+                      <div 
+                        className="prose prose-invert max-w-none text-gray-300 leading-relaxed space-y-4"
+                        style={{ fontSize: '0.95rem', lineHeight: '1.7' }}
+                      >
+                        <div 
+                          dangerouslySetInnerHTML={{ __html: content }}
+                          className="space-y-3"
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">
+                        <p>Start editing to see a live preview of how students will see your content</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-800/50 border-t border-gray-700 px-6 py-4 flex gap-3 justify-end">
               <button
                 onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-800 transition"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700 transition"
               >
                 <X size={18} />
                 Cancel
@@ -152,7 +210,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition disabled:opacity-50 font-medium shadow-lg shadow-orange-900/30"
               >
                 <Save size={18} />
                 {isSaving ? 'Saving...' : 'Save Content'}
