@@ -18,16 +18,7 @@ class CourseLectureController extends Controller
         try {
             $course = Course::findOrFail($courseId);
             
-            // Check authorization
-            $user = auth()->user();
-            $isTeacher = $user && ($user->role_id == 2 || $user->role_id == 1); // 1=Admin, 2=Teacher
-            $isCourseOwner = $user && $user->id === $course->faculty_id;
-            
-            // Only teachers can see lectures endpoint, or course owner can see their own
-            if (!$isTeacher && !$isCourseOwner && $request->route()->getName() !== 'lectures.view') {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-            }
-
+            // Get lectures - everyone can view, but only include relevant fields for students
             $lectures = CourseLecture::where('course_id', $courseId)
                 ->orderBy('order')
                 ->get();
