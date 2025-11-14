@@ -49,6 +49,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       
       if (response.data.success) {
         const allLectures = response.data.lectures || [];
+        console.log('Fetched lectures:', allLectures);
+        console.log('Root lectures:', allLectures.filter(l => !l.parent_lecture_id));
+        console.log('Sub-lectures:', allLectures.filter(l => l.parent_lecture_id));
+        
         setLectures(allLectures);
         
         // Expand root lectures by default

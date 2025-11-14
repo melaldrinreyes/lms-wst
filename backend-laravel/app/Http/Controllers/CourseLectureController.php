@@ -18,8 +18,11 @@ class CourseLectureController extends Controller
         try {
             $course = Course::findOrFail($courseId);
             
-            // Get lectures - everyone can view, but only include relevant fields for students
+            // Get lectures - everyone can view
+            // Order by: level (roots first), then parent_lecture_id, then order
             $lectures = CourseLecture::where('course_id', $courseId)
+                ->orderBy('level')
+                ->orderBy('parent_lecture_id')
                 ->orderBy('order')
                 ->get();
 
