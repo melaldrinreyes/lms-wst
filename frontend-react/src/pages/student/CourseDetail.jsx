@@ -48,6 +48,7 @@ export default function CourseDetail() {
   // Notification badges
   const [newModulesCount, setNewModulesCount] = useState(0);
   const [newAssignmentsCount, setNewAssignmentsCount] = useState(0);
+  const [hasContent, setHasContent] = useState(false);
   
   // Submission modal state
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
@@ -111,8 +112,27 @@ export default function CourseDetail() {
     if (id) {
       fetchCourseData();
       fetchAssignments();
+      checkContentExists();
     }
   }, [id]);
+
+  const checkContentExists = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://127.0.0.1:8000/api/courses/${id}/content/view`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if (data.success && data.content?.content) {
+        setHasContent(true);
+      }
+    } catch (error) {
+      console.error('Error checking content:', error);
+    }
+  };
 
   const fetchCourseData = async () => {
     try {
@@ -637,7 +657,7 @@ export default function CourseDetail() {
       <div className="flex gap-2 border-b border-gray-800 overflow-x-auto">
         {[
           { id: 'overview', label: 'Overview', icon: BookOpen, count: 0 },
-          { id: 'content', label: 'Content', icon: FileEdit, count: 0 },
+          { id: 'content', label: 'Content', icon: FileEdit, count: hasContent ? 1 : 0, highlight: hasContent },
           { id: 'modules', label: 'Modules', icon: PlayCircle, count: newModulesCount },
           { id: 'assignments', label: 'Assignments', icon: FileText, count: newAssignmentsCount },
           { id: 'announcements', label: 'Announcements', icon: MessageSquare, count: 0 },
@@ -653,6 +673,11 @@ export default function CourseDetail() {
           >
             <tab.icon size={18} />
             <span>{tab.label}</span>
+            {tab.highlight && !tab.count && (
+              <span className="ml-1 px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-full">
+                ✓
+              </span>
+            )}
             {tab.count > 0 && (
               <span className="ml-1 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] text-center">
                 {tab.count}
@@ -666,6 +691,30 @@ export default function CourseDetail() {
       <div>
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Course Materials Quick Access */}
+            {hasContent && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-700/50 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:from-blue-900/40 hover:to-blue-800/30 transition-all"
+                onClick={() => setActiveTab('content')}
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileEdit size={20} className="text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Course Content</h3>
+                </div>
+                <p className="text-blue-200 text-sm mb-4">
+                  View important course materials, guidelines, and resources from your instructor.
+                </p>
+                <div className="flex items-center gap-2 text-blue-400 text-sm font-medium hover:text-blue-300 transition">
+                  <span>View Materials</span>
+                  <ArrowLeft size={16} className="rotate-180" />
+                </div>
+              </motion.div>
+            )}
+            
             {/* Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -729,12 +778,33 @@ export default function CourseDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl shadow-lg p-6">
-              <CourseContent 
-                courseId={id}
-                isTeacher={false}
-              />
-            </div>
+            {!hasContent ? (
+              <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileEdit className="h-10 w-10 text-gray-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">No Course Content Yet</h3>
+                <p className="text-gray-400">
+                  Your instructor hasn't posted any course content yet. Check back later for course materials and guidelines.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl shadow-lg p-6">
+                <div className="mb-4 flex items-center gap-2 pb-4 border-b border-gray-800">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <FileEdit size={20} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Course Materials</h3>
+                    <p className="text-sm text-gray-400">Important course information and guidelines</p>
+                  </div>
+                </div>
+                <CourseContent 
+                  courseId={id}
+                  isTeacher={false}
+                />
+              </div>
+            )}
           </motion.div>
         )}
 
