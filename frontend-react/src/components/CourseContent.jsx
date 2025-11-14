@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Edit, X, Eye, Loader } from 'lucide-react';
+import { Save, Edit, X, Eye, Loader, Trash2 } from 'lucide-react';
 import RichTextEditor from './Editor/RichTextEditor';
 import Toast from './ui/Toast';
 import axios from 'axios';
@@ -23,13 +23,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export default function CourseContent({ courseId, isTeacher = false, onSave }) {
+export default function CourseContent({ courseId, isTeacher = false, isAdmin = false, onSave }) {
   const [content, setContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [originalContent, setOriginalContent] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchContent();
@@ -87,6 +88,32 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
     setIsEditing(false);
   };
 
+  const handleDelete = async () => {
+    try {
+      setIsSaving(true);
+      
+      const response = await api.delete(`/courses/${courseId}/content`);
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to delete content');
+      }
+
+      setContent('');
+      setOriginalContent('');
+      setShowDeleteConfirm(false);
+      setToast({ message: 'Course content deleted successfully!', type: 'success' });
+      
+      if (onSave) {
+        onSave('');
+      }
+    } catch (error) {
+      setToast({ message: error.message || 'Failed to delete course content', type: 'error' });
+      console.error('Error deleting content:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -104,14 +131,14 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
     <div className="space-y-4">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      {isEditing && isTeacher ? (
+      {isEditing && (isTeacher || isAdmin) ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
           <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Edit Course Content</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{isAdmin ? 'Edit Course Content (Admin)' : 'Edit Course Content'}</h2>
             <RichTextEditor value={content} onChange={setContent} />
             
             <div className="flex gap-3 mt-4 justify-end">
@@ -139,8 +166,8 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          {isTeacher && (
-            <div className="flex justify-end">
+          {(isTeacher || isAdmin) && (
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setIsEditing(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
@@ -148,6 +175,15 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
                 <Edit size={18} />
                 Edit Content
               </button>
+              {isAdmin && content && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                >
+                  <Trash2 size={18} />
+                  Delete Content
+                </button>
+              )}
             </div>
           )}
 
@@ -173,13 +209,44 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           ) : (
             <div className="bg-gray-900 rounded-2xl border border-gray-800 p-12 text-center">
               <p className="text-gray-400">
-                {isTeacher 
+                {isTeacher || isAdmin
                   ? 'No course content yet. Click "Edit Content" to add information about this course.'
                   : 'No course content available'}
               </p>
             </div>
           )}
         </motion.div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
+          >
+            <h3 className="text-lg font-bold text-white mb-4">Delete Course Content?</h3>
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to delete all course content for this course? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isSaving}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {isSaving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );
