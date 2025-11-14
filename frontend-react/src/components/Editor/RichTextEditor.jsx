@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -40,6 +41,14 @@ export default function RichTextEditor({ value = '', onChange }) {
           openOnClick: false,
         },
       }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'link-class',
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
+      }),
       Image.configure({
         allowBase64: true,
       }),
@@ -60,6 +69,11 @@ export default function RichTextEditor({ value = '', onChange }) {
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    onPaste: (view, event) => {
+      // Allow browser default paste to handle HTML clipboard data
+      // This preserves links and formatting from pasted content
+      return false;
+    },
   });
 
   if (!editor) {
@@ -67,9 +81,43 @@ export default function RichTextEditor({ value = '', onChange }) {
   }
 
   const addLink = () => {
-    const url = prompt('Enter URL');
-    if (url) {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    const url = prompt('Enter URL (e.g., https://example.com)');
+    if (url && url.trim()) {
+      // Ensure URL has protocol
+      let finalUrl = url.trim();
+      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+        finalUrl = 'https://' + finalUrl;
+      }
+      
+      // If text is selected, apply link to selection
+      if (!editor.state.selection.empty) {
+        editor
+          .chain()
+          .focus()
+          .extendMarkRange('link')
+          .setLink({ href: finalUrl })
+          .run();
+      } else {
+        // If no text selected, insert URL as text
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'text',
+            text: url,
+            marks: [
+              {
+                type: 'link',
+                attrs: {
+                  href: finalUrl,
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                },
+              },
+            ],
+          })
+          .run();
+      }
     }
   };
 
