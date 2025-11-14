@@ -89,6 +89,13 @@ class CourseLectureController extends Controller
                 ], 400);
             }
 
+            if (empty($lecturesData)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No lectures provided',
+                ], 400);
+            }
+
             DB::beginTransaction();
 
             try {
@@ -104,41 +111,57 @@ class CourseLectureController extends Controller
                     $id = $lectureData['id'] ?? null;
                     
                     // Check if it's a temporary ID (from frontend Date.now() or very large number)
-                    $isTemporaryId = !is_numeric($id) || $id > 2147483647 || $id < 1;
+                    $isTemporaryId = !is_numeric($id) || intval($id) > 2147483647 || intval($id) < 1;
 
                     if ($isTemporaryId) {
                         // Create new lecture with hierarchical support
-                        $lecture = CourseLecture::create([
-                            'course_id' => $courseId,
-                            'parent_lecture_id' => isset($lectureData['parent_lecture_id']) && $lectureData['parent_lecture_id'] ? $lectureData['parent_lecture_id'] : null,
-                            'title' => $lectureData['title'],
-                            'content' => $lectureData['content'] ?? '',
-                            'order' => $lectureData['order'] ?? 0,
-                            'level' => $lectureData['level'] ?? 0,
-                            'created_by' => $user->id,
-                        ]);
-                        $existingDbIds[] = $lecture->id;
+                        try {
+                            $lecture = CourseLecture::create([
+                                'course_id' => intval($courseId),
+                                'parent_lecture_id' => (isset($lectureData['parent_lecture_id']) && !empty($lectureData['parent_lecture_id'])) ? intval($lectureData['parent_lecture_id']) : null,
+                                'title' => strval($lectureData['title']),
+                                'content' => isset($lectureData['content']) ? strval($lectureData['content']) : '',
+                                'order' => isset($lectureData['order']) ? intval($lectureData['order']) : 0,
+                                'level' => isset($lectureData['level']) ? intval($lectureData['level']) : 0,
+                                'created_by' => $user->id,
+                            ]);
+                            $existingDbIds[] = $lecture->id;
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Failed to create lecture: ' . $e->getMessage(),
+                            ], 400);
+                        }
                     } else {
                         // Update existing lecture
                         $lecture = CourseLecture::where('course_id', $courseId)
-                            ->where('id', $id)
+                            ->where('id', intval($id))
                             ->first();
 
                         if ($lecture) {
-                            $updateData = [
-                                'title' => $lectureData['title'],
-                                'content' => $lectureData['content'] ?? '',
-                                'order' => $lectureData['order'] ?? $lecture->order,
-                                'level' => $lectureData['level'] ?? $lecture->level,
-                            ];
-                            
-                            // Only update parent_lecture_id if provided
-                            if (isset($lectureData['parent_lecture_id'])) {
-                                $updateData['parent_lecture_id'] = $lectureData['parent_lecture_id'] ? $lectureData['parent_lecture_id'] : null;
+                            try {
+                                $updateData = [
+                                    'title' => strval($lectureData['title']),
+                                    'content' => isset($lectureData['content']) ? strval($lectureData['content']) : '',
+                                    'order' => isset($lectureData['order']) ? intval($lectureData['order']) : $lecture->order,
+                                    'level' => isset($lectureData['level']) ? intval($lectureData['level']) : $lecture->level,
+                                ];
+                                
+                                // Only update parent_lecture_id if provided
+                                if (isset($lectureData['parent_lecture_id'])) {
+                                    $updateData['parent_lecture_id'] = !empty($lectureData['parent_lecture_id']) ? intval($lectureData['parent_lecture_id']) : null;
+                                }
+                                
+                                $lecture->update($updateData);
+                                $existingDbIds[] = $lecture->id;
+                            } catch (\Exception $e) {
+                                DB::rollBack();
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'Failed to update lecture: ' . $e->getMessage(),
+                                ], 400);
                             }
-                            
-                            $lecture->update($updateData);
-                            $existingDbIds[] = $lecture->id;
                         }
                     }
                 }

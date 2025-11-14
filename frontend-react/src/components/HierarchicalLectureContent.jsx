@@ -142,9 +142,21 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       setIsSaving(true);
       const updatedLectures = lectures.map(l =>
         l.id === editingLectureId
-          ? { ...l, content: currentContent, updated_at: new Date().toISOString() }
-          : l
+          ? { 
+              ...l, 
+              content: currentContent, 
+              updated_at: new Date().toISOString(),
+              parent_lecture_id: l.parent_lecture_id || null,
+              level: typeof l.level !== 'undefined' ? l.level : 0,
+            }
+          : {
+              ...l,
+              parent_lecture_id: l.parent_lecture_id || null,
+              level: typeof l.level !== 'undefined' ? l.level : 0,
+            }
       );
+
+      console.log('Sending lectures to backend:', updatedLectures);
 
       const response = await api.post(`/courses/${courseId}/lectures`, {
         lectures: updatedLectures,
@@ -164,8 +176,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to save lecture';
-      setToast({ message: `Error: ${errorMsg}`, type: 'error' });
+      const errorDetails = error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : '';
+      setToast({ message: `Error: ${errorMsg} ${errorDetails}`, type: 'error' });
       console.error('Error saving lecture:', error);
+      console.error('Response data:', error.response?.data);
     } finally {
       setIsSaving(false);
     }
@@ -175,23 +189,35 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     try {
       setIsSaving(true);
       
+      // Ensure all lectures have required fields
+      const lecturesWithDefaults = lectures.map(l => ({
+        ...l,
+        parent_lecture_id: l.parent_lecture_id || null,
+        level: typeof l.level !== 'undefined' ? l.level : 0,
+        content: l.content || '',
+      }));
+
+      console.log('Sending all lectures to backend:', lecturesWithDefaults);
+
       const response = await api.post(`/courses/${courseId}/lectures`, {
-        lectures: lectures,
+        lectures: lecturesWithDefaults,
       });
 
       if (response.data.success) {
-        setLectures(response.data.lectures || lectures);
+        setLectures(response.data.lectures || lecturesWithDefaults);
         setUnsavedLectures([]); // Clear unsaved
         setToast({ message: 'All lectures saved successfully!', type: 'success' });
 
         if (onSave) {
-          onSave(response.data.lectures || lectures);
+          onSave(response.data.lectures || lecturesWithDefaults);
         }
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to save lectures';
-      setToast({ message: `Error: ${errorMsg}`, type: 'error' });
+      const errorDetails = error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : '';
+      setToast({ message: `Error: ${errorMsg} ${errorDetails}`, type: 'error' });
       console.error('Error saving lectures:', error);
+      console.error('Response data:', error.response?.data);
     } finally {
       setIsSaving(false);
     }
