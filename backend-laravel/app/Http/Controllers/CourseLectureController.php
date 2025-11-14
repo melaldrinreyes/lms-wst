@@ -93,7 +93,6 @@ class CourseLectureController extends Controller
 
             try {
                 // Process each lecture
-                $order = 1;
                 $existingDbIds = [];
 
                 foreach ($lecturesData as $lectureData) {
@@ -108,12 +107,14 @@ class CourseLectureController extends Controller
                     $isTemporaryId = !is_numeric($id) || $id > 2147483647 || $id < 1;
 
                     if ($isTemporaryId) {
-                        // Create new lecture
+                        // Create new lecture with hierarchical support
                         $lecture = CourseLecture::create([
                             'course_id' => $courseId,
+                            'parent_lecture_id' => $lectureData['parent_lecture_id'] ?? null,
                             'title' => $lectureData['title'],
                             'content' => $lectureData['content'] ?? '',
-                            'order' => $order,
+                            'order' => $lectureData['order'] ?? 0,
+                            'level' => $lectureData['level'] ?? 0,
                             'created_by' => $user->id,
                         ]);
                         $existingDbIds[] = $lecture->id;
@@ -125,15 +126,15 @@ class CourseLectureController extends Controller
 
                         if ($lecture) {
                             $lecture->update([
+                                'parent_lecture_id' => $lectureData['parent_lecture_id'] ?? $lecture->parent_lecture_id,
                                 'title' => $lectureData['title'],
                                 'content' => $lectureData['content'] ?? '',
-                                'order' => $order,
+                                'order' => $lectureData['order'] ?? $lecture->order,
+                                'level' => $lectureData['level'] ?? $lecture->level,
                             ]);
                             $existingDbIds[] = $lecture->id;
                         }
                     }
-
-                    $order++;
                 }
 
                 // Delete lectures from this course that were not in the request
@@ -145,6 +146,7 @@ class CourseLectureController extends Controller
 
                 // Reload and return all lectures
                 $allLectures = CourseLecture::where('course_id', $courseId)
+                    ->orderBy('parent_lecture_id')
                     ->orderBy('order')
                     ->get();
 

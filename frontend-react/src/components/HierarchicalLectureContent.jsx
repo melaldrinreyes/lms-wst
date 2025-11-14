@@ -36,6 +36,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [showAddSubModal, setShowAddSubModal] = useState(null); // For adding sub-lectures
   const [subLectureTitle, setSubLectureTitle] = useState('');
+  const [unsavedLectures, setUnsavedLectures] = useState([]); // Track newly created sub-lectures
 
   useEffect(() => {
     fetchLectures();
@@ -123,10 +124,11 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
     const updatedLectures = [...lectures, newLecture];
     setLectures(updatedLectures);
+    setUnsavedLectures([...unsavedLectures, newLecture.id]); // Mark as unsaved
     setExpandedLectures({ ...expandedLectures, [parentId]: true });
     setSubLectureTitle('');
     setShowAddSubModal(null);
-    setToast({ message: 'Sub-lecture created! Click Edit to add content.', type: 'success' });
+    setToast({ message: 'Sub-lecture created! Remember to save when done.', type: 'info' });
   };
 
   const editLecture = (lecture) => {
@@ -150,6 +152,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
       if (response.data.success) {
         setLectures(response.data.lectures || updatedLectures);
+        setUnsavedLectures([]); // Clear unsaved after successful save
         setIsEditing(false);
         setEditingLectureId(null);
         setCurrentContent('');
@@ -163,6 +166,32 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       const errorMsg = error.response?.data?.message || error.message || 'Failed to save lecture';
       setToast({ message: `Error: ${errorMsg}`, type: 'error' });
       console.error('Error saving lecture:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveAllLectures = async () => {
+    try {
+      setIsSaving(true);
+      
+      const response = await api.post(`/courses/${courseId}/lectures`, {
+        lectures: lectures,
+      });
+
+      if (response.data.success) {
+        setLectures(response.data.lectures || lectures);
+        setUnsavedLectures([]); // Clear unsaved
+        setToast({ message: 'All lectures saved successfully!', type: 'success' });
+
+        if (onSave) {
+          onSave(response.data.lectures || lectures);
+        }
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to save lectures';
+      setToast({ message: `Error: ${errorMsg}`, type: 'error' });
+      console.error('Error saving lectures:', error);
     } finally {
       setIsSaving(false);
     }
@@ -445,6 +474,27 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
               Tip: Add modules first, then expand to add sub-lectures
             </p>
           </div>
+
+          {unsavedLectures.length > 0 && (
+            <div className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-700/50 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-green-400">
+                  ✓ {unsavedLectures.length} unsaved sub-lecture{unsavedLectures.length !== 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Click "Save All" to save to database
+                </p>
+              </div>
+              <button
+                onClick={saveAllLectures}
+                disabled={isSaving}
+                className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition disabled:opacity-50 font-medium flex items-center gap-2 whitespace-nowrap"
+              >
+                <Save size={18} />
+                {isSaving ? 'Saving...' : 'Save All'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
