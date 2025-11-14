@@ -74,4 +74,12 @@ class Course extends Model
     {
         return $this->hasMany(Announcement::class);
     }
+
+    /**
+     * Get the course content
+     */
+    public function content()
+    {
+        return $this->hasOne(CourseContent::class);
+    }
 }

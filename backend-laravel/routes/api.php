@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseContentController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SuperAdminController;
@@ -72,6 +73,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/courses', [CourseController::class, 'store']);
         Route::put('/courses/{id}', [CourseController::class, 'update']);
         Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+    });
+    
+    // Course content routes (Faculty and Admin can manage, all can view)
+    // Important: Specific routes must come before parameterized routes
+    Route::get('/courses/{courseId}/content/view', [CourseContentController::class, 'view']);
+    Route::get('/courses/{courseId}/content', [CourseContentController::class, 'show']);
+    
+    Route::middleware(['check.role:2,1'])->group(function () {
+        Route::post('/courses/{courseId}/content', [CourseContentController::class, 'store']);
+        Route::delete('/courses/{courseId}/content', [CourseContentController::class, 'destroy']);
     });
     
     // Enrollment management (Faculty and Admin)

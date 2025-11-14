@@ -17,13 +17,15 @@ import {
   Send,
   Trash2,
   Edit,
-  Reply
+  Reply,
+  FileEdit
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
+import CourseContent from '../../components/CourseContent';
 import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
 export default function CourseDetail() {
@@ -635,6 +637,7 @@ export default function CourseDetail() {
       <div className="flex gap-2 border-b border-gray-800 overflow-x-auto">
         {[
           { id: 'overview', label: 'Overview', icon: BookOpen, count: 0 },
+          { id: 'content', label: 'Content', icon: FileEdit, count: 0 },
           { id: 'modules', label: 'Modules', icon: PlayCircle, count: newModulesCount },
           { id: 'assignments', label: 'Assignments', icon: FileText, count: newAssignmentsCount },
           { id: 'announcements', label: 'Announcements', icon: MessageSquare, count: 0 },
@@ -718,6 +721,21 @@ export default function CourseDetail() {
               </div>
             </motion.div>
           </div>
+        )}
+
+        {activeTab === 'content' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl shadow-lg p-6">
+              <CourseContent 
+                courseId={id}
+                isTeacher={false}
+              />
+            </div>
+          </motion.div>
         )}
 
         {activeTab === 'modules' && (

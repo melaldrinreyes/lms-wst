@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Edit, Trash2, FileText, Calendar, Users, 
-  CheckCircle, XCircle, Clock, Upload, Download, Eye, Check, X, Share2, Copy, BookOpen, BarChart, Megaphone, MessageCircle, Send, Reply
+  CheckCircle, XCircle, Clock, Upload, Download, Eye, Check, X, Share2, Copy, BookOpen, BarChart, Megaphone, MessageCircle, Send, Reply, FileEdit
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
+import CourseContent from '../../components/CourseContent';
 import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
 import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
@@ -980,6 +981,17 @@ export default function CourseManage() {
           >
             <Megaphone size={20} />
             <span>Announcements</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('content')}
+            className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
+              activeTab === 'content'
+                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+            }`}
+          >
+            <FileEdit size={20} />
+            <span>Content</span>
           </button>
         </div>
       </div>
@@ -2512,6 +2524,30 @@ export default function CourseManage() {
           </div>
         </Modal>
       )}
+
+      {/* Content Tab */}
+      {activeTab === 'content' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">Course Content</h2>
+            <p className="text-gray-400 text-sm">Create rich formatted course material for your students</p>
+          </div>
+          
+          <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl shadow-lg">
+            <CourseContent 
+              courseId={id}
+              isTeacher={true}
+              onSave={(content) => {
+                setToast({ 
+                  message: 'Course content saved successfully!', 
+                  type: 'success' 
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
