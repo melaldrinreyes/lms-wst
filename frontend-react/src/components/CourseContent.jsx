@@ -23,7 +23,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export default function CourseContent({ courseId, isTeacher = false, isAdmin = false, onSave }) {
+export default function CourseContent({ courseId, isTeacher = false, onSave }) {
   const [content, setContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -131,14 +131,14 @@ export default function CourseContent({ courseId, isTeacher = false, isAdmin = f
     <div className="space-y-4">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      {isEditing && (isTeacher || isAdmin) ? (
+      {isEditing && isTeacher ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
           <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">{isAdmin ? 'Edit Course Content (Admin)' : 'Edit Course Content'}</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Edit Course Content</h2>
             <RichTextEditor value={content} onChange={setContent} />
             
             <div className="flex gap-3 mt-4 justify-end">
@@ -166,7 +166,7 @@ export default function CourseContent({ courseId, isTeacher = false, isAdmin = f
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          {(isTeacher || isAdmin) && (
+          {isTeacher && (
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setIsEditing(true)}
@@ -175,7 +175,7 @@ export default function CourseContent({ courseId, isTeacher = false, isAdmin = f
                 <Edit size={18} />
                 Edit Content
               </button>
-              {isAdmin && content && (
+              {content && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
@@ -209,7 +209,7 @@ export default function CourseContent({ courseId, isTeacher = false, isAdmin = f
           ) : (
             <div className="bg-gray-900 rounded-2xl border border-gray-800 p-12 text-center">
               <p className="text-gray-400">
-                {isTeacher || isAdmin
+                {isTeacher
                   ? 'No course content yet. Click "Edit Content" to add information about this course.'
                   : 'No course content available'}
               </p>
