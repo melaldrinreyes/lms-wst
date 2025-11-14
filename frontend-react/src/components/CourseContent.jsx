@@ -246,22 +246,54 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           )}
 
           {content ? (
-            <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Eye size={20} />
-                Course Content
-              </h2>
-              <div 
-                className="prose prose-invert max-w-none text-gray-300 leading-relaxed space-y-4"
-                style={{
-                  fontSize: '1rem',
-                  lineHeight: '1.6',
-                }}
-              >
+            <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4">
+                <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                  <Eye size={20} className="text-blue-400" />
+                  Course Content
+                </h2>
+                <p className="text-sm text-gray-400">Course materials and resources from your instructor</p>
+              </div>
+              
+              {/* Content Area */}
+              <div className="p-6 md:p-8">
                 <div 
-                  dangerouslySetInnerHTML={{ __html: content }}
-                  className="space-y-4"
-                />
+                  className="prose prose-invert max-w-none text-gray-200 leading-relaxed"
+                  style={{
+                    fontSize: '1rem',
+                    lineHeight: '1.8',
+                  }}
+                >
+                  <style>{`
+                    .student-content h1 { font-size: 2.25rem; font-weight: bold; margin: 1.5rem 0 0.75rem 0; color: #f97316; line-height: 1.2; }
+                    .student-content h2 { font-size: 1.875rem; font-weight: bold; margin: 1.25rem 0 0.75rem 0; color: #fb923c; line-height: 1.3; }
+                    .student-content h3 { font-size: 1.5rem; font-weight: bold; margin: 1rem 0 0.5rem 0; color: #fdba74; line-height: 1.4; }
+                    .student-content p { margin: 0.75rem 0; line-height: 1.8; color: #e5e7eb; }
+                    .student-content ul { list-style-type: disc; margin-left: 2rem; margin: 0.75rem 0 0.75rem 2rem; }
+                    .student-content ol { list-style-type: decimal; margin-left: 2rem; margin: 0.75rem 0 0.75rem 2rem; }
+                    .student-content li { margin: 0.5rem 0; color: #d1d5db; }
+                    .student-content blockquote { border-left: 4px solid #f97316; padding-left: 1.5rem; margin: 1rem 0; color: #d1d5db; font-style: italic; background: linear-gradient(90deg, #f97316 0%, rgba(249, 115, 22, 0.1) 10%, transparent 20%); padding: 1rem; border-radius: 0.5rem; }
+                    .student-content code { background: #111827; padding: 0.25rem 0.5rem; border-radius: 0.35rem; font-family: 'Courier New', monospace; font-size: 0.9em; color: #fca5a5; border: 1px solid #4b5563; }
+                    .student-content pre { background: linear-gradient(135deg, #0f172a 0%, #111827 100%); padding: 1.5rem; border-radius: 0.75rem; overflow-x: auto; margin: 1rem 0; border: 1px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+                    .student-content pre code { background: none; padding: 0; color: #a1d8f7; border: none; }
+                    .student-content a { color: #60a5fa; text-decoration: underline; cursor: pointer; font-weight: 500; transition: all 0.2s ease; }
+                    .student-content a:hover { color: #93c5fd; text-decoration: underline wavy; text-decoration-color: #f97316; }
+                    .student-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
+                    .student-content img:hover { border-color: #f97316; box-shadow: 0 8px 20px rgba(249, 115, 22, 0.2); transform: scale(1.02); }
+                    .student-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; background: #111827; border: 2px solid #4b5563; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+                    .student-content table td, .student-content table th { border: 1px solid #4b5563; padding: 1rem; text-align: left; min-width: 120px; }
+                    .student-content table th { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); font-weight: bold; color: white; font-size: 0.95rem; }
+                    .student-content table td { color: #d1d5db; background: #1f2937; }
+                    .student-content table tr:hover td { background: #374151; }
+                    .student-content iframe { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; aspect-ratio: 16 / 9; border: 2px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
+                    .student-content iframe:hover { border-color: #f97316; box-shadow: 0 8px 20px rgba(249, 115, 22, 0.2); }
+                  `}</style>
+                  <div 
+                    dangerouslySetInnerHTML={{ __html: content }}
+                    className="student-content space-y-4"
+                  />
+                </div>
               </div>
             </div>
           ) : (
