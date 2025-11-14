@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import { Table, TableRow, TableCell } from '@tiptap/extension-table';
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
@@ -47,6 +47,7 @@ export default function RichTextEditor({ value = '', onChange }) {
         resizable: true,
       }),
       TableRow,
+      TableHeader,
       TableCell,
       TextStyle,
       Color,
