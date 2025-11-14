@@ -103,7 +103,7 @@ export default function RichTextEditor({ value = '', onChange }) {
       }
 
       if (videoId) {
-        editor.chain().focus().setYoutube({ src: `https://www.youtube.com/embed/${videoId}` }).run();
+        editor.chain().focus().setYoutubeVideo({ src: `https://www.youtube.com/embed/${videoId}` }).run();
         setVideoUrl('');
         setShowVideoModal(false);
       } else {
