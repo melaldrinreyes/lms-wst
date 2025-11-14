@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     setLoading(true);
     try {
-      console.log('Logging in with credentials:', { email: credentials.email });
+      console.log('Logging in with credentials:', { email: credentials.email, hasPassword: !!credentials.password });
       const response = await authAPI.login(credentials);
       console.log('Login response:', response);
       
@@ -29,6 +29,16 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Login error:', error);
       console.error('Error response:', error.response?.data);
+      console.error('Full error object:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data,
+        }
+      });
       return { 
         success: false, 
         error: error.response?.data?.message || 'Login failed. Please try again.' 

@@ -61,7 +61,7 @@ export default function FacultyDashboard() {
       }
       
       if (pendingResult.status === 'fulfilled' && pendingResult.value?.success) {
-        pendingSubmissions = pendingResult.value?.pending_count || 0;
+        pendingSubmissions = pendingResult.value?.count || 0;
       } else {
         console.error('Pending submissions fetch failed:', pendingResult);
       }
@@ -112,6 +112,7 @@ export default function FacultyDashboard() {
       icon: ClipboardCheck,
       color: 'from-orange-500 to-orange-600',
       link: '/faculty/submissions',
+      badge: stats.pendingSubmissions > 0,
     },
     {
       title: 'Join Requests',

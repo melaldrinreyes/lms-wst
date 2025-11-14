@@ -57,6 +57,7 @@ export const authAPI = {
   },
 
   login: async (credentials) => {
+    console.log('Sending login request with:', credentials);
     const response = await api.post('/login', credentials);
     return response.data;
   },

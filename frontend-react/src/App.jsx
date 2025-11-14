@@ -112,6 +112,7 @@ import Assignments from './pages/student/Assignments';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
+import AdminStudents from './pages/admin/Students';
 import AdminCourses from './pages/admin/Courses';
 import CourseManage from './pages/admin/CourseManage';
 import Instructors from './pages/admin/Instructors';
@@ -222,6 +223,7 @@ function App() {
             >
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
+              <Route path="students" element={<AdminStudents />} />
               <Route path="courses" element={<AdminCourses />} />
               <Route path="courses/:id" element={<CourseManage />} />
               <Route path="instructors" element={<Instructors />} />

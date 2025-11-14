@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, BookOpen, Users, FileText, Calendar, Upload, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
+import { courseAPI, superAdminAPI } from '../../services/api';
 
 export default function AdminCourses() {
+  const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [instructorMap, setInstructorMap] = useState({});
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -20,61 +24,75 @@ export default function AdminCourses() {
     thumbnail: ''
   });
 
-  const courses = [
-    { 
-      id: 1, 
-      code: 'CS101', 
-      name: 'Introduction to Computer Science', 
-      instructor: 'Dr. John Smith',
-      faculty_id: 2,
-      students: 45, 
-      modules: 3,
-      assignments: 2,
-      status: 'active',
-      credits: 3,
-      semester: '1st Semester',
-      academic_year: '2024-2025',
-      thumbnail: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=400&q=80',
-      description: 'Fundamentals of programming, algorithms, and computational thinking'
-    },
-    { 
-      id: 2, 
-      code: 'MATH101', 
-      name: 'College Algebra', 
-      instructor: 'Dr. John Smith',
-      faculty_id: 2,
-      students: 50, 
-      modules: 2,
-      assignments: 1,
-      status: 'active',
-      credits: 3,
-      semester: '1st Semester',
-      academic_year: '2024-2025',
-      thumbnail: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&q=80',
-      description: 'Introduction to algebraic concepts and problem solving'
-    },
-    { 
-      id: 3, 
-      code: 'ENG101', 
-      name: 'English Communication Skills', 
-      instructor: 'Dr. John Smith',
-      faculty_id: 2,
-      students: 38, 
-      modules: 0,
-      assignments: 0,
-      status: 'active',
-      credits: 3,
-      semester: '1st Semester',
-      academic_year: '2024-2025',
-      thumbnail: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&q=80',
-      description: 'Development of effective written and oral communication'
-    },
-  ];
+  // Fetch courses and instructors on mount
+  useEffect(() => {
+    fetchInstructors();
+  }, []);
+
+  // Fetch courses when instructorMap is updated
+  useEffect(() => {
+    if (Object.keys(instructorMap).length > 0 || !loading) {
+      fetchCourses();
+    }
+  }, [instructorMap]);
+
+  const fetchInstructors = async () => {
+    try {
+      const response = await superAdminAPI.getInstructors();
+      if (response.success) {
+        const map = {};
+        response.instructors.forEach(instructor => {
+          map[instructor.id] = instructor.name;
+        });
+        setInstructorMap(map);
+      }
+    } catch (error) {
+      console.error('Error fetching instructors:', error);
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await courseAPI.getAll();
+      
+      if (response.success) {
+        // Transform API response to match component expectations
+        const formattedCourses = response.courses.map(course => ({
+          id: course.id,
+          code: course.code,
+          name: course.name,
+          description: course.description,
+          faculty_id: course.faculty_id || 0,
+          instructor: instructorMap[course.faculty_id] || 'Unknown',
+          students: course.students || 0,
+          modules: course.modules || 0,
+          assignments: course.assignments || 0,
+          status: course.status,
+          credits: course.credits,
+          semester: course.semester,
+          academic_year: course.academic_year,
+          thumbnail: course.thumbnail || `https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=400&q=80`,
+        }));
+        setCourses(formattedCourses);
+      } else {
+        setToast({ message: 'Failed to load courses', type: 'error' });
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      setToast({
+        message: error.response?.data?.message || 'Failed to load courses',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCourses = courses.filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+    (course.instructor && course.instructor.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getStatusBadge = (status) => {
@@ -113,19 +131,63 @@ export default function AdminCourses() {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingCourse) {
-      setToast({ message: 'Course updated successfully!', type: 'success' });
-    } else {
-      setToast({ message: 'Course created successfully!', type: 'success' });
+    try {
+      if (editingCourse) {
+        const response = await courseAPI.update(editingCourse.id, {
+          course_code: formData.code,
+          course_name: formData.name,
+          description: formData.description,
+          faculty_id: formData.faculty_id,
+          credits: formData.credits,
+          semester: formData.semester,
+          academic_year: formData.academic_year,
+        });
+        if (response.success) {
+          setToast({ message: 'Course updated successfully!', type: 'success' });
+          fetchCourses();
+        }
+      } else {
+        const response = await courseAPI.create({
+          course_code: formData.code,
+          course_name: formData.name,
+          description: formData.description,
+          faculty_id: formData.faculty_id,
+          credits: formData.credits,
+          semester: formData.semester,
+          academic_year: formData.academic_year,
+        });
+        if (response.success) {
+          setToast({ message: 'Course created successfully!', type: 'success' });
+          fetchCourses();
+        }
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error saving course:', error);
+      setToast({
+        message: error.response?.data?.message || 'Failed to save course',
+        type: 'error',
+      });
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (courseId) => {
+  const handleDelete = async (courseId) => {
     if (confirm('Are you sure you want to delete this course?')) {
-      setToast({ message: 'Course deleted successfully!', type: 'success' });
+      try {
+        const response = await courseAPI.delete(courseId);
+        if (response.success) {
+          setToast({ message: 'Course deleted successfully!', type: 'success' });
+          fetchCourses();
+        }
+      } catch (error) {
+        console.error('Error deleting course:', error);
+        setToast({
+          message: error.response?.data?.message || 'Failed to delete course',
+          type: 'error',
+        });
+      }
     }
   };
 
@@ -161,7 +223,28 @@ export default function AdminCourses() {
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden animate-pulse">
+              <div className="h-48 bg-gray-200 dark:bg-gray-700"></div>
+              <div className="p-6 space-y-3">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredCourses.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
+          <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">
+            {searchTerm ? 'No courses found' : 'No courses yet. Create one to get started!'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => (
           <div
             key={course.id}
@@ -247,7 +330,8 @@ export default function AdminCourses() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Add/Edit Course Modal */}
       <Modal

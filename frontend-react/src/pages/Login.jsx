@@ -23,6 +23,7 @@ export default function Login() {
       return;
     }
 
+    console.log('Form data before login:', formData);
     console.log('Attempting login with:', { email: formData.email });
     
     const result = await login(formData);
