@@ -20,7 +20,7 @@ class CourseLectureController extends Controller
             
             // Check authorization
             $user = auth()->user();
-            $isTeacher = $user && ($user->role === 'teacher' || $user->role === 'admin');
+            $isTeacher = $user && ($user->role_id == 2 || $user->role_id == 1); // 1=Admin, 2=Teacher
             $isCourseOwner = $user && $user->id === $course->faculty_id;
             
             // Only teachers can see lectures endpoint, or course owner can see their own
@@ -77,15 +77,15 @@ class CourseLectureController extends Controller
         try {
             $user = auth()->user();
             
-            // Check authorization - only teachers
-            if ($user->role !== 'teacher' && $user->role !== 'admin') {
+            // Check authorization - only teachers (role_id=2) and admin (role_id=1)
+            if ($user->role_id != 2 && $user->role_id != 1) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
             $course = Course::findOrFail($courseId);
             
-            // Check course ownership
-            if ($user->role === 'teacher' && $user->id !== $course->faculty_id) {
+            // Check course ownership - teachers can only edit their own courses
+            if ($user->role_id == 2 && $user->id !== $course->faculty_id) {
                 return response()->json(['success' => false, 'message' => 'You cannot edit this course'], 403);
             }
 
@@ -175,8 +175,8 @@ class CourseLectureController extends Controller
         try {
             $user = auth()->user();
             
-            // Check authorization
-            if ($user->role !== 'teacher' && $user->role !== 'admin') {
+            // Check authorization - only teachers (role_id=2) and admin (role_id=1)
+            if ($user->role_id != 2 && $user->role_id != 1) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -188,7 +188,8 @@ class CourseLectureController extends Controller
                 return response()->json(['success' => false, 'message' => 'Lecture not found'], 404);
             }
 
-            if ($user->role === 'teacher' && $user->id !== $course->faculty_id) {
+            // Teachers can only delete from their own courses
+            if ($user->role_id == 2 && $user->id !== $course->faculty_id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
