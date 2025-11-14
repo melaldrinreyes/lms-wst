@@ -34,6 +34,8 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
   const [newParentId, setNewParentId] = useState(null);
   const [currentContent, setCurrentContent] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showAddSubModal, setShowAddSubModal] = useState(null); // For adding sub-lectures
+  const [subLectureTitle, setSubLectureTitle] = useState('');
 
   useEffect(() => {
     fetchLectures();
@@ -100,6 +102,31 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     setNewLectureTitle('');
     setNewParentId(null);
     setToast({ message: 'Lecture added! Click Edit to add content.', type: 'success' });
+  };
+
+  // Add a sub-lecture to a specific parent
+  const addSubLecture = (parentId) => {
+    if (!subLectureTitle.trim()) {
+      setToast({ message: 'Please enter a sub-lecture title', type: 'error' });
+      return;
+    }
+
+    const newLecture = {
+      id: Date.now(),
+      parent_lecture_id: parentId,
+      title: subLectureTitle,
+      content: '',
+      order: getChildren(parentId).length + 1,
+      level: 1,
+      created_at: new Date().toISOString(),
+    };
+
+    const updatedLectures = [...lectures, newLecture];
+    setLectures(updatedLectures);
+    setExpandedLectures({ ...expandedLectures, [parentId]: true });
+    setSubLectureTitle('');
+    setShowAddSubModal(null);
+    setToast({ message: 'Sub-lecture created! Click Edit to add content.', type: 'success' });
   };
 
   const editLecture = (lecture) => {
@@ -215,6 +242,16 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
             {isTeacher && (
               <div className="flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAddSubModal(lecture.id);
+                  }}
+                  className="p-1.5 hover:bg-green-600/20 rounded text-green-400 transition"
+                  title="Add Sub-Lecture"
+                >
+                  <Plus size={16} />
+                </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -455,6 +492,53 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
               >
                 {isSaving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Add Sub-Lecture Modal */}
+      {showAddSubModal !== null && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
+          >
+            <h3 className="text-lg font-bold text-white mb-4">
+              Create Sub-Lecture
+            </h3>
+            <div className="mb-4">
+              <label className="block text-sm text-gray-300 mb-2">
+                Sub-Lecture Title
+              </label>
+              <input
+                type="text"
+                value={subLectureTitle}
+                onChange={(e) => setSubLectureTitle(e.target.value)}
+                placeholder="e.g., Chapter 1: Getting Started"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                onKeyPress={(e) => e.key === 'Enter' && addSubLecture(showAddSubModal)}
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAddSubModal(null);
+                  setSubLectureTitle('');
+                }}
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => addSubLecture(showAddSubModal)}
+                disabled={isSaving || !subLectureTitle.trim()}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? 'Creating...' : 'Create'}
               </button>
             </div>
           </motion.div>
