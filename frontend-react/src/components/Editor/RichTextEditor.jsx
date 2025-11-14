@@ -1,6 +1,11 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import { Table, TableRow, TableCell } from '@tiptap/extension-table';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
+import Youtube from '@tiptap/extension-youtube';
+import { useState } from 'react';
 import {
   Bold,
   Italic,
@@ -14,10 +19,17 @@ import {
   Quote,
   Code,
   ImageIcon,
+  Table as TableIcon,
+  Film,
+  Palette,
 } from 'lucide-react';
 import './RichTextEditor.css';
 
 export default function RichTextEditor({ value = '', onChange }) {
+  const [videoUrl, setVideoUrl] = useState('');
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [textColor, setTextColor] = useState('#ffffff');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -30,6 +42,17 @@ export default function RichTextEditor({ value = '', onChange }) {
       }),
       Image.configure({
         allowBase64: true,
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableCell,
+      TextStyle,
+      Color,
+      Youtube.configure({
+        controls: true,
+        nocookie: true,
       }),
     ],
     content: value,
@@ -54,6 +77,42 @@ export default function RichTextEditor({ value = '', onChange }) {
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
+  };
+
+  const addTable = () => {
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .run();
+  };
+
+  const addYoutubeVideo = () => {
+    if (videoUrl) {
+      // Extract video ID from various YouTube URL formats
+      let videoId = videoUrl;
+      
+      // Format: https://youtu.be/dQw4w9WgXcQ
+      if (videoUrl.includes('youtu.be/')) {
+        videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+      }
+      // Format: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+      else if (videoUrl.includes('youtube.com')) {
+        videoId = new URL(videoUrl).searchParams.get('v');
+      }
+
+      if (videoId) {
+        editor.chain().focus().setYoutube({ src: `https://www.youtube.com/embed/${videoId}` }).run();
+        setVideoUrl('');
+        setShowVideoModal(false);
+      } else {
+        alert('Invalid YouTube URL');
+      }
+    }
+  };
+
+  const setColor = (color) => {
+    editor.chain().focus().setColor(color).run();
   };
 
   return (
@@ -148,6 +207,38 @@ export default function RichTextEditor({ value = '', onChange }) {
           >
             <ImageIcon size={18} />
           </button>
+          <button
+            onClick={() => setShowVideoModal(true)}
+            className="toolbar-btn"
+            title="Add YouTube Video"
+          >
+            <Film size={18} />
+          </button>
+          <button
+            onClick={addTable}
+            className="toolbar-btn"
+            title="Add Table"
+          >
+            <TableIcon size={18} />
+          </button>
+        </div>
+
+        <div className="toolbar-divider"></div>
+
+        <div className="toolbar-group">
+          <div className="flex items-center gap-2">
+            <Palette size={18} className="text-gray-400" />
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => {
+                setTextColor(e.target.value);
+                setColor(e.target.value);
+              }}
+              className="h-8 w-12 cursor-pointer rounded"
+              title="Text Color"
+            />
+          </div>
         </div>
 
         <div className="toolbar-divider"></div>
@@ -171,6 +262,37 @@ export default function RichTextEditor({ value = '', onChange }) {
           </button>
         </div>
       </div>
+
+      {/* YouTube Video Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+            <h3 className="text-lg font-bold text-white mb-4">Add YouTube Video</h3>
+            <input
+              type="text"
+              placeholder="Paste YouTube URL (e.g., https://youtu.be/dQw4w9WgXcQ)"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
+              onKeyPress={(e) => e.key === 'Enter' && addYoutubeVideo()}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowVideoModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addYoutubeVideo}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+              >
+                Add Video
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Editor */}
       <EditorContent editor={editor} className="editor-content" />

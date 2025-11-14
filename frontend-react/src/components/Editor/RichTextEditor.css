@@ -18,6 +18,7 @@
 .toolbar-group {
   display: flex;
   gap: 0.25rem;
+  align-items: center;
 }
 
 .toolbar-divider {
@@ -165,6 +166,43 @@
   height: auto;
   border-radius: 0.5rem;
   margin: 0.5rem 0;
+}
+
+/* Table styling */
+.editor-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.editor-content table td,
+.editor-content table th {
+  border: 1px solid #4b5563;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.editor-content table th {
+  background: #111827;
+  font-weight: bold;
+  color: #f97316;
+}
+
+.editor-content table td {
+  background: #1f2937;
+}
+
+.editor-content table tr:hover td {
+  background: #374151;
+}
+
+/* YouTube Video styling */
+.editor-content iframe {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 0.5rem 0;
+  aspect-ratio: 16 / 9;
 }
 
 /* Scrollbar styling */
