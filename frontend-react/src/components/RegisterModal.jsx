@@ -188,13 +188,6 @@ export default function RegisterModal({ isOpen, onClose }) {
                   </button>
                 </form>
 
-                {/* Info Note */}
-                <div className="mt-3 p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                  <p className="text-xs text-blue-400 text-center">
-                    <strong>Student Registration Only.</strong> Faculty and staff accounts are created by administrators.
-                  </p>
-                </div>
-
                 {/* Divider */}
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">

@@ -12,16 +12,23 @@ export default function Navbar() {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
 
+  const handleScrollTo = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const navLinks = user
     ? [
-        { to: `/${user.role}`, label: 'Dashboard' },
-        { to: '/chatbot', label: 'AI Assistant' },
-        { to: '/profile', label: 'Profile' },
+        { to: `/${user.role}`, label: 'Dashboard', isRoute: true },
+        { to: '/chatbot', label: 'AI Assistant', isRoute: true },
+        { to: '/profile', label: 'Profile', isRoute: true },
       ]
     : [
-        { to: '/', label: 'Home' },
-        { to: '/courses', label: 'Courses' },
-        { to: '/about', label: 'About' },
+        { to: 'home', label: 'Home', isRoute: false },
+        { to: 'courses', label: 'Courses', isRoute: false },
+        { to: 'about', label: 'About', isRoute: false },
       ];
 
   return (
@@ -54,7 +61,7 @@ export default function Navbar() {
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav onLoginClick={() => setLoginModalOpen(true)} />
       
-      <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-30">
+      <nav className="bg-gray-900 border-b border-gray-800 fixed top-0 left-0 right-0 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -70,13 +77,23 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="text-gray-300 hover:text-orange-500 font-medium transition"
-              >
-                {link.label}
-              </Link>
+              link.isRoute ? (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="text-gray-300 hover:text-orange-500 font-medium transition"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <button
+                  key={link.to}
+                  onClick={() => handleScrollTo(link.to)}
+                  className="text-gray-300 hover:text-orange-500 font-medium transition"
+                >
+                  {link.label}
+                </button>
+              )
             ))}
             
             {!user && (

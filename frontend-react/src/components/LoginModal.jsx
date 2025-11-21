@@ -152,13 +152,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwit
                   </button>
                 </form>
 
-                {/* Info Note */}
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                  <p className="text-xs text-blue-400 text-center">
-                    Your account role will be automatically detected upon login.
-                  </p>
-                </div>
-
                 {/* Divider */}
                 <div className="relative my-5">
                   <div className="absolute inset-0 flex items-center">

@@ -15,6 +15,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-950 pb-20 md:pb-0 overflow-x-hidden">
+      <Navbar />
       <LoginModal 
         isOpen={loginModalOpen} 
         onClose={() => setLoginModalOpen(false)}
@@ -39,11 +40,21 @@ export default function Home() {
           setLoginModalOpen(true);
         }}
       />
-      <Navbar />
-
+      
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32">
-        {/* Background */}
+      <section id="home" className="relative overflow-hidden py-20 lg:py-32 mt-16">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-sm"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=1920&q=80)',
+            }}
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/40 via-gray-950/50 to-gray-950/60"></div>
+        </div>
+
+        {/* Animated Blobs */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-1/4 right-1/4 w-64 h-64 md:w-96 md:h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -136,8 +147,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-gray-900/50">
+      {/* Courses Section */}
+      <section id="courses" className="py-20 bg-gray-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
@@ -206,8 +217,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
+      {/* About Section */}
+      <section id="about" className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -223,13 +234,13 @@ export default function Home() {
             <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
               Join MINSU E-LEARN today and unlock your potential with world-class education.
             </p>
-            <Link
-              to="/register"
+            <button
+              onClick={() => setRegisterModalOpen(true)}
               className="inline-flex items-center gap-2 px-10 py-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/50 hover:shadow-orange-500/70 text-lg"
             >
               Get Started Now
               <ArrowRight size={24} />
-            </Link>
+            </button>
           </motion.div>
         </div>
       </section>

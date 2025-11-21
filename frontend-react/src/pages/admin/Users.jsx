@@ -92,23 +92,24 @@ export default function AdminUsers() {
     <div className="space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
           Manage Users
         </h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium"
         >
           <UserPlus size={20} />
           Add User
         </button>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
@@ -143,7 +144,8 @@ export default function AdminUsers() {
               </div>
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="p-6 text-center">
+            <div className="p-12 text-center">
+              <UserPlus className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400">
                 {searchTerm || filterRole !== 'all' ? 'No users found' : 'No users yet'}
               </p>
@@ -197,14 +199,14 @@ export default function AdminUsers() {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
                         <button
-                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition"
+                          className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
                           title="Edit"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition"
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
                           title="Delete"
                         >
                           <Trash2 size={16} />
