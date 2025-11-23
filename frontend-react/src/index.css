@@ -114,6 +114,11 @@
   .surface-variant {
     @apply bg-gray-50 dark:bg-[#2c2c2c];
   }
+  
+  /* Profile Picture */
+  .profile-picture {
+    @apply w-16 h-16 rounded-full object-cover shadow-md;
+  }
 }
 
 @layer utilities {

@@ -62,7 +62,6 @@ export default function DashboardLayout({ role }) {
     admin: [
       { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/admin/users', icon: User, label: 'Manage Users' },
-      { to: '/admin/courses', icon: BookOpen, label: 'Manage Courses' },
       { to: '/profile', icon: User, label: 'Profile', external: true },
     ],
     faculty: [
@@ -84,7 +83,6 @@ export default function DashboardLayout({ role }) {
     admin: [
       { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/admin/users', icon: User, label: 'Users' },
-      { to: '/admin/courses', icon: BookOpen, label: 'Courses' },
       { to: '/profile', icon: User, label: 'Profile' },
     ],
     faculty: [

@@ -19,6 +19,13 @@ export default function Navbar() {
     }
   };
 
+  const navigateToWhyChoose = () => {
+    const section = document.getElementById('why-choose');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const navLinks = user
     ? [
         { to: `/${user.role}`, label: 'Dashboard', isRoute: true },
@@ -26,8 +33,9 @@ export default function Navbar() {
       ]
     : [
         { to: 'home', label: 'Home', isRoute: false },
-        { to: 'courses', label: 'Courses', isRoute: false },
-        { to: 'about', label: 'About', isRoute: false },
+        { to: 'why-choose', label: 'Why Choose Us', isRoute: false },
+        { to: 'values', label: 'Our Values', isRoute: false },
+        { to: 'story', label: 'Our Story', isRoute: false },
       ];
 
   return (

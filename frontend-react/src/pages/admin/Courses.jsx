@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
 import { courseAPI, superAdminAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminCourses() {
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState(null);
@@ -199,13 +201,15 @@ export default function AdminCourses() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
           Manage Courses
         </h1>
-        <button
-          onClick={handleAddCourse}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium"
-        >
-          <Plus size={20} />
-          Add Course
-        </button>
+        {user?.role === 'faculty' && (
+          <button
+            onClick={handleAddCourse}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium"
+          >
+            <Plus size={20} />
+            Add Course
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -217,7 +221,7 @@ export default function AdminCourses() {
             placeholder="Search courses..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full pl-10 pr-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           />
         </div>
       </div>
@@ -312,20 +316,24 @@ export default function AdminCourses() {
                   <Eye size={16} />
                   Manage
                 </Link>
-                <button 
-                  onClick={() => handleEditCourse(course)}
-                  className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
-                  title="Edit Course"
-                >
-                  <Edit size={18} />
-                </button>
-                <button 
-                  onClick={() => handleDelete(course.id)}
-                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
-                  title="Delete Course"
-                >
-                  <Trash2 size={18} />
-                </button>
+                {user?.role === 'faculty' && (
+                  <>
+                    <button 
+                      onClick={() => handleEditCourse(course)}
+                      className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
+                      title="Edit Course"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(course.id)}
+                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                      title="Delete Course"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

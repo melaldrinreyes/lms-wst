@@ -105,8 +105,17 @@ export default function MobileBottomNav({ onLoginClick }) {
                 {active && (
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-b-full"></div>
                 )}
-                
-                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+
+                {item.to === '/profile' ? (
+                  <img
+                    src={user?.profilePicture || '/default-profile.png'}
+                    alt="Profile"
+                    className="profile-picture"
+                  />
+                ) : (
+                  <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+                )}
+
                 <span className={`text-[10px] leading-tight whitespace-nowrap ${active ? 'font-bold' : 'font-medium'}`}>
                   {item.label}
                 </span>

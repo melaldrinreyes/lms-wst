@@ -242,6 +242,9 @@ export default function Students() {
                     Phone
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    Instructor(s)
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
                     Status
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
@@ -276,6 +279,22 @@ export default function Students() {
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-400">
                       {student.phone || '-'}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-400">
+                      {Array.isArray(student.instructors) && student.instructors.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                          {student.instructors.map((instructor, idx) => (
+                            <li key={idx} className="text-gray-300">
+                              {instructor.name}
+                              {instructor.email ? (
+                                <span className="ml-2 text-xs text-gray-400">({instructor.email})</span>
+                              ) : null}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-gray-500">-</span>
+                      )}
                     </td>
                     <td className="py-4 px-6">
                       <span

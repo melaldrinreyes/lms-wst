@@ -28,6 +28,7 @@ export default function SuperAdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+  const [adminProfile, setAdminProfile] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -40,6 +41,7 @@ export default function SuperAdminDashboard() {
       
       if (response.success) {
         setStats(response.statistics);
+        setAdminProfile(response.adminProfile); // Assuming the API returns adminProfile
       } else {
         setToast({ message: 'Failed to load dashboard data', type: 'error' });
       }
@@ -73,9 +75,12 @@ Dashboard Statistics:
 - Total Students: ${stats.students.total}
 - Total Courses: ${stats.courses.total}
 - Total Instructors: ${stats.instructors.total}
+- Active Instructors: ${stats.instructors.active}
+- Inactive Instructors: ${stats.instructors.inactive}
 - Total Enrollments: ${stats.enrollments.total}
-- Pending Submissions: ${stats.submissions.pending}
+- Total Submissions: ${stats.submissions.total}
 - Graded Submissions: ${stats.submissions.graded}
+- Pending Submissions: ${stats.submissions.pending}
 `;
       
       const element = document.createElement('a');
@@ -90,33 +95,6 @@ Dashboard Statistics:
     } catch (error) {
       console.error('Export error:', error);
       setToast({ message: 'Failed to export report', type: 'error' });
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleViewAllCourses = async () => {
-    setActionLoading('courses');
-    try {
-      navigate('/admin/courses');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleViewAllStudents = async () => {
-    setActionLoading('students');
-    try {
-      navigate('/admin/students');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleViewAllInstructors = async () => {
-    setActionLoading('instructors');
-    try {
-      navigate('/admin/instructors');
     } finally {
       setActionLoading(null);
     }
@@ -137,32 +115,54 @@ Dashboard Statistics:
       color: 'from-purple-500 to-purple-600',
       link: '/admin/courses',
     },
+    {
+      title: 'Total Instructors',
+      value: stats.instructors.total,
+      icon: Users,
+      color: 'from-blue-500 to-blue-600',
+      link: '/admin/instructors',
+    },
+    {
+      title: 'Total Enrollments',
+      value: stats.enrollments.total,
+      icon: ClipboardCheck,
+      color: 'from-orange-500 to-orange-600',
+      link: '/admin/enrollments',
+    },
   ];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-      
+
+      {/* Admin Profile Section */}
+      {adminProfile && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
+          <div className="flex items-center gap-4">
+            <img
+              src={adminProfile.pictureUrl || '/default-profile.png'}
+              alt="Admin Profile"
+              className="profile-picture"
+            />
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{adminProfile.name}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">System Administrator</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Material Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-medium text-gray-900 dark:text-white">Admin Dashboard</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manage instructors, monitor activities, and view statistics
-          </p>
+          <h1 className="text-4xl font-bold text-white drop-shadow mb-1">Admin Dashboard</h1>
+          <p className="text-base text-gray-300 drop-shadow-sm">Manage instructors, monitor activities, and view statistics</p>
         </div>
-        <Link
-          to="/admin/instructors/new"
-          className="btn-primary inline-flex items-center gap-2"
-        >
-          <UserPlus className="w-4 h-4" />
-          Add Instructor
-        </Link>
       </div>
 
       {/* Material Stats Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2].map((i) => (
             <div key={i} className="card p-6 animate-pulse">
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
@@ -171,7 +171,7 @@ Dashboard Statistics:
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {statCards.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -180,24 +180,16 @@ Dashboard Statistics:
               transition={{ delay: index * 0.1 }}
             >
               <Link to={stat.link}>
-                <div className="card p-6 hover:shadow-xl transition-all duration-300 group">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-wider font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                        {stat.title}
-                      </p>
-                      <p className="text-4xl font-medium text-gray-900 dark:text-white">
-                        {stat.value}
-                      </p>
-                      {stat.subtitle && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                          {stat.subtitle}
-                        </p>
-                      )}
-                    </div>
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                      <stat.icon size={28} className="text-white" />
-                    </div>
+                <div className="bg-white dark:bg-[#fff] rounded-2xl p-8 flex items-center justify-between shadow-md">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider font-bold text-gray-700 mb-2">{stat.title}</p>
+                    <p className="text-5xl font-extrabold text-[#181c23] mb-1" style={{letterSpacing:'-2px'}}>{stat.value}</p>
+                    {stat.subtitle && (
+                      <p className="text-xs text-gray-500 mt-2">{stat.subtitle}</p>
+                    )}
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg">
+                    <stat.icon size={32} className="text-white" />
                   </div>
                 </div>
               </Link>
@@ -215,35 +207,32 @@ Dashboard Statistics:
       >
         <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button
-            onClick={handleViewAllCourses}
-            disabled={actionLoading === 'courses'}
-            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-orange-500 hover:bg-orange-500/10 transition-all text-center group disabled:opacity-50 disabled:cursor-not-allowed"
+          <Link
+            to="/admin/courses"
+            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-orange-500 hover:bg-orange-500/10 transition-all text-center group"
           >
             <BookOpen className="w-8 h-8 text-orange-500 mx-auto mb-2" />
             <p className="font-medium text-white">View All Courses</p>
             <p className="text-xs text-gray-400 mt-1">{stats.courses.total} courses</p>
-          </button>
+          </Link>
 
-          <button
-            onClick={handleViewAllStudents}
-            disabled={actionLoading === 'students'}
-            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-green-500 hover:bg-green-500/10 transition-all text-center group disabled:opacity-50 disabled:cursor-not-allowed"
+          <Link
+            to="/admin/students"
+            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-green-500 hover:bg-green-500/10 transition-all text-center group"
           >
             <GraduationCap className="w-8 h-8 text-green-500 mx-auto mb-2" />
             <p className="font-medium text-white">View All Students</p>
             <p className="text-xs text-gray-400 mt-1">{stats.students.total} students</p>
-          </button>
+          </Link>
 
-          <button
-            onClick={handleViewAllInstructors}
-            disabled={actionLoading === 'instructors'}
-            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-blue-500/10 transition-all text-center group disabled:opacity-50 disabled:cursor-not-allowed"
+          <Link
+            to="/admin/instructors"
+            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-blue-500/10 transition-all text-center group"
           >
             <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
             <p className="font-medium text-white">View All Instructors</p>
             <p className="text-xs text-gray-400 mt-1">{stats.instructors.total} instructors</p>
-          </button>
+          </Link>
 
           <button
             onClick={handleRefreshStats}
@@ -254,15 +243,6 @@ Dashboard Statistics:
             <p className="font-medium text-white">Refresh Stats</p>
             <p className="text-xs text-gray-400 mt-1">Update data</p>
           </button>
-
-          <Link
-            to="/admin/instructors/new"
-            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-emerald-500 hover:bg-emerald-500/10 transition-all text-center group"
-          >
-            <Plus className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-            <p className="font-medium text-white">Add Instructor</p>
-            <p className="text-xs text-gray-400 mt-1">Create new</p>
-          </Link>
 
           <button
             onClick={handleExportReport}
@@ -292,7 +272,7 @@ Dashboard Statistics:
           </div>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500/10 rounded-full mb-3">
                 <GraduationCap className="w-6 h-6 text-green-500" />
@@ -311,8 +291,15 @@ Dashboard Statistics:
               <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500/10 rounded-full mb-3">
                 <Users className="w-6 h-6 text-blue-500" />
               </div>
-              <p className="text-2xl font-bold text-white">{stats.enrollments.total}</p>
-              <p className="text-sm text-gray-400">Total Enrollments</p>
+              <p className="text-2xl font-bold text-white">{stats.instructors.total}</p>
+              <p className="text-sm text-gray-400">Total Instructors</p>
+            </div>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-500/10 rounded-full mb-3">
+                <ClipboardCheck className="w-6 h-6 text-orange-500" />
+              </div>
+              <p className="text-2xl font-bold text-white">{stats.submissions.total}</p>
+              <p className="text-sm text-gray-400">Total Submissions</p>
             </div>
           </div>
         </div>

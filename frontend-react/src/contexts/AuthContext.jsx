@@ -13,10 +13,7 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     setLoading(true);
     try {
-      console.log('Logging in with credentials:', { email: credentials.email, hasPassword: !!credentials.password });
       const response = await authAPI.login(credentials);
-      console.log('Login response:', response);
-      
       if (response.success) {
         localStorage.setItem('user', JSON.stringify(response.user));
         localStorage.setItem('token', response.token);

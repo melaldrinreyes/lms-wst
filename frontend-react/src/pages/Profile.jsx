@@ -24,6 +24,9 @@ export default function Profile() {
     new_password: '',
     new_password_confirmation: '',
   });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Helper function to format date to yyyy-MM-dd
   const formatDate = (dateString) => {
@@ -33,6 +36,82 @@ export default function Profile() {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };
+
+  // Handle image file selection
+  const handleImageSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setToast({ message: 'Please select a valid image file (JPEG, PNG, GIF, or WebP)', type: 'error' });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setToast({ message: 'Image size should be less than 5MB', type: 'error' });
+        return;
+      }
+
+      // Validate file is not empty
+      if (file.size === 0) {
+        setToast({ message: 'Selected file is empty', type: 'error' });
+        return;
+      }
+
+      setSelectedImage(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle image upload
+  const handleImageUpload = async () => {
+    if (!selectedImage) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('profile_image', selectedImage);
+
+      // Debug: Log what we're sending
+      console.log('Uploading file:', {
+        name: selectedImage.name,
+        size: selectedImage.size,
+        type: selectedImage.type,
+        lastModified: selectedImage.lastModified
+      });
+
+      // Log FormData contents
+      for (let [key, value] of formData.entries()) {
+        console.log('FormData entry:', key, value instanceof File ? `File: ${value.name} (${value.size} bytes, ${value.type})` : value);
+      }
+
+      const response = await authAPI.updateProfile(formData);
+      if (response.success) {
+        // Update user context with new image
+        updateUser({ ...user, profile_image: response.user.profile_image });
+        setSelectedImage(null);
+        setImagePreview(null);
+        // Clear the file input
+        document.getElementById('profile-image-input').value = '';
+        setToast({ message: 'Profile image updated successfully', type: 'success' });
+      } else {
+        setToast({ message: 'Failed to update profile image', type: 'error' });
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Validation errors:', error.response?.data?.errors);
+      console.error('Profile image errors:', error.response?.data?.errors?.profile_image);
+      setToast({ message: error.response?.data?.message || 'Failed to upload image', type: 'error' });
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   // Fetch fresh user data from API on mount
@@ -187,9 +266,15 @@ export default function Profile() {
         <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
           <form onSubmit={handleSave} className="space-y-6">
             <div className="flex items-center gap-6 pb-6 border-b border-gray-800">
-              {user?.profile_image ? (
-                <img 
-                  src={user.profile_image} 
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-orange-500"
+                />
+              ) : user?.profile_image ? (
+                <img
+                  src={user.profile_image}
                   alt={user.name}
                   className="w-24 h-24 rounded-full object-cover"
                 />
@@ -205,12 +290,46 @@ export default function Profile() {
                 <p className="text-sm text-gray-400">
                   {user?.student_id ? `Student ID: ${formData.studentId}` : user?.email}
                 </p>
-                <button
-                  type="button"
-                  className="mt-2 text-sm text-orange-500 hover:text-orange-400"
-                >
-                  Change Photo
-                </button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('profile-image-input').click()}
+                    className="text-sm text-orange-500 hover:text-orange-400"
+                  >
+                    Change Photo
+                  </button>
+                  {selectedImage && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleImageUpload}
+                        disabled={uploadingImage}
+                        className="text-sm text-green-500 hover:text-green-400 disabled:opacity-50"
+                      >
+                        {uploadingImage ? 'Uploading...' : 'Upload'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setImagePreview(null);
+                          // Clear the file input
+                          document.getElementById('profile-image-input').value = '';
+                        }}
+                        className="text-sm text-red-500 hover:text-red-400"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+                <input
+                  id="profile-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
               </div>
             </div>
 

@@ -7,9 +7,11 @@ import {
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
 import { courseAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function CourseManage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [toast, setToast] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(null);
@@ -446,20 +448,24 @@ export default function CourseManage() {
                       >
                         <Eye size={18} />
                       </button>
-                      <button 
-                        onClick={() => handleEditModule(module)}
-                        className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
-                        title="Edit module"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteModule(module)}
-                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
-                        title="Delete module"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {user?.role === 'faculty' && (
+                        <>
+                          <button 
+                            onClick={() => handleEditModule(module)}
+                            className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
+                            title="Edit module"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteModule(module)}
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                            title="Delete module"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -474,13 +480,15 @@ export default function CourseManage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Course Assignments</h2>
-            <button
-              onClick={handleAddAssignment}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-            >
-              <Plus size={20} />
-              Add Assignment
-            </button>
+            {user?.role === 'faculty' && (
+              <button
+                onClick={handleAddAssignment}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+              >
+                <Plus size={20} />
+                Add Assignment
+              </button>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -520,20 +528,24 @@ export default function CourseManage() {
                     >
                       <Eye size={18} />
                     </button>
-                    <button 
-                      onClick={() => handleEditAssignment(assignment)}
-                      className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
-                      title="Edit assignment"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteAssignment(assignment)}
-                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
-                      title="Delete assignment"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {user?.role === 'faculty' && (
+                      <>
+                        <button 
+                          onClick={() => handleEditAssignment(assignment)}
+                          className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
+                          title="Edit assignment"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAssignment(assignment)}
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                          title="Delete assignment"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="pt-3 border-t dark:border-gray-700">
