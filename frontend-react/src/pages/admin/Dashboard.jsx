@@ -140,38 +140,38 @@ Dashboard Statistics:
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
-      {/* Header */}
+      {/* Material Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Super Admin Dashboard</h1>
-            <p className="text-gray-400 mt-1">
-              Manage instructors, monitor activities, and view statistics
-            </p>
+        <div>
+          <h1 className="text-3xl font-medium text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Manage instructors, monitor activities, and view statistics
+          </p>
         </div>
         <Link
           to="/admin/instructors/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 font-semibold"
+          className="btn-primary inline-flex items-center gap-2"
         >
           <UserPlus className="w-4 h-4" />
-          Add New Instructor
+          Add Instructor
         </Link>
       </div>
 
-      {/* Stats Grid */}
+      {/* Material Stats Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
           {[1, 2].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg animate-pulse border border-gray-200 dark:border-gray-800">
-              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2 mb-4"></div>
-              <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-1/3"></div>
+            <div key={i} className="card p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
           {statCards.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -180,21 +180,23 @@ Dashboard Statistics:
               transition={{ delay: index * 0.1 }}
             >
               <Link to={stat.link}>
-                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all cursor-pointer group">
+                <div className="card p-6 hover:shadow-xl transition-all duration-300 group">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-400">{stat.title}</p>
-                      <p className="text-3xl font-bold text-white mt-2">
+                      <p className="text-xs uppercase tracking-wider font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                        {stat.title}
+                      </p>
+                      <p className="text-4xl font-medium text-gray-900 dark:text-white">
                         {stat.value}
                       </p>
                       {stat.subtitle && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                           {stat.subtitle}
                         </p>
                       )}
                     </div>
-                    <div className={`w-14 h-14 ${stat.color.replace('from-', 'bg-').replace(/to-.*/, '').replace('-500', '-500/10')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                      <stat.icon size={28} className={`${stat.color.replace('from-', 'text-').replace(/to-.*/, '')}`} />
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                      <stat.icon size={28} className="text-white" />
                     </div>
                   </div>
                 </div>

@@ -12,7 +12,8 @@
     min-height: 100vh;
     overflow-x: hidden;
     width: 100%;
-    @apply bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200;
+    @apply bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white transition-colors duration-200;
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
   
   html {
@@ -20,48 +21,98 @@
     width: 100%;
   }
   
-  /* Custom Scrollbar */
+  /* Custom Scrollbar - Material Style */
   ::-webkit-scrollbar {
     @apply w-2 h-2;
   }
   
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-900;
+    @apply bg-transparent;
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+    @apply bg-gray-400 dark:bg-gray-600 rounded-full;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-600;
+    @apply bg-gray-500 dark:bg-gray-500;
   }
 }
 
 @layer components {
+  /* Material Design Components */
+  
   /* Gradient Text */
   .gradient-text {
     @apply bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent;
   }
   
-  /* Primary Button */
+  /* Material Button - Primary */
   .btn-primary {
-    @apply px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold;
-    @apply hover:from-orange-600 hover:to-orange-700 transition-all;
-    @apply shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50;
+    @apply px-6 py-3 bg-orange-600 text-white rounded-lg font-medium uppercase text-sm tracking-wider;
+    @apply hover:bg-orange-700 active:bg-orange-800 transition-all duration-200;
+    @apply shadow-md hover:shadow-lg active:shadow-sm;
+    @apply transform hover:-translate-y-0.5 active:translate-y-0;
   }
   
-  /* Card */
+  /* Material Button - Secondary */
+  .btn-secondary {
+    @apply px-6 py-3 bg-transparent text-orange-600 dark:text-orange-400 rounded-lg font-medium uppercase text-sm tracking-wider;
+    @apply border-2 border-orange-600 dark:border-orange-400;
+    @apply hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200;
+  }
+  
+  /* Material Card - Elevated */
   .card {
-    @apply bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800;
-    @apply shadow-lg hover:shadow-xl transition-all;
+    @apply bg-white dark:bg-[#1e1e1e] rounded-2xl;
+    @apply shadow-md hover:shadow-lg transition-all duration-300;
+    @apply border border-gray-100 dark:border-gray-800;
   }
   
-  /* Input */
+  /* Material Card - Outlined */
+  .card-outlined {
+    @apply bg-transparent rounded-2xl;
+    @apply border-2 border-gray-200 dark:border-gray-700;
+    @apply hover:border-orange-500 dark:hover:border-orange-400 transition-all duration-300;
+  }
+  
+  /* Material Input - Filled */
   .input {
-    @apply w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700;
-    @apply rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent;
-    @apply text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all;
+    @apply w-full px-4 py-3 bg-gray-100 dark:bg-[#2c2c2c] rounded-t-lg;
+    @apply border-b-2 border-gray-400 dark:border-gray-600;
+    @apply focus:border-orange-600 dark:focus:border-orange-400 focus:bg-gray-50 dark:focus:bg-[#2c2c2c];
+    @apply text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400;
+    @apply transition-all duration-200 outline-none;
+  }
+  
+  /* Material Input - Outlined */
+  .input-outlined {
+    @apply w-full px-4 py-3 bg-transparent rounded-lg;
+    @apply border-2 border-gray-300 dark:border-gray-600;
+    @apply focus:border-orange-600 dark:focus:border-orange-400;
+    @apply text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400;
+    @apply transition-all duration-200 outline-none;
+  }
+  
+  /* Material Chip */
+  .chip {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    @apply transition-all duration-200;
+  }
+  
+  /* Material Divider */
+  .divider {
+    @apply border-t border-gray-200 dark:border-gray-700;
+  }
+  
+  /* Material Surface */
+  .surface {
+    @apply bg-white dark:bg-[#1e1e1e];
+  }
+  
+  /* Material Surface Variant */
+  .surface-variant {
+    @apply bg-gray-50 dark:bg-[#2c2c2c];
   }
 }
 

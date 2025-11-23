@@ -57,7 +57,6 @@ export const authAPI = {
   },
 
   login: async (credentials) => {
-    console.log('Sending login request with:', credentials);
     const response = await api.post('/login', credentials);
     return response.data;
   },
@@ -73,7 +72,14 @@ export const authAPI = {
   },
 
   updateProfile: async (data) => {
-    const response = await api.put('/user/profile', data);
+    // Check if data is FormData (for file uploads)
+    const isFormData = data instanceof FormData;
+    const method = isFormData ? 'post' : 'put';
+    const response = await api[method]('/user/profile', data, {
+      headers: isFormData ? {
+        'Content-Type': undefined, // Let browser set multipart/form-data
+      } : undefined,
+    });
     return response.data;
   },
 
@@ -567,6 +573,26 @@ export const announcementCommentAPI = {
 export const superAdminAPI = {
   getDashboard: async () => {
     const response = await api.get('/admin/dashboard');
+    return response.data;
+  },
+
+  getUsers: async () => {
+    const response = await api.get('/admin/users');
+    return response.data;
+  },
+
+  createUser: async (data) => {
+    const response = await api.post('/admin/users', data);
+    return response.data;
+  },
+
+  updateUser: async (id, data) => {
+    const response = await api.put(`/admin/users/${id}`, data);
+    return response.data;
+  },
+
+  deleteUser: async (id) => {
+    const response = await api.delete(`/admin/users/${id}`);
     return response.data;
   },
 

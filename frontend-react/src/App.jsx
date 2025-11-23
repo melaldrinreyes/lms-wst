@@ -101,7 +101,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Pages
 import Home from './pages/Home';
 import Register from './pages/Register';
-import ChatbotPage from './pages/ChatbotPage';
 import PublicCourses from './pages/Courses';
 import CourseInvite from './pages/CourseInvite';
 import About from './pages/About';
@@ -174,99 +173,91 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
-            <Route 
-              path="/register" 
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              } 
-            />
-            <Route path="/courses" element={<PublicCourses />} />
-            <Route path="/invite/:id" element={<CourseInvite />} />
-            <Route path="/about" element={<About />} />
-            <Route 
-              path="/chatbot" 
-              element={
-                <ProtectedRoute>
-                  <ChatbotPage />
-                </ProtectedRoute>
-              } 
-            />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route 
+            path="/register" 
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            } 
+          />
+          <Route path="/courses" element={<PublicCourses />} />
+          <Route path="/invite/:id" element={<CourseInvite />} />
+          <Route path="/about" element={<About />} />
 
-            {/* Student Routes */}
-            <Route
-              path="/student"
-              element={
-                <ProtectedRoute requiredRole="student">
-                  <DashboardLayout role="student" />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<StudentDashboard />} />
-              <Route path="courses" element={<StudentCourses />} />
-              <Route path="courses/:id" element={<StudentCourseDetail />} />
-              <Route path="assignments" element={<Assignments />} />
-            </Route>
+          {/* Student Routes */}
+          <Route
+            path="/student"
+            element={
+              <ProtectedRoute requiredRole="student">
+                <DashboardLayout role="student" />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<StudentDashboard />} />
+            <Route path="courses" element={<StudentCourses />} />
+            <Route path="courses/:id" element={<StudentCourseDetail />} />
+            <Route path="assignments" element={<Assignments />} />
+          </Route>
 
-            {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <DashboardLayout role="admin" />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="students" element={<AdminStudents />} />
-              <Route path="courses" element={<AdminCourses />} />
-              <Route path="courses/:id" element={<CourseManage />} />
-              <Route path="instructors" element={<Instructors />} />
-              <Route path="instructors/new" element={<InstructorForm />} />
-              <Route path="instructors/:id/edit" element={<InstructorForm />} />
-            </Route>
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <DashboardLayout role="admin" />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="students" element={<AdminStudents />} />
+            <Route path="courses" element={<AdminCourses />} />
+            <Route path="courses/:id" element={<CourseManage />} />
+            <Route path="instructors" element={<Instructors />} />
+            <Route path="instructors/new" element={<InstructorForm />} />
+            <Route path="instructors/:id/edit" element={<InstructorForm />} />
+          </Route>
 
-            {/* Faculty Routes */}
-            <Route
-              path="/faculty"
-              element={
-                <ProtectedRoute requiredRole="faculty">
-                  <DashboardLayout role="faculty" />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<FacultyDashboard />} />
-              <Route path="courses" element={<FacultyCourses />} />
-              <Route path="courses/create" element={<CourseCreate />} />
-              <Route path="courses/:id" element={<FacultyCourseManage />} />
-              <Route path="students" element={<FacultyStudents />} />
-              <Route path="students/new" element={<StudentRegistration />} />
-              <Route path="submissions" element={<FacultySubmissions />} />
-              <Route path="join-requests" element={<JoinRequests />} />
-            </Route>
+          {/* Faculty Routes */}
+          <Route
+            path="/faculty"
+            element={
+              <ProtectedRoute requiredRole="faculty">
+                <DashboardLayout role="faculty" />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<FacultyDashboard />} />
+            <Route path="courses" element={<FacultyCourses />} />
+            <Route path="courses/create" element={<CourseCreate />} />
+            <Route path="courses/:id" element={<FacultyCourseManage />} />
+            <Route path="students" element={<FacultyStudents />} />
+            <Route path="students/new" element={<StudentRegistration />} />
+            <Route path="submissions" element={<FacultySubmissions />} />
+            <Route path="join-requests" element={<JoinRequests />} />
+          </Route>
 
-            {/* Shared Protected Routes */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Profile />} />
-            </Route>
+          {/* Shared Protected Routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Profile />} />
+          </Route>
 
-            {/* Catch all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

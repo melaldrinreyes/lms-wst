@@ -37,10 +37,25 @@ export default function FacultyCourses() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
+      console.log('Fetching faculty courses...');
+      console.log('Current user:', JSON.parse(localStorage.getItem('user') || '{}'));
+      console.log('Token exists:', !!localStorage.getItem('token'));
+      
       const response = await courseAPI.getAll();
+      console.log('Courses API response:', response);
+      
       setCourses(response.courses || []);
+      
+      if (!response.courses || response.courses.length === 0) {
+        console.warn('No courses found for this instructor');
+      }
     } catch (error) {
       console.error('Error fetching courses:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       setToast({ message: 'Failed to load courses', type: 'error' });
     } finally {
       setLoading(false);

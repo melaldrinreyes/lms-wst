@@ -19,14 +19,14 @@ export default function MobileBottomNav({ onLoginClick }) {
     { to: '/student', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/student/courses', label: 'Courses', icon: BookOpen },
     { to: '/student/assignments', label: 'Tasks', icon: ClipboardList },
-    { to: '/chatbot', label: 'AI Chat', icon: MessageCircle },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   const adminNavItems = [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/admin/users', label: 'Users', icon: User },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
-    { to: '/chatbot', label: 'AI Chat', icon: MessageCircle },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   let navItems = guestNavItems;

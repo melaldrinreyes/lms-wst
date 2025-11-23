@@ -189,7 +189,24 @@ class AuthController extends Controller
      */
     public function updateProfile(Request $request)
     {
+        // Log that we reached the method
+        \Log::info('UpdateProfile method called', [
+            'user_id' => $request->user() ? $request->user()->id : 'no user',
+            'method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+        ]);
+
         $user = $request->user();
+
+        // Debug: Log all request data
+        \Log::info('UpdateProfile request debug', [
+            'hasFile_profile_image' => $request->hasFile('profile_image'),
+            'has_profile_image' => $request->has('profile_image'),
+            'all_files' => $request->allFiles(),
+            'content_type' => $request->header('Content-Type'),
+            'method' => $request->method(),
+            'all_data' => $request->all(),
+        ]);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -197,7 +214,35 @@ class AuthController extends Controller
             'address' => 'nullable|string',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',
+            // 'profile_image' => 'nullable|file|max:5120', // Temporarily removed validation
         ]);
+
+        // Handle profile image upload
+        if ($request->hasFile('profile_image')) {
+            $file = $request->file('profile_image');
+            
+            // Debug logging
+            \Log::info('Profile image upload attempt', [
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'is_valid' => $file->isValid()
+            ]);
+            
+            // Delete old profile image if it exists and is not a default avatar
+            if ($user->profile_image && !str_contains($user->profile_image, 'ui-avatars.com')) {
+                $oldImagePath = public_path(parse_url($user->profile_image, PHP_URL_PATH));
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+
+            // Store new image
+            $imageName = time() . '_' . $user->id . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/profiles'), $imageName);
+            
+            $validated['profile_image'] = asset('uploads/profiles/' . $imageName);
+        }
 
         $user->update($validated);
 

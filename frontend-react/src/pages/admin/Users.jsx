@@ -89,40 +89,45 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      {/* Header */}
+      {/* Material Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-          Manage Users
-        </h1>
+        <div>
+          <h1 className="text-3xl font-medium text-gray-900 dark:text-white mb-1">
+            Manage Users
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Add and manage system users
+          </p>
+        </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium"
+          className="btn-primary flex items-center gap-2"
         >
-          <UserPlus size={20} />
+          <UserPlus size={18} />
           Add User
         </button>
       </div>
 
-      {/* Search */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      {/* Material Search Card */}
+      <div className="card p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="input pl-12"
             />
           </div>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="input-outlined px-4 py-3 min-w-[140px]"
           >
             <option value="all">All Roles</option>
             <option value="student">Students</option>
@@ -133,63 +138,75 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="p-6 text-center">
-              <div className="inline-block">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading users...</p>
-              </div>
+      {/* Material Users Card */}
+      <div className="card overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="inline-flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 dark:border-orange-800 border-t-orange-600 dark:border-t-orange-400"></div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Loading users...</p>
             </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="p-12 text-center">
-              <UserPlus className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
-                {searchTerm || filterRole !== 'all' ? 'No users found' : 'No users yet'}
-              </p>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="p-16 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+              <UserPlus className="w-10 h-10 text-gray-400" />
             </div>
-          ) : (
+            <p className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+              {searchTerm || filterRole !== 'all' ? 'No users found' : 'No users yet'}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {searchTerm || filterRole !== 'all' ? 'Try adjusting your filters' : 'Get started by adding your first user'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700/50">
+              <thead className="surface-variant border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                  <th className="text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                     Name
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                  <th className="text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                     Email
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                  <th className="text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                     Role
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                  <th className="text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                     Status
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                  <th className="text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                     Joined
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 dark:text-white">
+                  <th className="text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="py-4 px-6 text-sm font-medium text-gray-900 dark:text-white">
-                      {user.name}
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-[#2c2c2c] transition-colors">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-medium">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {user.name}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">
                       {user.email}
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium capitalize ${getRoleBadge(user.role)}`}>
+                      <span className={`chip ${getRoleBadge(user.role)}`}>
                         {user.role}
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 capitalize">
+                      <span className="chip bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                         {user.status}
                       </span>
                     </td>
@@ -217,8 +234,8 @@ export default function AdminUsers() {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Add User Modal */}

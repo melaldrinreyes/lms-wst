@@ -57,21 +57,18 @@ export default function DashboardLayout({ role }) {
       { to: '/student', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/student/courses', icon: BookOpen, label: 'My Courses' },
       { to: '/student/assignments', icon: ClipboardList, label: 'Assignments' },
-      { to: '/chatbot', icon: Bot, label: 'AI Assistant', external: true },
       { to: '/profile', icon: User, label: 'Profile', external: true },
     ],
     admin: [
       { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/admin/users', icon: User, label: 'Manage Users' },
       { to: '/admin/courses', icon: BookOpen, label: 'Manage Courses' },
-      { to: '/chatbot', icon: Bot, label: 'AI Assistant', external: true },
       { to: '/profile', icon: User, label: 'Profile', external: true },
     ],
     faculty: [
       { to: '/faculty', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/faculty/courses', icon: BookOpen, label: 'My Courses' },
       { to: '/faculty/join-requests', icon: UserPlus, label: 'Join Requests' },
-      { to: '/chatbot', icon: Bot, label: 'AI Assistant', external: true },
       { to: '/profile', icon: User, label: 'Profile', external: true },
     ],
   };
@@ -82,13 +79,13 @@ export default function DashboardLayout({ role }) {
       { to: '/student', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/student/courses', icon: BookOpen, label: 'Courses' },
       { to: '/student/assignments', icon: ClipboardList, label: 'Tasks' },
-      { to: '/chatbot', icon: Bot, label: 'Assistant' },
+      { to: '/profile', icon: User, label: 'Profile' },
     ],
     admin: [
       { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/admin/users', icon: User, label: 'Users' },
       { to: '/admin/courses', icon: BookOpen, label: 'Courses' },
-      { to: '/chatbot', icon: Bot, label: 'AI Chat' },
+      { to: '/profile', icon: User, label: 'Profile' },
     ],
     faculty: [
       { to: '/faculty', icon: LayoutDashboard, label: 'Dashboard', end: true },

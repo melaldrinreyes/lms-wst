@@ -6,7 +6,8 @@ import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
-import { useState } from 'react';
+import mammoth from 'mammoth';
+import { useState, useRef } from 'react';
 import {
   Bold,
   Italic,
@@ -23,6 +24,7 @@ import {
   Table as TableIcon,
   Film,
   Palette,
+  Upload,
 } from 'lucide-react';
 import './RichTextEditor.css';
 
@@ -30,6 +32,8 @@ export default function RichTextEditor({ value = '', onChange }) {
   const [videoUrl, setVideoUrl] = useState('');
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [textColor, setTextColor] = useState('#ffffff');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -51,6 +55,7 @@ export default function RichTextEditor({ value = '', onChange }) {
       }),
       Image.configure({
         allowBase64: true,
+        inline: true,
       }),
       Table.configure({
         resizable: true,
@@ -70,8 +75,55 @@ export default function RichTextEditor({ value = '', onChange }) {
       onChange(editor.getHTML());
     },
     onPaste: (view, event) => {
-      // Allow browser default paste to handle HTML clipboard data
-      // This preserves links and formatting from pasted content
+      const items = event.clipboardData?.items;
+      
+      // Handle HTML content (from Word, etc.)
+      const htmlData = event.clipboardData?.getData('text/html');
+      if (htmlData && htmlData.trim()) {
+        // Let TipTap handle HTML paste naturally
+        return false;
+      }
+      
+      // Handle pasted files (images, videos)
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          
+          // Handle images
+          if (item.type.indexOf('image') !== -1) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            handleImageFile(file);
+            return true;
+          }
+          
+          // Handle videos
+          if (item.type.indexOf('video') !== -1) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            handleVideoFile(file);
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+    onDrop: (view, event, slice, moved) => {
+      // Handle dropped files
+      if (!moved && event.dataTransfer?.files?.length) {
+        event.preventDefault();
+        const files = Array.from(event.dataTransfer.files);
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            handleImageFile(file);
+          } else if (file.type.startsWith('video/')) {
+            handleVideoFile(file);
+          } else if (file.name.endsWith('.docx')) {
+            handleWordFile(file);
+          }
+        });
+        return true;
+      }
       return false;
     },
   });
@@ -79,6 +131,110 @@ export default function RichTextEditor({ value = '', onChange }) {
   if (!editor) {
     return null;
   }
+
+  const handleImageFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      editor.chain().focus().setImage({ src: base64 }).run();
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleVideoFile = (file) => {
+    if (!file || !file.type.startsWith('video/')) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      const videoType = file.type.split('/')[1];
+      
+      // Insert HTML video element with base64 source
+      const videoHtml = `
+        <video controls style="max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;">
+          <source src="${base64}" type="${file.type}">
+          Your browser does not support the video tag.
+        </video>
+      `;
+      
+      editor.chain().focus().insertContent(videoHtml).run();
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleWordFile = async (file) => {
+    if (!file || !file.name.endsWith('.docx')) {
+      return;
+    }
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      const html = result.value;
+      
+      if (html && html.trim()) {
+        editor.chain().focus().insertContent(html).run();
+      }
+    } catch (error) {
+      console.error('Error converting Word document:', error);
+      alert('Failed to import Word document. Please try copying and pasting the content instead.');
+    }
+  };
+
+  const handleFileSelect = (event) => {
+    const files = Array.from(event.target.files);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        handleImageFile(file);
+      } else if (file.type.startsWith('video/')) {
+        handleVideoFile(file);
+      } else if (file.name.endsWith('.docx')) {
+        handleWordFile(file);
+      }
+    });
+    // Reset input
+    event.target.value = '';
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        handleImageFile(file);
+      } else if (file.type.startsWith('video/')) {
+        handleVideoFile(file);
+      } else if (file.name.endsWith('.docx')) {
+        handleWordFile(file);
+      }
+    });
+  };
 
   const addLink = () => {
     const url = prompt('Enter URL (e.g., https://example.com)');
@@ -122,6 +278,10 @@ export default function RichTextEditor({ value = '', onChange }) {
   };
 
   const addImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const addImageFromUrl = () => {
     const url = prompt('Enter image URL');
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
@@ -252,7 +412,14 @@ export default function RichTextEditor({ value = '', onChange }) {
           <button
             onClick={addImage}
             className="toolbar-btn"
-            title="Add Image"
+            title="Upload Image (or drag & drop)"
+          >
+            <Upload size={18} />
+          </button>
+          <button
+            onClick={addImageFromUrl}
+            className="toolbar-btn"
+            title="Add Image from URL"
           >
             <ImageIcon size={18} />
           </button>
@@ -343,8 +510,35 @@ export default function RichTextEditor({ value = '', onChange }) {
         </div>
       )}
 
-      {/* Editor */}
-      <EditorContent editor={editor} className="editor-content" />
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*,.docx"
+        multiple
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Editor Container with Drag & Drop */}
+      <div
+        className={`editor-container ${isDragging ? 'dragging' : ''}`}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {isDragging && (
+          <div className="drag-overlay">
+            <div className="drag-overlay-content">
+              <Upload size={48} className="mb-2" />
+              <p className="text-lg font-semibold">Drop files here</p>
+              <p className="text-sm text-gray-400">Images, Videos (MP4/WebM), Word (.docx)</p>
+            </div>
+          </div>
+        )}
+        <EditorContent editor={editor} className="editor-content" />
+      </div>
     </div>
   );
 }

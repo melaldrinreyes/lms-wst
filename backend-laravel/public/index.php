@@ -3,6 +3,12 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
+// Increase memory and packet limits for large content uploads
+ini_set('memory_limit', '256M');
+ini_set('post_max_size', '64M');
+ini_set('upload_max_filesize', '64M');
+ini_set('max_execution_time', '300');
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...
