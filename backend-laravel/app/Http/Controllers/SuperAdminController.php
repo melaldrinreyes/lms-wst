@@ -98,19 +98,19 @@ class SuperAdminController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($instructor) {
-                    // Get classes taught
-                    $classesCount = \DB::table('classes')
+                    // Get courses taught
+                    $coursesCount = \DB::table('courses')
                         ->where('faculty_id', $instructor->id)
                         ->count();
                     
-                    // Get total students enrolled in instructor's classes
-                    $studentsCount = \DB::table('class_student')
-                        ->join('classes', 'class_student.class_id', '=', 'classes.id')
-                        ->where('classes.faculty_id', $instructor->id)
-                        ->distinct('class_student.student_id')
-                        ->count('class_student.student_id');
+                    // Get total students enrolled in instructor's courses
+                    $studentsCount = \DB::table('enrollments')
+                        ->join('courses', 'enrollments.course_id', '=', 'courses.id')
+                        ->where('courses.faculty_id', $instructor->id)
+                        ->distinct('enrollments.student_id')
+                        ->count('enrollments.student_id');
                     
-                    // Get submissions for instructor's courses (if using old course system)
+                    // Get submissions for instructor's courses
                     $submissionsCount = Submission::whereHas('assignment', function ($q) use ($instructor) {
                         $q->whereHas('course', function ($q2) use ($instructor) {
                             $q2->where('faculty_id', $instructor->id);
@@ -142,7 +142,7 @@ class SuperAdminController extends Controller
                         'last_login' => $instructor->last_login,
                         'created_at' => $instructor->created_at,
                         'statistics' => [
-                            'courses' => $classesCount,
+                            'courses' => $coursesCount,
                             'students' => $studentsCount,
                             'graded' => $gradedSubmissions,
                             'pending' => $pendingSubmissions,
@@ -158,6 +158,192 @@ class SuperAdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching instructors: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all users (students, faculty, admin)
+     */
+    public function getUsers(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if ($user->role_id != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access',
+                ], 403);
+            }
+
+            $users = User::whereIn('role_id', [2, 3, 1]) // faculty, student, admin
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'role' => $user->role_id == 1 ? 'admin' : ($user->role_id == 2 ? 'faculty' : 'student'),
+                        'status' => $user->status ?? 'active',
+                        'joined' => $user->created_at,
+                        'profile_image' => $user->profile_image ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=0ea5e9&color=fff',
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'users' => $users,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching users: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Create a new user
+     */
+    public function createUser(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if ($user->role_id != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access',
+                ], 403);
+            }
+
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8',
+                'role' => 'required|in:student,faculty,admin',
+            ]);
+
+            $roleId = $request->role === 'admin' ? 1 : ($request->role === 'faculty' ? 2 : 3);
+
+            $newUser = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role_id' => $roleId,
+                'status' => 'active',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $newUser->id,
+                    'name' => $newUser->name,
+                    'email' => $newUser->email,
+                    'role' => $request->role,
+                    'status' => $newUser->status,
+                    'joined' => $newUser->created_at,
+                ],
+                'message' => 'User created successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating user: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update a user
+     */
+    public function updateUser(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+            
+            if ($user->role_id != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access',
+                ], 403);
+            }
+
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+                'role' => 'required|in:student,faculty,admin',
+                'status' => 'required|in:active,inactive',
+            ]);
+
+            $updateUser = User::findOrFail($id);
+            $roleId = $request->role === 'admin' ? 1 : ($request->role === 'faculty' ? 2 : 3);
+
+            $updateUser->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'role_id' => $roleId,
+                'status' => $request->status,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $updateUser->id,
+                    'name' => $updateUser->name,
+                    'email' => $updateUser->email,
+                    'role' => $request->role,
+                    'status' => $updateUser->status,
+                    'joined' => $updateUser->created_at,
+                ],
+                'message' => 'User updated successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating user: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a user
+     */
+    public function deleteUser(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+            
+            if ($user->role_id != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access',
+                ], 403);
+            }
+
+            $deleteUser = User::findOrFail($id);
+            
+            // Prevent deleting the current admin user
+            if ($deleteUser->id === $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete your own account',
+                ], 400);
+            }
+
+            $deleteUser->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting user: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -211,11 +397,21 @@ class SuperAdminController extends Controller
                     'last_login' => $instructor->last_login,
                     'created_at' => $instructor->created_at,
                     'courses' => $instructor->coursesTaught->map(function ($course) {
+                        $activeEnrollments = $course->enrollments->where('status', 'active');
                         return [
                             'id' => $course->id,
                             'code' => $course->course_code,
                             'name' => $course->course_name,
-                            'students' => $course->enrollments->count(),
+                            // Only count active enrollments
+                            'students' => $activeEnrollments->count(),
+                            'student_list' => $activeEnrollments->map(function ($enrollment) {
+                                return [
+                                    'id' => $enrollment->student_id,
+                                    'name' => $enrollment->student ? $enrollment->student->name : null,
+                                    'email' => $enrollment->student ? $enrollment->student->email : null,
+                                    'status' => $enrollment->status,
+                                ];
+                            })->values(),
                             'assignments' => $course->assignments->count(),
                             'status' => $course->status,
                         ];

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Edit, X, Eye, Loader, Trash2, Plus, ChevronDown, ChevronRight, Indent } from 'lucide-react';
 import RichTextEditor from './Editor/RichTextEditor';
@@ -23,9 +23,16 @@ api.interceptors.request.use((config) => {
 
 export default function HierarchicalLectureContent({ courseId, isTeacher = false, onSave }) {
   const [lectures, setLectures] = useState([]);
+  // Track pending files for each lecture: { [lectureId]: [fileObj, ...] }
+  const [pendingFilesMap, setPendingFilesMap] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [editingLectureId, setEditingLectureId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingTotal, setUploadingTotal] = useState(0);
+  const [uploadingLoaded, setUploadingLoaded] = useState(0);
+  const uploadAbortController = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [showPreview, setShowPreview] = useState(true);
@@ -33,6 +40,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
   const [newLectureTitle, setNewLectureTitle] = useState('');
   const [newParentId, setNewParentId] = useState(null);
   const [currentContent, setCurrentContent] = useState('');
+  const editorRef = useRef();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [showAddSubModal, setShowAddSubModal] = useState(null); // For adding sub-lectures
   const [subLectureTitle, setSubLectureTitle] = useState('');
@@ -159,12 +167,91 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
   const saveLecture = async () => {
     try {
+      // Block save if any blob: URLs are present
+      if (/blob:[^"'\s]+/.test(currentContent)) {
+        setToast({ message: 'Cannot save: May natitirang blob URL sa content. Hintayin matapos ang upload o alisin ang hindi pa uploaded na file.', type: 'error' });
+        return;
+      }
       setIsSaving(true);
+      setIsUploading(true);
+      let html = currentContent;
+      // 1. Get pending files from editor
+      const pendingFiles = editorRef.current?.getPendingFiles?.() || [];
+      const urlMap = {};
+      // --- Total progress tracking ---
+      let totalSize = pendingFiles.reduce((sum, pf) => sum + (pf.file?.size || 0), 0);
+      let loadedSoFar = 0;
+      setUploadingTotal(totalSize);
+      setUploadingLoaded(0);
+      // Setup AbortController for this upload
+      uploadAbortController.current = new AbortController();
+      // 2. Upload each file and map objectUrl to real URL
+      const uploadErrors = [];
+      for (const pf of pendingFiles) {
+        try {
+          const formData = new FormData();
+          formData.append('file', pf.file);
+          const uploadRes = await api.post('/modules/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                // progressEvent.loaded is for this file only
+                // Add loadedSoFar (bytes from previous files)
+                const currentLoaded = loadedSoFar + progressEvent.loaded;
+                setUploadingLoaded(currentLoaded);
+                if (totalSize > 0) {
+                  setUploadProgress(Math.round((currentLoaded * 100) / totalSize));
+                }
+              }
+            },
+            signal: uploadAbortController.current.signal,
+          });
+          
+          loadedSoFar += pf.file?.size || 0;
+          setUploadingLoaded(loadedSoFar);
+          if (totalSize > 0) {
+            setUploadProgress(Math.round((loadedSoFar * 100) / totalSize));
+          }
+          
+          if (uploadRes.data?.url) {
+            urlMap[pf.objectUrl] = uploadRes.data.url;
+          } else {
+            uploadErrors.push(`Failed to upload ${pf.file?.name || 'unknown file'}: No URL returned`);
+          }
+        } catch (uploadError) {
+          loadedSoFar += pf.file?.size || 0; // Still count as loaded for progress
+          setUploadingLoaded(loadedSoFar);
+          if (totalSize > 0) {
+            setUploadProgress(Math.round((loadedSoFar * 100) / totalSize));
+          }
+          
+          const errorMsg = uploadError.response?.data?.message || uploadError.message || 'Upload failed';
+          uploadErrors.push(`Failed to upload ${pf.file?.name || 'unknown file'}: ${errorMsg}`);
+        }
+      }
+      
+      // If some uploads failed, show warning but continue with successful ones
+      if (uploadErrors.length > 0) {
+        setToast({ 
+          message: `Some files failed to upload: ${uploadErrors.join('; ')}. Content saved with available files.`, 
+          type: 'warning' 
+        });
+      }
+      // 3. Replace all object URLs in HTML with real URLs
+      Object.entries(urlMap).forEach(([objectUrl, realUrl]) => {
+        // Escape special regex characters and replace all occurrences
+        const escapedObjectUrl = objectUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedObjectUrl, 'g');
+        html = html.replace(regex, realUrl);
+      });
+      // 4. Clear pending files
+      editorRef.current?.clearPendingFiles?.();
+      // 5. Save lecture with updated HTML
       const updatedLectures = lectures.map(l =>
         l.id === editingLectureId
           ? { 
               ...l, 
-              content: currentContent, 
+              content: html, // html is already real HTML, do not escape
               updated_at: new Date().toISOString(),
               parent_lecture_id: l.parent_lecture_id || null,
               level: typeof l.level !== 'undefined' ? l.level : 0,
@@ -175,69 +262,120 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
               level: typeof l.level !== 'undefined' ? l.level : 0,
             }
       );
-
-      console.log('Sending lectures to backend:', updatedLectures);
-
       const response = await api.post(`/courses/${courseId}/lectures`, {
         lectures: updatedLectures,
       });
-
       if (response.data.success) {
-        setLectures(response.data.lectures || updatedLectures);
-        setUnsavedLectures([]); // Clear unsaved after successful save
+        const newLectures = response.data.lectures || updatedLectures;
+        setLectures(newLectures);
+        setUnsavedLectures([]);
+        // Update currentContent with the saved HTML (with real URLs)
+        const updated = newLectures.find(l => l.id === editingLectureId);
+        setCurrentContent(updated ? updated.content : '');
+        // Force the editor to reload the updated HTML so blob URLs are replaced with backend URLs
+        if (editorRef.current && editorRef.current.setContent) {
+          editorRef.current.setContent(updated ? updated.content : '');
+        }
         setIsEditing(false);
         setEditingLectureId(null);
-        setCurrentContent('');
         setToast({ message: 'Lecture saved successfully!', type: 'success' });
-
         if (onSave) {
-          onSave(response.data.lectures || updatedLectures);
+          onSave(newLectures);
         }
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to save lecture';
-      const errorDetails = error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : '';
-      setToast({ message: `Error: ${errorMsg} ${errorDetails}`, type: 'error' });
-      console.error('Error saving lecture:', error);
-      console.error('Response data:', error.response?.data);
+      if (axios.isCancel?.(error) || error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED' || error?.message === 'canceled') {
+        setToast({ message: 'Upload canceled.', type: 'warning' });
+      } else {
+        const errorMsg = error.response?.data?.message || error.message || 'Failed to save lecture';
+        const errorDetails = error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : '';
+        setToast({ message: `Error: ${errorMsg} ${errorDetails}`, type: 'error' });
+        console.error('Error saving lecture:', error);
+        console.error('Response data:', error.response?.data);
+      }
     } finally {
       setIsSaving(false);
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadingTotal(0);
+      setUploadingLoaded(0);
+      uploadAbortController.current = null;
     }
   };
 
   const saveAllLectures = async () => {
     try {
       setIsSaving(true);
-      
+      setIsUploading(true);
       // Sort lectures by level to ensure parents are saved before children
-      // This prevents foreign key constraint violations
       const sortedLectures = [...lectures].sort((a, b) => {
         const levelA = typeof a.level !== 'undefined' ? a.level : 0;
         const levelB = typeof b.level !== 'undefined' ? b.level : 0;
         return levelA - levelB;
       });
-
-      // Ensure all lectures have required fields
-      const lecturesWithDefaults = sortedLectures.map(l => ({
-        ...l,
-        parent_lecture_id: l.parent_lecture_id || null,
-        level: typeof l.level !== 'undefined' ? l.level : 0,
-        content: l.content || '',
+      // --- Total progress tracking for all files in all lectures ---
+      let allPendingFiles = [];
+      Object.values(pendingFilesMap).forEach(arr => { if (Array.isArray(arr)) allPendingFiles.push(...arr); });
+      let totalSize = allPendingFiles.reduce((sum, pf) => sum + (pf.file?.size || 0), 0);
+      let loadedSoFar = 0;
+      setUploadingTotal(totalSize);
+      setUploadingLoaded(0);
+      // For each lecture, upload pending files and replace blob URLs
+      const updatedLectures = await Promise.all(sortedLectures.map(async (l) => {
+        let html = l.content || '';
+        const pendingFiles = pendingFilesMap[l.id] || [];
+        const urlMap = {};
+        for (const pf of pendingFiles) {
+          const formData = new FormData();
+          formData.append('file', pf.file);
+          await api.post('/modules/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const currentLoaded = loadedSoFar + progressEvent.loaded;
+                setUploadingLoaded(currentLoaded);
+                if (totalSize > 0) {
+                  setUploadProgress(Math.round((currentLoaded * 100) / totalSize));
+                }
+              }
+            },
+          }).then(uploadRes => {
+            loadedSoFar += pf.file?.size || 0;
+            setUploadingLoaded(loadedSoFar);
+            if (totalSize > 0) {
+              setUploadProgress(Math.round((loadedSoFar * 100) / totalSize));
+            }
+            if (uploadRes.data?.url) {
+              urlMap[pf.objectUrl] = uploadRes.data.url;
+            }
+          });
+        }
+        // Replace all object/blob URLs in HTML with real URLs (robust, logs for debug)
+        console.log('Blob URL map:', urlMap);
+        Object.entries(urlMap).forEach(([objectUrl, realUrl]) => {
+          const regex = new RegExp(objectUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+          html = html.replace(regex, realUrl);
+        });
+        // Log the final HTML for verification
+        console.log('Final HTML after replacement:', html);
+        return {
+          ...l,
+          content: html,
+          parent_lecture_id: l.parent_lecture_id || null,
+          level: typeof l.level !== 'undefined' ? l.level : 0,
+        };
       }));
-
-      console.log('Sending all lectures to backend (sorted by level):', lecturesWithDefaults);
-
+      // After save, clear all pending files
+      setPendingFilesMap({});
       const response = await api.post(`/courses/${courseId}/lectures`, {
-        lectures: lecturesWithDefaults,
+        lectures: updatedLectures,
       });
-
       if (response.data.success) {
-        setLectures(response.data.lectures || lecturesWithDefaults);
-        setUnsavedLectures([]); // Clear unsaved
+        setLectures(response.data.lectures || updatedLectures);
+        setUnsavedLectures([]);
         setToast({ message: 'All lectures saved successfully!', type: 'success' });
-
         if (onSave) {
-          onSave(response.data.lectures || lecturesWithDefaults);
+          onSave(response.data.lectures || updatedLectures);
         }
       }
     } catch (error) {
@@ -248,25 +386,37 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       console.error('Response data:', error.response?.data);
     } finally {
       setIsSaving(false);
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadingTotal(0);
+      setUploadingLoaded(0);
     }
   };
 
   const deleteLecture = async (lectureId) => {
     try {
       setIsSaving(true);
-      const updatedLectures = lectures.filter(l => l.id !== lectureId && l.parent_lecture_id !== lectureId);
       
-      const response = await api.post(`/courses/${courseId}/lectures`, {
-        lectures: updatedLectures,
-      });
+      // Find all child lectures that need to be deleted
+      const childrenToDelete = lectures.filter(l => l.parent_lecture_id === lectureId);
+      
+      // Delete children first
+      for (const child of childrenToDelete) {
+        await api.delete(`/courses/${courseId}/lectures/${child.id}`);
+      }
+      
+      // Delete the parent lecture
+      const response = await api.delete(`/courses/${courseId}/lectures/${lectureId}`);
 
       if (response.data.success) {
-        setLectures(response.data.lectures || updatedLectures);
+        // Remove the deleted lecture and all its children from local state
+        const updatedLectures = lectures.filter(l => l.id !== lectureId && l.parent_lecture_id !== lectureId);
+        setLectures(updatedLectures);
         setShowDeleteConfirm(null);
         setToast({ message: 'Lecture deleted successfully!', type: 'success' });
 
         if (onSave) {
-          onSave(response.data.lectures || updatedLectures);
+          onSave(updatedLectures);
         }
       }
     } catch (error) {
@@ -372,6 +522,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 .lecture-content li { margin: 0.5rem 0; color: #d1d5db; }
                 .lecture-content blockquote { border-left: 4px solid #f97316; padding-left: 1.5rem; margin: 1rem 0; color: #d1d5db; font-style: italic; background: linear-gradient(90deg, #f97316 0%, rgba(249, 115, 22, 0.1) 10%, transparent 20%); padding: 1rem; border-radius: 0.5rem; }
                 .lecture-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+                .lecture-content video { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
                 .lecture-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; background: #111827; border: 2px solid #4b5563; border-radius: 0.75rem; }
                 .lecture-content table th { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); font-weight: bold; color: white; padding: 1rem; }
                 .lecture-content table td { border: 1px solid #4b5563; padding: 1rem; color: #d1d5db; background: #1f2937; }
@@ -412,94 +563,255 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
   if (isEditing && editingLectureId !== null) {
     const editingLecture = lectures.find(l => l.id === editingLectureId);
-    
-    return (
-      <div className="space-y-4">
-        {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
-            <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white mb-1">
-                    Edit: {editingLecture?.title}
-                  </h2>
-                  <p className="text-sm text-gray-400">Lecture content editor</p>
+    // --- BlobUrlHighlighter component ---
+    function BlobUrlHighlighter({ html, pendingFiles = [] }) {
+      // Find all <img> and <video>/<source> tags with blob: URLs
+      const blobMatches = [];
+      // Regex for <img src="blob:...">
+      const imgRegex = /<img[^>]*src=["'](blob:[^"'>]+)["'][^>]*>/gi;
+      let match;
+      while ((match = imgRegex.exec(html))) {
+        blobMatches.push({ tag: 'img', url: match[1], snippet: match[0] });
+      }
+      // Regex for <video src="blob:..."> or <source src="blob:...">
+      const videoRegex = /<(video|source)[^>]*src=["'](blob:[^"'>]+)["'][^>]*>/gi;
+      while ((match = videoRegex.exec(html))) {
+        blobMatches.push({ tag: match[1], url: match[2], snippet: match[0] });
+      }
+      if (blobMatches.length === 0) return null;
+
+      // Create a map of objectUrl to file info for better display
+      const fileInfoMap = {};
+      pendingFiles.forEach(pf => {
+        fileInfoMap[pf.objectUrl] = {
+          name: pf.file?.name || 'Unknown file',
+          size: pf.file?.size || 0,
+          type: pf.file?.type || 'unknown',
+        };
+      });
+
+      return (
+        <div style={{ background: '#fff3cd', color: '#b45309', padding: '10px', borderRadius: '6px', marginTop: '10px', fontWeight: 'normal', textAlign: 'left' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Found {blobMatches.length} file(s) that need to be uploaded:</div>
+          <ul style={{ fontSize: '0.9em', paddingLeft: '18px' }}>
+            {blobMatches.map((m, i) => {
+              const fileInfo = fileInfoMap[m.url];
+              const fileName = fileInfo?.name || 'Unknown file';
+              const fileSize = fileInfo?.size ? `${(fileInfo.size / 1024 / 1024).toFixed(2)} MB` : 'Unknown size';
+              const fileType = fileInfo?.type?.split('/')[0] || 'file';
+              
+              return (
+                <li key={i} style={{ marginBottom: '8px', padding: '6px', background: '#fef3c7', borderRadius: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.2em' }}>
+                      {fileType === 'image' ? '🖼️' : fileType === 'video' ? '🎥' : '📄'}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 'bold', color: '#92400e' }}>{fileName}</div>
+                      <div style={{ fontSize: '0.85em', color: '#a16207' }}>
+                        {fileSize} • {fileType}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '4px', fontSize: '0.8em', color: '#dc2626' }}>
+                    This file will be uploaded when you click "Save"
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <div style={{ marginTop: '8px', fontSize: '0.85em', color: '#92400e', fontStyle: 'italic' }}>
+            💡 Tip: Click "Save" to upload these files and make them permanently available.
+            <button
+              onClick={() => {
+                // Remove all blob URLs from content
+                let cleanedHtml = html;
+                blobMatches.forEach(match => {
+                  // Remove the entire element containing blob URL
+                  const elementRegex = new RegExp(`<${match.tag}[^>]*src=["']${match.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*>[^<]*<\/${match.tag}>`, 'gi');
+                  cleanedHtml = cleanedHtml.replace(elementRegex, '');
+                  // Also remove self-closing tags
+                  const selfClosingRegex = new RegExp(`<${match.tag}[^>]*src=["']${match.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*/>`, 'gi');
+                  cleanedHtml = cleanedHtml.replace(selfClosingRegex, '');
+                });
+                setCurrentContent(cleanedHtml);
+                // Clear pending files
+                setPendingFilesMap(prev => ({ ...prev, [editingLectureId]: [] }));
+                editorRef.current?.clearPendingFiles?.();
+              }}
+              style={{
+                marginLeft: '10px',
+                padding: '4px 8px',
+                background: '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '0.8em',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#b91c1c'}
+              onMouseOut={(e) => e.target.style.background = '#dc2626'}
+            >
+              Remove All
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {isUploading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-gray-900 border border-orange-500 rounded-xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl min-w-[300px]">
+              <svg className="animate-spin h-8 w-8 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+              </svg>
+              <span className="text-orange-200 font-semibold mb-1">Uploading file... Please wait</span>
+              <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                <div className="bg-orange-500 h-3 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
+              </div>
+              <span className="text-orange-300 text-sm mt-1">{uploadProgress}%</span>
+            </div>
+          </div>
+        )}
+        <div className="space-y-4">
+          {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    {/* Warning for blob URLs in content */}
+                    {(() => {
+                      const pendingFiles = pendingFilesMap[editingLectureId] || [];
+                      const hasBlobUrls = currentContent.includes('blob:');
+                      const totalSize = pendingFiles.reduce((sum, pf) => sum + (pf.file?.size || 0), 0);
+                      const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+                      
+                      return hasBlobUrls && (
+                        <div style={{ background: '#fef3c7', color: '#92400e', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 'bold', textAlign: 'center', border: '1px solid #f59e0b' }}>
+                          📁 Files Ready for Upload: {pendingFiles.length} file(s) ({totalSizeMB} MB total). Click "Save" to upload them permanently, or "Remove All" to clear them.
+                          <br /><br />
+                          <BlobUrlHighlighter html={currentContent} pendingFiles={pendingFiles} />
+                        </div>
+                      );
+                    })()}
+
+                    <h2 className="text-xl font-bold text-white mb-1">
+                      Edit: {editingLecture?.title}
+                    </h2>
+                    <p className="text-sm text-gray-400">Lecture content editor</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 rounded-lg hover:bg-blue-600/30 transition"
+                  >
+                    <Eye size={18} />
+                    {showPreview ? 'Hide' : 'Show'} Preview
+                  </button>
                 </div>
+              </div>
+              <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-700">
+                <div className="flex-1 p-6">
+                  <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                    📝 Editor
+                  </label>
+                  <RichTextEditor
+                    ref={editorRef}
+                    value={currentContent}
+                    onChange={setCurrentContent}
+                    pendingFiles={pendingFilesMap[editingLectureId] || []}
+                    onPendingFilesChange={files => setPendingFilesMap(prev => ({ ...prev, [editingLectureId]: files }))}
+                  />
+                </div>
+                {showPreview && (
+                  <div className="flex-1 p-6 bg-gradient-to-b from-gray-800/50 to-gray-900/50">
+                    <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                      👁️ Live Preview
+                    </label>
+                    <div className="bg-gray-900 rounded-xl border border-gray-700 p-4 max-h-[600px] overflow-y-auto">
+                      {currentContent ? (
+                        <div 
+                          className="prose prose-invert max-w-none text-gray-300"
+                          dangerouslySetInnerHTML={{ __html: currentContent }}
+                        />
+                      ) : (
+                        <div className="text-center text-gray-500 py-8">
+                          Start editing to see preview
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="bg-gray-800/50 border-t border-gray-700 px-6 py-4 flex gap-3 justify-end">
                 <button
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 rounded-lg hover:bg-blue-600/30 transition"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditingLectureId(null);
+                    setCurrentContent('');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700 transition"
                 >
-                  <Eye size={18} />
-                  {showPreview ? 'Hide' : 'Show'} Preview
+                  <X size={18} />
+                  Cancel
+                </button>
+                <button
+                  onClick={saveLecture}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition disabled:opacity-50 font-medium"
+                >
+                  <Save size={18} />
+                  {isSaving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>
-
-            <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-700">
-              <div className="flex-1 p-6">
-                <label className="text-sm font-semibold text-gray-300 mb-2 block">
-                  📝 Editor
-                </label>
-                <RichTextEditor value={currentContent} onChange={setCurrentContent} />
-              </div>
-
-              {showPreview && (
-                <div className="flex-1 p-6 bg-gradient-to-b from-gray-800/50 to-gray-900/50">
-                  <label className="text-sm font-semibold text-gray-300 mb-2 block">
-                    👁️ Live Preview
-                  </label>
-                  <div className="bg-gray-900 rounded-xl border border-gray-700 p-4 max-h-[600px] overflow-y-auto">
-                    {currentContent ? (
-                      <div 
-                        className="prose prose-invert max-w-none text-gray-300"
-                        dangerouslySetInnerHTML={{ __html: currentContent }}
-                      />
-                    ) : (
-                      <div className="text-center text-gray-500 py-8">
-                        Start editing to see preview
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-gray-800/50 border-t border-gray-700 px-6 py-4 flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditingLectureId(null);
-                  setCurrentContent('');
-                }}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700 transition"
-              >
-                <X size={18} />
-                Cancel
-              </button>
-              <button
-                onClick={saveLecture}
-                disabled={isSaving}
-                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition disabled:opacity-50 font-medium"
-              >
-                <Save size={18} />
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
+      </>
     );
   }
 
   return (
     <div className="space-y-4">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      {isUploading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-gray-900 border border-orange-500 rounded-xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl min-w-[300px]">
+            <svg className="animate-spin h-8 w-8 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+            <span className="text-orange-200 font-semibold mb-1">Uploading file... Please wait</span>
+            <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+              <div className="bg-orange-500 h-3 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
+            </div>
+            <span className="text-orange-300 text-sm mt-1">{uploadProgress}%</span>
+            <button
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold"
+              onClick={() => {
+                if (uploadAbortController.current) {
+                  uploadAbortController.current.abort();
+                }
+                setIsUploading(false);
+                setIsSaving(false);
+                setUploadProgress(0);
+                setUploadingTotal(0);
+                setUploadingLoaded(0);
+              }}
+            >
+              Cancel Upload
+            </button>
+          </div>
+        </div>
+      )}
 
       {isTeacher && (
         <div className="space-y-3">
@@ -529,14 +841,15 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             </p>
           </div>
 
-          {unsavedLectures.length > 0 && (
+          {/* Show Save All if any unsaved lectures (modules or sub-lectures) exist */}
+          {lectures.some(l => !Number.isInteger(l.id) || l.id > 2147483647 || l.id < 1) && (
             <div className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-700/50 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-green-400">
-                  ✓ {unsavedLectures.length} unsaved sub-lecture{unsavedLectures.length !== 1 ? 's' : ''}
+                  ✓ Unsaved changes detected
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Click "Save All" to save to database
+                  Click "Save All" to save all new modules and topics to the database
                 </p>
               </div>
               <button

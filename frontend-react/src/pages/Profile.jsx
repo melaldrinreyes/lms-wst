@@ -140,7 +140,7 @@ export default function Profile() {
     };
 
     fetchUserData();
-  }, []);
+  }, [updateUser]);
 
   // Update form data when user changes
   useEffect(() => {

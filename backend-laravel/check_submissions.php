@@ -32,8 +32,8 @@ if ($submissionsCount > 0) {
     }
 }
 
-echo "\n=== CHECKING COURSE 4 (Database) ===\n\n";
-$course = Course::find(4);
+echo "\n=== CHECKING COURSE 10 (Database) ===\n\n";
+$course = Course::find(10);
 if ($course) {
     echo "Course: {$course->course_name}\n";
     echo "Faculty ID: {$course->faculty_id}\n";
@@ -47,9 +47,9 @@ if ($course) {
         }
     }
     
-    echo "\n--- Submissions for Course 4 ---\n";
+    echo "\n--- Submissions for Course 10 ---\n";
     $courseSubmissions = Submission::whereHas('assignment', function($q) {
-        $q->where('course_id', 4);
+        $q->where('course_id', 10);
     })->with(['user', 'assignment'])->get();
     
     echo "Found {$courseSubmissions->count()} submissions\n";

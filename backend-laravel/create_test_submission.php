@@ -12,8 +12,12 @@ use App\Models\User;
 echo "=== CREATING TEST SUBMISSION ===\n\n";
 
 // Get the student and assignment
+
+// Find the first student (role_id = 3)
 $student = User::where('role_id', 3)->first();
-$assignment = Assignment::find(14);
+// Find the first assignment for course 10
+$assignment = Assignment::where('course_id', 10)->first();
+
 
 if (!$student) {
     echo "ERROR: No student found!\n";
@@ -21,7 +25,7 @@ if (!$student) {
 }
 
 if (!$assignment) {
-    echo "ERROR: Assignment 14 not found!\n";
+    echo "ERROR: No assignment found for course 10!\n";
     exit(1);
 }
 
@@ -57,7 +61,7 @@ echo "   Submitted at: {$submission->submitted_at}\n";
 echo "\n=== VERIFYING SUBMISSION ===\n\n";
 
 // Test the query that faculty would use
-$courseId = 4;
+$courseId = 10;
 $facultySubmissions = Submission::whereHas('assignment', function($q) use ($courseId) {
     $q->where('course_id', $courseId);
 })->with(['user', 'assignment'])->get();

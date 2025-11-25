@@ -56,7 +56,7 @@ class ModuleController extends Controller
                 'file' => [
                     'nullable',
                     'file',
-                    'max:512000', // 500MB max
+                    'max:10240000', // 10GB max
                     function ($attribute, $value, $fail) {
                         if (!$value) return;
                         
@@ -320,5 +320,21 @@ class ModuleController extends Controller
                 'trace' => $e->getTraceAsString()
             ], 500);
         }
+    }
+
+    /**
+     * Handle WYSIWYG file uploads (images/videos) for modules
+     */
+    public function upload(Request $request)
+    {
+        if (!$request->hasFile('file')) {
+            return response()->json(['error' => 'No file uploaded'], 400);
+        }
+
+        $file = $request->file('file');
+        $path = $file->store('uploads', 'public');
+        $url = asset('storage/' . $path);
+
+        return response()->json(['url' => $url]);
     }
 }

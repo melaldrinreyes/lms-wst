@@ -61,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::match(['PUT', 'POST'], '/user/profile', [AuthController::class, 'updateProfile']);
     Route::put('/user/password', [AuthController::class, 'updatePassword']);
     
     // Course routes (All authenticated users can view courses)
@@ -69,8 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses', [CourseController::class, 'index']);
     Route::get('/courses/{id}', [CourseController::class, 'show']);
     
-    // Course creation and modification (Faculty and Admin only)
-    Route::middleware(['check.role:2,1'])->group(function () {
+    // Course creation and modification (Faculty only)
+    Route::middleware(['check.role:2'])->group(function () {
         Route::post('/courses', [CourseController::class, 'store']);
         Route::put('/courses/{id}', [CourseController::class, 'update']);
         Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
@@ -81,7 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses/{courseId}/content/view', [CourseContentController::class, 'view']);
     Route::get('/courses/{courseId}/content', [CourseContentController::class, 'show']);
     
-    Route::middleware(['check.role:2,1'])->group(function () {
+    Route::middleware(['check.role:2'])->group(function () {
         Route::post('/courses/{courseId}/content', [CourseContentController::class, 'store']);
         Route::delete('/courses/{courseId}/content', [CourseContentController::class, 'destroy']);
     });
@@ -91,13 +91,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses/{courseId}/lectures/view', [CourseLectureController::class, 'view']);
     Route::get('/courses/{courseId}/lectures', [CourseLectureController::class, 'index']);
     
-    Route::middleware(['check.role:2,1'])->group(function () {
+    Route::middleware(['check.role:2'])->group(function () {
         Route::post('/courses/{courseId}/lectures', [CourseLectureController::class, 'store']);
         Route::delete('/courses/{courseId}/lectures/{lectureId}', [CourseLectureController::class, 'destroy']);
     });
     
     // Enrollment management (Faculty and Admin)
-    Route::middleware(['check.role:2,1'])->group(function () {
+    Route::middleware(['check.role:2'])->group(function () {
         Route::put('/courses/{courseId}/students/{studentId}/status', [CourseController::class, 'updateStudentStatus']);
         Route::delete('/courses/{courseId}/students/{studentId}', [CourseController::class, 'removeStudent']);
     });
@@ -110,8 +110,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Module routes (Faculty and Admin can manage, all can view)
     Route::get('/courses/{courseId}/modules', [ModuleController::class, 'index']);
     Route::get('/modules/{id}/download', [ModuleController::class, 'download']);
-    
-    Route::middleware(['check.role:2,1'])->group(function () {
+    // File upload endpoint for modules (for WYSIWYG uploads)
+    Route::post('/modules/upload', [ModuleController::class, 'upload']);
+
+    Route::middleware(['check.role:2'])->group(function () {
         Route::post('/modules', [ModuleController::class, 'store']);
         Route::put('/modules/{id}', [ModuleController::class, 'update']);
         Route::post('/modules/{id}', [ModuleController::class, 'update']); // For FormData with _method=PUT
@@ -124,7 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/assignments/{id}/download', [AssignmentController::class, 'download']);
     
     // Assignment management (Faculty and Admin only)
-    Route::middleware(['check.role:2,1'])->group(function () {
+    Route::middleware(['check.role:2'])->group(function () {
         Route::post('/assignments', [AssignmentController::class, 'store']);
         Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
         Route::post('/assignments/{id}', [AssignmentController::class, 'update']); // For FormData with _method=PUT
@@ -150,7 +152,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Student routes (Faculty and Admin can view all students)
-    Route::middleware(['check.role:2,1'])->group(function () {
+    Route::middleware(['check.role:1,2'])->group(function () {
         Route::get('/students', [StudentController::class, 'index']);
         Route::get('/students/{id}', [StudentController::class, 'show']);
         Route::get('/courses/{courseId}/students', [StudentController::class, 'byCourse']);
@@ -168,7 +170,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/announcements/{id}', [AnnouncementController::class, 'show']);
     
     // Announcement management (Faculty and Admin only)
-    Route::middleware(['check.role:2,1'])->group(function () {
+    Route::middleware(['check.role:2'])->group(function () {
         Route::post('/announcements', [AnnouncementController::class, 'store']);
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
         Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
@@ -211,6 +213,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Super Admin routes (role_id = 1)
     Route::middleware(['check.role:1'])->group(function () {
         Route::get('/admin/dashboard', [SuperAdminController::class, 'dashboard']);
+        Route::get('/admin/users', [SuperAdminController::class, 'getUsers']);
+        Route::post('/admin/users', [SuperAdminController::class, 'createUser']);
+        Route::put('/admin/users/{id}', [SuperAdminController::class, 'updateUser']);
+        Route::delete('/admin/users/{id}', [SuperAdminController::class, 'deleteUser']);
         Route::get('/admin/instructors', [SuperAdminController::class, 'getInstructors']);
         Route::get('/admin/instructors/{id}', [SuperAdminController::class, 'getInstructor']);
         Route::post('/admin/instructors', [SuperAdminController::class, 'createInstructor']);

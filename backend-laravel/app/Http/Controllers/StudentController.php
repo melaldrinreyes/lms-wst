@@ -102,6 +102,26 @@ class StudentController extends Controller
             return response()->json([
                 'success' => true,
                 'students' => $students->map(function ($student) {
+                    // Get student's enrollments (active only)
+                    $enrollments = Enrollment::where('student_id', $student->id)
+                        ->where('status', 'enrolled')
+                        ->with('course.instructor')
+                        ->get();
+
+                    // Get all instructors for this student (may be multiple if enrolled in multiple courses)
+                    $instructors = $enrollments->map(function ($enrollment) {
+                        $course = $enrollment->course;
+                        if ($course && $course->instructor) {
+                            return [
+                                'id' => $course->instructor->id,
+                                'name' => $course->instructor->name,
+                                'email' => $course->instructor->email,
+                                'course' => $course->course_name,
+                            ];
+                        }
+                        return null;
+                    })->filter()->values();
+
                     // Get student's classes via class_student pivot table
                     $enrolledClasses = \DB::table('class_student')
                         ->where('student_id', $student->id)
@@ -121,6 +141,7 @@ class StudentController extends Controller
                         'total_assignments' => 0, // Placeholder
                         'average_grade' => 0, // Placeholder
                         'enrolled_classes' => $enrolledClasses,
+                        'instructors' => $instructors,
                     ];
                 }),
             ]);

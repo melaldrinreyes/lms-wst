@@ -335,11 +335,6 @@ export const submissionAPI = {
         responseType: 'blob',
       });
       
-      // Create a download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      
       // Extract filename from Content-Disposition header or use default
       const contentDisposition = response.headers['content-disposition'];
       let filename = 'submission-download';
@@ -349,7 +344,13 @@ export const submissionAPI = {
           filename = filenameMatch[1].replace(/['"]/g, '');
         }
       }
-      
+
+      // Use the correct MIME type from the response
+      const mimeType = response.data.type || response.headers['content-type'] || 'application/octet-stream';
+      const blob = new Blob([response.data], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
