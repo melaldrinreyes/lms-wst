@@ -1,4 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
+import { useDropzone } from 'react-dropzone';
+import api from '../../services/api';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
@@ -6,8 +8,9 @@ import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
+import { Video } from './VideoExtension';
 import mammoth from 'mammoth';
-import { useState, useRef } from 'react';
+import { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import {
   Bold,
   Italic,
@@ -28,11 +31,39 @@ import {
 } from 'lucide-react';
 import './RichTextEditor.css';
 
-export default function RichTextEditor({ value = '', onChange }) {
+function VideoDropzone({ onVideoDrop }) {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: { 'video/*': [] },
+    multiple: false,
+    onDrop: (acceptedFiles) => {
+      if (acceptedFiles.length > 0) {
+        onVideoDrop(acceptedFiles[0]);
+      }
+    },
+  });
+  return (
+    <div {...getRootProps()} style={{
+      border: '2px dashed #888', padding: 20, textAlign: 'center', borderRadius: 8, background: '#222', color: '#fff', marginBottom: 16
+    }}>
+      <input {...getInputProps()} />
+      {isDragActive
+        ? <p>Drop the video here ...</p>
+        : <p>Drag & drop a video here, or click to select</p>
+      }
+    </div>
+  );
+}
+
+const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange, pendingFiles = [], onPendingFilesChange }, ref) {
   const [videoUrl, setVideoUrl] = useState('');
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showVideoDropzone, setShowVideoDropzone] = useState(false);
   const [textColor, setTextColor] = useState('#ffffff');
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
+  const [lastUploadFile, setLastUploadFile] = useState(null);
   const fileInputRef = useRef(null);
 
   const editor = useEditor({
@@ -40,9 +71,6 @@ export default function RichTextEditor({ value = '', onChange }) {
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],
-        },
-        link: {
-          openOnClick: false,
         },
       }),
       Link.configure({
@@ -69,6 +97,7 @@ export default function RichTextEditor({ value = '', onChange }) {
         controls: true,
         nocookie: true,
       }),
+      Video,
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -76,19 +105,16 @@ export default function RichTextEditor({ value = '', onChange }) {
     },
     onPaste: (view, event) => {
       const items = event.clipboardData?.items;
-      
       // Handle HTML content (from Word, etc.)
       const htmlData = event.clipboardData?.getData('text/html');
       if (htmlData && htmlData.trim()) {
         // Let TipTap handle HTML paste naturally
         return false;
       }
-      
       // Handle pasted files (images, videos)
       if (items) {
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          
           // Handle images
           if (item.type.indexOf('image') !== -1) {
             event.preventDefault();
@@ -96,7 +122,6 @@ export default function RichTextEditor({ value = '', onChange }) {
             handleImageFile(file);
             return true;
           }
-          
           // Handle videos
           if (item.type.indexOf('video') !== -1) {
             event.preventDefault();
@@ -128,44 +153,147 @@ export default function RichTextEditor({ value = '', onChange }) {
     },
   });
 
+  // Update editor content if value prop changes (after save)
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value || '', false);
+    }
+  }, [value, editor]);
+
   if (!editor) {
     return null;
   }
 
-  const handleImageFile = (file) => {
+  // Store local files for later upload, sync with prop
+  const [localPendingFiles, setLocalPendingFiles] = useState(pendingFiles);
+
+  // Sync localPendingFiles with prop
+  useEffect(() => {
+    setLocalPendingFiles(pendingFiles);
+  }, [pendingFiles]);
+
+  // Helper to update both local and parent
+  const updatePendingFiles = (files) => {
+    setLocalPendingFiles(files);
+    if (onPendingFilesChange) onPendingFilesChange(files);
+  };
+
+  const retryLastUpload = async () => {
+    if (!lastUploadFile) return;
+    setUploadError(null);
+    const ok = await handleVideoFile(lastUploadFile);
+    if (ok) setShowVideoDropzone(false);
+  };
+
+  // Expose pendingFiles and a clear function to parent via ref
+  useImperativeHandle(ref, () => ({
+    getPendingFiles: () => localPendingFiles,
+    clearPendingFiles: () => updatePendingFiles([]),
+    setContent: (html) => {
+      if (editor) {
+        editor.commands.setContent(html || '', false);
+      }
+    },
+    isUploading,
+    uploadProgress,
+  }), [localPendingFiles, editor, isUploading, uploadProgress]);
+
+  const handleImageFile = async (file) => {
     if (!file || !file.type.startsWith('image/')) {
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target.result;
-      editor.chain().focus().setImage({ src: base64 }).run();
-    };
-    reader.readAsDataURL(file);
+    setUploadError(null);
+    setLastUploadFile(file);
+    setIsUploading(true);
+    setUploadProgress(0);
+    const formData = new FormData();
+    formData.append('file', file);
+    let backendUrl = '';
+    try {
+      const res = await api.post('/modules/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000, // 10 minutes for very large images
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+          }
+        },
+      });
+      backendUrl = res.data.url;
+    } catch (e) {
+      console.error('Image upload error:', e);
+      const msg = e.response?.data?.message || e.message || 'Image upload failed';
+      setUploadError(msg);
+      setIsUploading(false);
+      setUploadProgress(0);
+      return false;
+    }
+    if (!backendUrl) {
+      const msg = 'Image upload failed. No URL returned.';
+      setUploadError(msg);
+      setIsUploading(false);
+      setUploadProgress(0);
+      return false;
+    }
+    editor.chain().focus().setImage({ src: backendUrl }).run();
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadError(null);
+    setLastUploadFile(null);
+    return true;
   };
 
-  const handleVideoFile = (file) => {
+  const handleVideoFile = async (file) => {
     if (!file || !file.type.startsWith('video/')) {
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target.result;
-      const videoType = file.type.split('/')[1];
-      
-      // Insert HTML video element with base64 source
-      const videoHtml = `
-        <video controls style="max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;">
-          <source src="${base64}" type="${file.type}">
-          Your browser does not support the video tag.
-        </video>
-      `;
-      
-      editor.chain().focus().insertContent(videoHtml).run();
-    };
-    reader.readAsDataURL(file);
+    setUploadError(null);
+    setLastUploadFile(file);
+    setIsUploading(true);
+    setUploadProgress(0);
+    const formData = new FormData();
+    formData.append('file', file);
+    let backendUrl = '';
+    try {
+      const res = await api.post('/modules/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000, // 10 minutes for large video uploads
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+          }
+        },
+      });
+      backendUrl = res.data.url;
+    } catch (e) {
+      console.error('Video upload error:', e);
+      const msg = e.response?.data?.message || e.message || 'Video upload failed';
+      setUploadError(msg);
+      setIsUploading(false);
+      setUploadProgress(0);
+      return false;
+    }
+    if (!backendUrl) {
+      const msg = 'Video upload failed. No URL returned.';
+      setUploadError(msg);
+      setIsUploading(false);
+      setUploadProgress(0);
+      return false;
+    }
+    editor.chain().focus().insertContent({
+      type: 'video',
+      attrs: {
+        src: backendUrl,
+        type: file.type,
+        controls: true,
+        style: 'max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;'
+      }
+    }).run();
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadError(null);
+    setLastUploadFile(null);
+    return true;
   };
 
   const handleWordFile = async (file) => {
@@ -325,7 +453,15 @@ export default function RichTextEditor({ value = '', onChange }) {
   };
 
   return (
-    <div className="rich-text-editor">
+    <div className="rich-text-editor" style={{ position: 'relative' }}>
+      {isUploading && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, background: '#222', color: '#fff', padding: 8, textAlign: 'center' }}>
+          <span>Uploading... {uploadProgress}%</span>
+          <div style={{ height: 6, background: '#444', borderRadius: 3, marginTop: 4 }}>
+            <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#f90', borderRadius: 3, transition: 'width 0.2s' }} />
+          </div>
+        </div>
+      )}
       {/* Toolbar */}
       <div className="editor-toolbar">
         <div className="toolbar-group">
@@ -424,12 +560,55 @@ export default function RichTextEditor({ value = '', onChange }) {
             <ImageIcon size={18} />
           </button>
           <button
-            onClick={() => setShowVideoModal(true)}
+            onClick={() => setShowVideoDropzone(true)}
             className="toolbar-btn"
-            title="Add YouTube Video"
+            title="Upload Video (drag & drop)"
           >
             <Film size={18} />
           </button>
+                {/* Video Drag-and-Drop Modal */}
+                {showVideoDropzone && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+                    <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+                      <h3 className="text-lg font-bold text-white mb-4">Upload Video</h3>
+                      <VideoDropzone onVideoDrop={async (file) => {
+                        setUploadError(null);
+                        setLastUploadFile(file);
+                        const ok = await handleVideoFile(file);
+                        if (ok) setShowVideoDropzone(false);
+                      }} />
+                      {uploadError && (
+                        <div className="mt-4 text-sm text-red-400">
+                          <div>Upload failed: {String(uploadError)}</div>
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={retryLastUpload}
+                              className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                            >
+                              Retry
+                            </button>
+                            <button
+                              onClick={() => { setShowVideoDropzone(false); setUploadError(null); setLastUploadFile(null); }}
+                              className="px-3 py-2 border border-gray-600 rounded text-gray-300 hover:bg-gray-800"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {!uploadError && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setShowVideoDropzone(false)}
+                            className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
           <button
             onClick={addTable}
             className="toolbar-btn"
@@ -541,4 +720,5 @@ export default function RichTextEditor({ value = '', onChange }) {
       </div>
     </div>
   );
-}
+});
+export default RichTextEditor;
