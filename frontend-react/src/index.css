@@ -148,3 +148,21 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+/* If you need to hide the I-beam/caret for specific non-editable elements, use the
+  `.no-ibeam` utility below. Avoid global rules so inputs and editors behave normally. */
+
+/* Utility: opt-in to disable I-beam and caret on a specific element */
+.no-ibeam {
+  cursor: default !important;
+  caret-color: transparent !important;
+}
+
+/* Body-level mode: hide I-beam when no editable is active and mouse is over non-interactive content */
+body.hide-ibeam :not(input):not(textarea):not(select):not(button):not(a):not([role="button"]):not([contenteditable]):not(.cursor-pointer) {
+  cursor: default !important;
+}
+
+body.hide-ibeam :not(input):not(textarea):not([contenteditable]) {
+  caret-color: transparent !important;
+}

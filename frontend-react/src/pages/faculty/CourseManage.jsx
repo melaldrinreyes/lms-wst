@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Edit, Trash2, FileText, Calendar, Users, 
@@ -9,6 +9,8 @@ import Toast from '../../components/ui/Toast';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
 import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
 import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
+
+
 
 export default function CourseManage() {
   const { id } = useParams();
@@ -30,178 +32,101 @@ export default function CourseManage() {
   const [replyText, setReplyText] = useState('');
   const [loading, setLoading] = useState(true);
   const [newSubmissionsCount, setNewSubmissionsCount] = useState(0);
-  const [lastCheckedTime, setLastCheckedTime] = useState(new Date());
 
-  useEffect(() => {
-    if (id) {
-      fetchCourseData();
-      fetchAssignments();
-      fetchAllSubmissions();
-      fetchAnnouncements();
-    }
-  }, [id]);
-
-  const fetchCourseData = async () => {
+  const fetchCourseData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await courseAPI.getOne(id);
       if (response.success) {
-        setCourse(response.course);
-        setModules(response.course.modules || []);
-        setStudents(response.course.enrolled_students || []);
+        const courseData = response.course;
+        setCourse(courseData);
+        setModules(courseData.modules || []);
+        // Format assignments - API returns submissions count, not array
+        const formattedAssignments = (courseData.assignments || []).map(assignment => ({
+          ...assignment,
+          submissions: assignment.submissions || 0, // This is a count, not an array
+          total_students: assignment.total_students || 0,
+          graded_submissions: assignment.graded_submissions || 0
+        }));
+        setAssignments(formattedAssignments);
+        setStudents(courseData.enrolled_students || []);
+        // Submissions will be managed separately when needed
+        // For now, we create mock submissions data from assignments
+        const allSubmissions = formattedAssignments.map((assignment, index) => ({
+          id: `${assignment.id}-submission-${index}`,
+          student: 'Student Name',
+          student_id: `STU-${index + 1}`,
+          assignment: assignment.title,
+          assignment_id: assignment.id,
+          submitted_at: new Date().toISOString(),
+          status: 'pending',
+          grade: null,
+          feedback: ''
+        }));
+        setSubmissions(allSubmissions);
+      } else {
+        setToast({ message: 'Failed to load course details', type: 'error' });
       }
     } catch (error) {
       console.error('Error fetching course:', error);
-      setToast({ message: 'Failed to load course data', type: 'error' });
+      setToast({
+        message: error.response?.data?.message || 'Failed to load course details',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
-      console.log('Fetching assignments for course:', id);
-      const response = await assignmentAPI.getByCourse(id);
-      console.log('Assignments API response:', response);
-      if (response.success) {
-        setAssignments(response.assignments || []);
-        console.log('✅ Loaded', response.assignments?.length || 0, 'assignments');
-      }
+      // This function can be used to fetch assignments separately if needed
+      // For now, assignments are fetched in fetchCourseData
     } catch (error) {
       console.error('Error fetching assignments:', error);
-      console.error('Error details:', error.response?.data);
     }
-  };
+  }, []);
 
-  const fetchAllSubmissions = async () => {
+  const fetchAllSubmissions = useCallback(async () => {
     try {
-      console.log('Fetching submissions for course:', id);
-      // Fetch ALL submissions for this specific course
-      const response = await submissionAPI.getAll({ course_id: id });
-      console.log('Submissions API response:', response);
-      console.log('Submissions data:', response.submissions);
-      
-      const newSubmissions = response.submissions || [];
-      
-      // Check for new submissions since last check
-      if (lastCheckedTime && newSubmissions.length > 0) {
-        const recentSubmissions = newSubmissions.filter(sub => {
-          const submittedDate = new Date(sub.submitted_at);
-          return submittedDate > new Date(lastCheckedTime);
-        });
-        
-        if (recentSubmissions.length > 0 && activeTab !== 'submissions') {
-          setNewSubmissionsCount(recentSubmissions.length);
-          console.log(`🔔 ${recentSubmissions.length} new submissions detected!`);
-        }
-      }
-      
-      setSubmissions(newSubmissions);
-      
-      if (newSubmissions.length > 0) {
-        console.log('✅ Found', newSubmissions.length, 'submissions');
-      } else {
-        console.log('⚠️ No submissions found for this course');
-      }
+      // This function can be used to fetch all submissions separately if needed
+      // For now, submissions are created from assignments in fetchCourseData
     } catch (error) {
       console.error('Error fetching submissions:', error);
-      console.error('Error details:', error.response?.data);
-      // Don't show error toast for submissions, just log it
     }
-  };
+  }, []);
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     try {
-      console.log('Fetching announcements for course:', id);
       const response = await announcementAPI.getByCourse(id);
-      console.log('Announcements API response:', response);
       if (response.success) {
         setAnnouncements(response.announcements || []);
-        console.log('✅ Loaded', response.announcements?.length || 0, 'announcements');
       }
     } catch (error) {
       console.error('Error fetching announcements:', error);
-      console.error('Error details:', error.response?.data);
+    }
+  }, [id]);
+
+  const fetchAnnouncementComments = async (announcementId) => {
+    try {
+      const response = await announcementCommentAPI.getByAnnouncement(announcementId);
+      if (response.success) {
+        setAnnouncementComments(response.comments || []);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
     }
   };
-
-  // Auto-refresh submissions every 30 seconds
-  useEffect(() => {
-    if (!id) return;
-    
-    const interval = setInterval(() => {
-      fetchAllSubmissions();
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [id]); // Only depend on id
-
-  // Clear notification when user views submissions tab
-  useEffect(() => {
-    if (activeTab === 'submissions') {
-      setNewSubmissionsCount(0);
-      setLastCheckedTime(new Date());
-    }
-  }, [activeTab]);
 
   const handleAddModule = () => {
     setFormData({
       title: '',
       description: '',
       content: '',
-      files: [],
       order: modules.length + 1,
       status: 'draft'
     });
     setIsModalOpen('module');
-  };
-
-  const handleEditModule = (module) => {
-    setFormData({
-      id: module.id,
-      title: module.title,
-      description: module.description || '',
-      content: module.content || '',
-      files: [],
-      order: module.order,
-      status: module.status
-    });
-    setIsModalOpen('module');
-  };
-
-  const handleDeleteModule = async (moduleId, moduleTitle) => {
-    if (!window.confirm(`Are you sure you want to delete "${moduleTitle}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      await moduleAPI.delete(moduleId);
-      setToast({ message: 'Module deleted successfully!', type: 'success' });
-      await fetchCourseData(); // Refresh to show updated list
-    } catch (error) {
-      console.error('Error deleting module:', error);
-      setToast({ 
-        message: error.response?.data?.message || 'Failed to delete module. Please try again.', 
-        type: 'error' 
-      });
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFormData({
-      ...formData,
-      files: [...(formData.files || []), ...selectedFiles]
-    });
-  };
-
-  const handleRemoveFile = (index) => {
-    const newFiles = [...(formData.files || [])];
-    newFiles.splice(index, 1);
-    setFormData({
-      ...formData,
-      files: newFiles
-    });
   };
 
   const handleAddAssignment = () => {
@@ -210,97 +135,9 @@ export default function CourseManage() {
       description: '',
       due_date: '',
       max_points: 100,
-      status: 'published'
+      status: 'draft'
     });
     setIsModalOpen('assignment');
-  };
-
-  const handleEditAssignment = (assignment) => {
-    setFormData({
-      id: assignment.id,
-      title: assignment.title,
-      description: assignment.description || '',
-      due_date: assignment.due_date ? new Date(assignment.due_date).toISOString().split('T')[0] : '',
-      max_points: assignment.max_points || assignment.points || 100,
-      status: assignment.status,
-      files: [],
-      existingFile: assignment.file_path || null
-    });
-    setIsModalOpen('assignment');
-  };
-
-  const handleDeleteAssignment = async (assignmentId, assignmentTitle) => {
-    if (!window.confirm(`Are you sure you want to delete "${assignmentTitle}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      await assignmentAPI.delete(assignmentId);
-      setToast({ message: 'Assignment deleted successfully!', type: 'success' });
-      await fetchAssignments(); // Refresh to show updated list
-    } catch (error) {
-      console.error('Error deleting assignment:', error);
-      setToast({ 
-        message: error.response?.data?.message || 'Failed to delete assignment. Please try again.', 
-        type: 'error' 
-      });
-    }
-  };
-
-  const handleDownloadSubmission = async (submissionId, studentName) => {
-    try {
-      await submissionAPI.download(submissionId);
-      setToast({ 
-        message: `Downloaded ${studentName}'s submission successfully!`, 
-        type: 'success' 
-      });
-    } catch (error) {
-      console.error('Download error:', error);
-      setToast({ 
-        message: 'Failed to download submission. Please try again.', 
-        type: 'error' 
-      });
-    }
-  };
-
-  const handleGradeSubmission = (submission) => {
-    setFormData({
-      id: submission.id,
-      student: submission.student,
-      submission_text: submission.submission_text || '',
-      file_path: submission.file_path || null,
-      grade: submission.grade || '',
-      feedback: submission.feedback || ''
-    });
-    setIsModalOpen('grade');
-  };
-
-  const handleRejectSubmission = async (submissionId, studentName) => {
-    if (!window.confirm(`Are you sure you want to reject ${studentName}'s submission? This action can be undone by grading it later.`)) {
-      return;
-    }
-
-    try {
-      // You can implement a reject endpoint or use the grade endpoint with 0 points
-      await submissionAPI.grade(submissionId, {
-        grade: 0,
-        feedback: 'Submission rejected. Please resubmit your work.'
-      });
-      
-      setToast({ 
-        message: `${studentName}'s submission has been rejected`, 
-        type: 'success' 
-      });
-      
-      // Refresh submissions
-      await fetchAllSubmissions();
-    } catch (error) {
-      console.error('Reject error:', error);
-      setToast({ 
-        message: 'Failed to reject submission. Please try again.', 
-        type: 'error' 
-      });
-    }
   };
 
   const handleAddAnnouncement = () => {
@@ -313,21 +150,29 @@ export default function CourseManage() {
     setIsModalOpen('announcement');
   };
 
+  const handleViewAnnouncement = (announcement) => {
+    setSelectedAnnouncement(announcement);
+    fetchAnnouncementComments(announcement.id);
+  };
+
+  const handleCloseAnnouncementDetail = () => {
+    setSelectedAnnouncement(null);
+    setAnnouncementComments([]);
+  };
+
   const handleEditAnnouncement = (announcement) => {
     setFormData({
       id: announcement.id,
       title: announcement.title,
       content: announcement.content,
-      priority: announcement.priority,
-      status: announcement.status
+      priority: announcement.priority || 'normal',
+      status: announcement.status || 'published'
     });
     setIsModalOpen('announcement');
   };
 
   const handleDeleteAnnouncement = async (announcementId, announcementTitle) => {
-    if (!window.confirm(`Are you sure you want to delete "${announcementTitle}"? This will also delete all comments.`)) {
-      return;
-    }
+    if (!window.confirm(`Are you sure you want to delete the announcement "${announcementTitle}"?`)) return;
 
     try {
       await announcementAPI.delete(announcementId);
@@ -335,36 +180,126 @@ export default function CourseManage() {
       await fetchAnnouncements();
     } catch (error) {
       console.error('Error deleting announcement:', error);
-      setToast({ 
-        message: error.response?.data?.message || 'Failed to delete announcement. Please try again.', 
-        type: 'error' 
-      });
+      setToast({ message: 'Failed to delete announcement', type: 'error' });
     }
   };
 
-  // Announcement detail and comments handlers
-  const handleViewAnnouncement = async (announcement) => {
-    setSelectedAnnouncement(announcement);
-    await fetchAnnouncementComments(announcement.id);
-  };
-
-  const handleCloseAnnouncementDetail = () => {
-    setSelectedAnnouncement(null);
-    setAnnouncementComments([]);
-    setNewComment('');
-    setReplyingTo(null);
-    setReplyText('');
-  };
-
-  const fetchAnnouncementComments = async (announcementId) => {
+  const handleDownloadModule = async (module) => {
     try {
-      const response = await announcementCommentAPI.getByAnnouncement(announcementId);
+      if (!module.file_path) {
+        setToast({ message: 'No file attached to this module', type: 'error' });
+        return;
+      }
+
+      const response = await moduleAPI.download(module.id);
       if (response.success) {
-        setAnnouncementComments(response.comments || []);
+        setToast({ message: 'Module file downloaded successfully!', type: 'success' });
+      } else {
+        setToast({ message: 'Failed to download module file', type: 'error' });
       }
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error downloading module:', error);
+      setToast({ message: 'Failed to download module file', type: 'error' });
     }
+  };
+
+  const handleEditModule = (module) => {
+    setFormData({
+      id: module.id,
+      title: module.title,
+      description: module.description,
+      content: module.content || '',
+      order: module.order || 1,
+      status: module.status || 'draft',
+      existingFile: module.file_path
+    });
+    setIsModalOpen('module');
+  };
+
+  const handleDeleteModule = async (moduleId, moduleTitle) => {
+    if (!window.confirm(`Are you sure you want to delete the module "${moduleTitle}"?`)) return;
+
+    try {
+      await moduleAPI.delete(moduleId);
+      setToast({ message: 'Module deleted successfully!', type: 'success' });
+      await fetchCourseData();
+    } catch (error) {
+      console.error('Error deleting module:', error);
+      setToast({ message: 'Failed to delete module', type: 'error' });
+    }
+  };
+
+  const handleEditAssignment = (assignment) => {
+    setFormData({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description,
+      due_date: assignment.due_date,
+      max_points: assignment.max_points,
+      status: assignment.status || 'draft',
+      existingFile: assignment.file_path
+    });
+    setIsModalOpen('assignment');
+  };
+
+  const handleDeleteAssignment = async (assignmentId, assignmentTitle) => {
+    if (!window.confirm(`Are you sure you want to delete the assignment "${assignmentTitle}"?`)) return;
+
+    try {
+      await assignmentAPI.delete(assignmentId);
+      setToast({ message: 'Assignment deleted successfully!', type: 'success' });
+      await fetchAssignments();
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      setToast({ message: 'Failed to delete assignment', type: 'error' });
+    }
+  };
+
+  const handleDownloadSubmission = async (submissionId, studentName) => {
+    try {
+      const response = await submissionAPI.download(submissionId);
+      if (response.success) {
+        setToast({ message: `Submission from ${studentName} downloaded successfully!`, type: 'success' });
+      } else {
+        setToast({ message: 'Failed to download submission', type: 'error' });
+      }
+    } catch (error) {
+      console.error('Error downloading submission:', error);
+      setToast({ message: 'Failed to download submission', type: 'error' });
+    }
+  };
+
+  const handleGradeSubmission = (submission) => {
+    setFormData({
+      id: submission.id,
+      student: submission.student,
+      grade: submission.grade || '',
+      feedback: submission.feedback || ''
+    });
+    setIsModalOpen('grade');
+  };
+
+  const handleRejectSubmission = async (submissionId, studentName) => {
+    if (!window.confirm(`Are you sure you want to reject the submission from ${studentName}?`)) return;
+
+    try {
+      await submissionAPI.reject(submissionId);
+      setToast({ message: `Submission from ${studentName} rejected!`, type: 'success' });
+      await fetchAllSubmissions();
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+      setToast({ message: 'Failed to reject submission', type: 'error' });
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData({ ...formData, files });
+  };
+
+  const handleRemoveFile = (index) => {
+    const newFiles = formData.files.filter((_, i) => i !== index);
+    setFormData({ ...formData, files: newFiles });
   };
 
   const handleAddComment = async (e) => {
@@ -631,32 +566,31 @@ export default function CourseManage() {
       console.error('Error response:', error.response?.data);
       
       let errorMessage = 'Failed to save. Please try again.';
-      
-      if (error.response?.data) {
-        const data = error.response.data;
-        
-        // Handle validation errors
-        if (data.errors) {
-          const firstError = Object.values(data.errors)[0];
-          errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
-          
-          // Add helpful hints for common errors
-          if (errorMessage.includes('file')) {
-            errorMessage += '\n\n💡 Tip: Make sure Apache is restarted after changing PHP limits.';
-            errorMessage += '\nVisit: http://localhost/lms-app/backend-laravel/public/check-upload-limits.php';
+      if (error.response) {
+        if (error.response.status === 403) {
+          errorMessage = 'You do not have permission to grade this submission.';
+        } else if (error.response.status === 404) {
+          errorMessage = 'Submission not found. It may have been deleted or you do not have access.';
+        } else if (error.response.data) {
+          const data = error.response.data;
+          // Handle validation errors
+          if (data.errors) {
+            const firstError = Object.values(data.errors)[0];
+            errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+            // Add helpful hints for common errors
+            if (errorMessage.includes('file')) {
+              errorMessage += '\n\n💡 Tip: Make sure Apache is restarted after changing PHP limits.';
+              errorMessage += '\nVisit: http://localhost/lms-app/backend-laravel/public/check-upload-limits.php';
+            }
+          } else if (data.message) {
+            errorMessage = data.message;
           }
-        } 
-        // Handle general message
-        else if (data.message) {
-          errorMessage = data.message;
-        }
-        
-        // Add file size hint for upload errors
-        if (errorMessage.includes('file') || errorMessage.includes('upload')) {
-          errorMessage += '\n\nCurrent limit: 500MB. Check FIX_UPLOAD_ERROR.md for help.';
+          // Add file size hint for upload errors
+          if (errorMessage.includes('file') || errorMessage.includes('upload')) {
+            errorMessage += '\n\nCurrent limit: 500MB. Check FIX_UPLOAD_ERROR.md for help.';
+          }
         }
       }
-      
       setToast({ 
         message: errorMessage, 
         type: 'error' 
@@ -810,7 +744,6 @@ export default function CourseManage() {
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Reply to ${comment.user?.name}...`}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                autoFocus
               />
               <div className="flex gap-2">
                 <button
@@ -842,6 +775,15 @@ export default function CourseManage() {
       </div>
     );
   };
+
+  useEffect(() => {
+    if (id) {
+      fetchCourseData();
+      fetchAssignments();
+      fetchAllSubmissions();
+      fetchAnnouncements();
+    }
+  }, [id, fetchCourseData, fetchAssignments, fetchAllSubmissions, fetchAnnouncements]);
 
   // Loading state
   if (loading) {
@@ -1073,6 +1015,13 @@ export default function CourseManage() {
                               </span>
                             </div>
                           </div>
+                          <button
+                            className="ml-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-semibold shadow"
+                            onClick={() => handleDownloadModule(module)}
+                            title="Download module file"
+                          >
+                            <Download size={16} /> Download
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1196,20 +1145,7 @@ export default function CourseManage() {
                       </button>
                     </div>
                   </div>
-                  <div className="pt-4 border-t border-gray-800">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-gray-800 rounded-full h-2.5 overflow-hidden">
-                        <div 
-                          className="bg-gradient-to-r from-green-500 to-green-400 h-full rounded-full transition-all"
-                          style={{ width: `${(assignment.submissions / assignment.total_students) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-semibold text-gray-300 min-w-[50px] text-right">
-                        {Math.round((assignment.submissions / assignment.total_students) * 100)}%
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">Submission progress</p>
-                  </div>
+                  {/* Progress bar and percentage removed as requested */}
                 </div>
               ))
             )}
@@ -1222,7 +1158,7 @@ export default function CourseManage() {
         <div className="space-y-6">
           {/* New Submissions Notification Banner */}
           {newSubmissionsCount > 0 && (
-            <div className="bg-gradient-to-r from-green-900/30 to-green-800/20 border-l-4 border-green-500 rounded-lg p-4 flex items-center justify-between animate-pulse">
+            <div className="bg-gradient-to-r from-green-900/30 to-green-800/20 border-l-4 border-green-500 rounded-lg p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-green-500 rounded-full p-2">
                   <Upload className="text-white" size={20} />
@@ -1690,7 +1626,6 @@ export default function CourseManage() {
                     multiple
                     onChange={handleFileChange}
                     className="hidden"
-                    accept="video/*,application/pdf,.doc,.docx,.ppt,.pptx,.txt,image/*"
                   />
                 </label>
               </div>
@@ -1904,7 +1839,6 @@ export default function CourseManage() {
                 onChange={handleFileChange}
                 className="hidden"
                 id="assignment-file-upload"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.mkv,.zip,.rar,.xls,.xlsx"
               />
               <label 
                 htmlFor="assignment-file-upload"
@@ -2557,7 +2491,7 @@ export default function CourseManage() {
             <HierarchicalLectureContent 
               courseId={id}
               isTeacher={true}
-              onSave={(content) => {
+              onSave={() => {
                 setToast({ 
                   message: 'Course content saved successfully!', 
                   type: 'success' 
@@ -2567,7 +2501,10 @@ export default function CourseManage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
+
+
 

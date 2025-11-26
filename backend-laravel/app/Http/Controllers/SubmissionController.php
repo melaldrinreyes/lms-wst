@@ -6,6 +6,7 @@ use App\Models\Submission;
 use App\Models\Assignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\DownloadService;
 
 class SubmissionController extends Controller
 {
@@ -247,26 +248,7 @@ class SubmissionController extends Controller
     public function download($id)
     {
         $submission = Submission::findOrFail($id);
-        
-        if (!$submission->file_path) {
-            return response()->json(['error' => 'No file attached'], 404);
-        }
-
-        if (!Storage::disk('public')->exists($submission->file_path)) {
-            return response()->json(['error' => 'File not found'], 404);
-        }
-
-        $path = storage_path('app/public/' . $submission->file_path);
-        
-        // Extract original filename from stored path (format: timestamp_userid_originalname)
-        $basename = basename($submission->file_path);
-        $parts = explode('_', $basename, 3);
-        $originalName = isset($parts[2]) ? $parts[2] : $basename;
-        
-        // Get MIME type
-        $mimeType = Storage::disk('public')->mimeType($submission->file_path);
-        
-        return response()->download($path, $originalName, ['Content-Type' => $mimeType]);
+        return \App\Services\DownloadService::serveFromStorage('public', $submission->file_path, null);
     }
 
     /**

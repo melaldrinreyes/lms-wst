@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
@@ -95,10 +95,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const updateUser = (updatedUser) => {
+  const updateUser = useCallback((updatedUser) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>

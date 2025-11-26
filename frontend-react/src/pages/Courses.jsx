@@ -179,7 +179,7 @@ export default function Courses() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-orange-500/50 transition-all group"
+                className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
               >
                 {/* Course Image */}
                 <div className="relative h-48 overflow-hidden bg-gray-800">
@@ -193,7 +193,7 @@ export default function Courses() {
                 </div>
 
                 {/* Course Info */}
-                <div className="p-6">
+                <div className="p-6 flex-1 flex flex-col justify-between">
                   <div className="text-xs text-orange-400 font-semibold mb-2">{course.category}</div>
                   <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition">
                     {course.title}
@@ -214,7 +214,7 @@ export default function Courses() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-800 mt-4">
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                       <Clock size={16} />
                       <span>{course.duration}</span>

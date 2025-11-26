@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Edit, Trash2, FileText, Calendar, Users, 
@@ -8,7 +8,6 @@ import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
 import { courseAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-
 export default function CourseManage() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -23,13 +22,7 @@ export default function CourseManage() {
   const [submissions, setSubmissions] = useState([]);
   const [students, setStudents] = useState([]);
 
-  useEffect(() => {
-    if (id) {
-      fetchCourseData();
-    }
-  }, [id]);
-
-  const fetchCourseData = async () => {
+  const fetchCourseData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await courseAPI.getOne(id);
@@ -76,7 +69,13 @@ export default function CourseManage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchCourseData();
+    }
+  }, [id, fetchCourseData]);
 
   const handleAddModule = () => {
     setFormData({
@@ -407,7 +406,18 @@ export default function CourseManage() {
       {/* Modules Tab */}
       {activeTab === 'modules' && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Course Modules</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Course Modules</h2>
+            {user?.role === 'faculty' && (
+              <button
+                onClick={handleAddModule}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+              >
+                <Plus size={20} />
+                Add Module
+              </button>
+            )}
+          </div>
 
           {modules.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 text-center border border-gray-200 dark:border-gray-700">

@@ -158,7 +158,7 @@ export default function Courses() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition group"
+              className="bg-gray-900 dark:bg-gray-950 rounded-xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition group flex flex-col h-full"
             >
               {/* Course Image */}
               <div className="aspect-video bg-gradient-to-br from-orange-500/10 to-purple-500/10 relative overflow-hidden">
@@ -181,7 +181,7 @@ export default function Courses() {
               </div>
 
               {/* Course Content */}
-              <div className="p-6">
+              <div className="p-6 flex-1 flex flex-col justify-between">
                 <div className="mb-4">
                   <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
                     <span className="bg-gray-800 px-2 py-1 rounded">
@@ -225,7 +225,7 @@ export default function Courses() {
                 {/* Action Button */}
                 <Link
                   to={`/student/courses/${course.id}`}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-500/30"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-500/30 mt-4"
                 >
                   View Course
                   <ChevronRight size={16} />

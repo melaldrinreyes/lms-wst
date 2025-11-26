@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { submissionAPI, courseAPI } from '../../services/api';
 import StudentSubmissionsTable from '../../components/StudentSubmissionsTable';
 
@@ -11,10 +11,10 @@ export default function FacultySubmissions() {
   const [loading, setLoading] = useState(true);
   // Toast and modal logic now handled in StudentSubmissionsTable
 
-  const handleDownloadSubmission = async (submissionId, studentName) => {
+  const handleDownloadSubmission = async (submissionId) => {
     try {
       await submissionAPI.download(submissionId);
-    } catch (error) {
+    } catch {
       // Optionally handle download error
     }
   };
@@ -23,16 +23,12 @@ export default function FacultySubmissions() {
     try {
       await submissionAPI.grade(submission.id, gradeData);
       fetchData();
-    } catch (error) {
+    } catch {
       // Optionally handle grade error
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [filterStatus, filterCourse]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -49,32 +45,19 @@ export default function FacultySubmissions() {
       
     } catch (error) {
       console.error('Error fetching data:', error);
-      setToast({ message: 'Failed to load submissions', type: 'error' });
+      // Optionally handle error notification here
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterStatus, filterCourse]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Duplicate handleDownloadSubmission, handleGradeSubmission, and openGradingModal removed
 
-  const filteredSubmissions = submissions.filter(submission => {
-    const matchesSearch = submission.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         submission.assignment_title?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'submitted':
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'graded':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'returned':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
-    }
-  };
 
   return (
     <StudentSubmissionsTable

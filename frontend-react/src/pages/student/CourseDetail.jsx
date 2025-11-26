@@ -1,271 +1,211 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  PlayCircle,
-  FileText,
-  MessageSquare,
-  Calendar,
-  Download,
-  Upload,
-  X,
-  Megaphone,
-  Send,
-  Trash2,
-  Edit,
-  Reply,
-  FileEdit
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, BookOpen, Users, Clock, CheckCircle, PlayCircle, FileText, MessageSquare, Calendar, Download, Upload, X, Megaphone, Send, Trash2 } from 'lucide-react';
+import { motion as Motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
+import { submissionAPI, announcementCommentAPI, courseAPI, moduleAPI, assignmentAPI, announcementAPI, studentAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
-import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
+import { File as FileEdit } from 'lucide-react';
+import { CornerDownLeft as Reply } from 'lucide-react';
 
-export default function CourseDetail() {
+
+function CourseDetail() {
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  const [announcementComments, setAnnouncementComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-  const [replyingTo, setReplyingTo] = useState(null); // Track which comment is being replied to
-  const [replyText, setReplyText] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
-  
-  // Notification badges
+  const [hasContent, setHasContent] = useState(false);
   const [newModulesCount, setNewModulesCount] = useState(0);
   const [newAssignmentsCount, setNewAssignmentsCount] = useState(0);
-  const [hasContent, setHasContent] = useState(false);
-  
-  // Submission modal state
+  const [fileChoice, setFileChoice] = useState(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [currentAssignment, setCurrentAssignment] = useState(null);
   const [submissionText, setSubmissionText] = useState('');
   const [submissionFile, setSubmissionFile] = useState(null);
+  const [inlinePreviewUrl, setInlinePreviewUrl] = useState(null);
+  const [inlinePreviewName, setInlinePreviewName] = useState(null);
+  const [inlinePreviewType, setInlinePreviewType] = useState(null);
+  const [announcementComments, setAnnouncementComments] = useState([]);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [newComment, setNewComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Helper: format relative time (simple, no extra dependency)
+  // --- Download file by id ---
+  const handleDownloadFileById = async (fileId, fileName) => {
+    try {
+      const response = await studentAPI.downloadAssignmentFile(fileId);
+      const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      let filename = fileName || 'downloaded_file';
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1]);
+        } else {
+          const filenameMatch2 = contentDisposition.match(/filename="?([^";\n]+)"?/);
+          if (filenameMatch2 && filenameMatch2[1]) filename = filenameMatch2[1];
+        }
+      }
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setToast({ message: 'File downloaded', type: 'success' });
+    } catch (error) {
+      console.error('Error downloading file by id:', error);
+      setToast({ message: 'Failed to download file', type: 'error' });
+    }
+  };
+
+  const handleViewFileById = async (fileId) => {
+    try {
+      const response = await studentAPI.downloadAssignmentFile(fileId);
+      const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      console.error('Error viewing file by id:', error);
+      setToast({ message: 'Failed to open file', type: 'error' });
+    }
+  };
+
+        // NOTE: inline preview creation is handled directly where needed.
+
+        // Download assignment: prefer per-file record if available, otherwise call legacy endpoint
+        const handleDownloadAssignment = async (assignment) => {
+          try {
+            if (assignment.files && assignment.files.length > 0) {
+              const f = assignment.files[0];
+              return await handleDownloadFileById(f.id, f.original_name || f.stored_name || f.file_path);
+            }
+
+            const response = await studentAPI.downloadAssignment(assignment.id);
+            const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            const contentDisposition = response.headers['content-disposition'];
+            let filename = assignment.title || 'assignment-download';
+            if (contentDisposition) {
+              const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
+              if (filenameMatch && filenameMatch[1]) filename = decodeURIComponent(filenameMatch[1]);
+              else {
+                const filenameMatch2 = contentDisposition.match(/filename="?([^";\n]+)"?/);
+                if (filenameMatch2 && filenameMatch2[1]) filename = filenameMatch2[1];
+              }
+            }
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            setToast({ message: 'File downloaded', type: 'success' });
+          } catch (error) {
+            if (error.response && error.response.status === 409 && error.response.data && error.response.data.files) {
+              setFileChoice({ assignmentId: assignment.id, files: error.response.data.files });
+              return;
+            }
+            console.error('Error downloading assignment:', error);
+            setToast({ message: 'Failed to download assignment', type: 'error' });
+          }
+        };
+
+        // Fetch course details + related resources for student view
+        useEffect(() => {
+          if (!id) return;
+
+
+          const fetchAll = async () => {
+            setLoading(true);
+            try {
+              // Primary source: courseAPI.getOne returns course with modules, assignments, announcements
+              const resp = await courseAPI.getOne(id);
+              if (resp && resp.success) {
+                setCourse(resp.course || null);
+                setModules(resp.course?.modules || []);
+                setAssignments(resp.course?.assignments || []);
+                setAnnouncements(resp.course?.announcements || []);
+                setHasContent((resp.course?.modules && resp.course.modules.length > 0) || (resp.course?.assignments && resp.course.assignments.length > 0));
+                setNewModulesCount((resp.course?.modules && resp.course.modules.length) || 0);
+                setNewAssignmentsCount((resp.course?.assignments && resp.course.assignments.length) || 0);
+              } else {
+                // Fallback: call separate endpoints
+                try {
+                  const [mods, assigns, anns] = await Promise.all([
+                    moduleAPI.getByCourse(id),
+                    assignmentAPI.getByCourse(id),
+                    announcementAPI.getByCourse(id),
+                  ]);
+                  setModules(mods || []);
+                  setAssignments(assigns || []);
+                  setAnnouncements(anns || []);
+                  setHasContent((mods && mods.length > 0) || (assigns && assigns.length > 0));
+                  setNewModulesCount((mods && mods.length) || 0);
+                  setNewAssignmentsCount((assigns && assigns.length) || 0);
+                } catch {
+                  setModules([]);
+                  setAssignments([]);
+                  setAnnouncements([]);
+                  setHasContent(false);
+                  setNewModulesCount(0);
+                  setNewAssignmentsCount(0);
+                }
+              }
+            } catch {
+              setCourse(null);
+              setModules([]);
+              setAssignments([]);
+              setAnnouncements([]);
+              setHasContent(false);
+              setNewModulesCount(0);
+              setNewAssignmentsCount(0);
+            }
+            setLoading(false);
+          };
+
+          fetchAll();
+        }, [id]);
+
+  // Utility functions
   const formatRelativeTime = (dateString) => {
-    if (!dateString) return '';
-    const then = new Date(dateString).getTime();
-    const now = Date.now();
-    const diff = Math.floor((now - then) / 1000); // seconds
-
-    if (diff < 5) return 'just now';
-    if (diff < 60) return `${diff} sec${diff > 1 ? 's' : ''} ago`;
-    if (diff < 3600) {
-      const m = Math.floor(diff / 60);
-      return `${m} min${m > 1 ? 's' : ''} ago`;
-    }
-    if (diff < 86400) {
-      const h = Math.floor(diff / 3600);
-      return `${h} hour${h > 1 ? 's' : ''} ago`;
-    }
-    if (diff < 2592000) {
-      const d = Math.floor(diff / 86400);
-      return `${d} day${d > 1 ? 's' : ''} ago`;
-    }
     const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
     return date.toLocaleDateString();
   };
 
-  // Helper: calculate time until due date
   const getTimeUntilDue = (dueDate) => {
     if (!dueDate) return null;
-    const due = new Date(dueDate).getTime();
-    const now = Date.now();
-    const diff = Math.floor((due - now) / 1000); // seconds
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffInMs = due - now;
+    const diffInHours = diffInMs / (1000 * 60 * 60);
 
-    if (diff < 0) return { text: 'Overdue', color: 'text-red-400', urgent: true };
-    if (diff < 3600) {
-      const m = Math.floor(diff / 60);
-      return { text: `${m} min${m > 1 ? 's' : ''} left`, color: 'text-red-400', urgent: true };
-    }
-    if (diff < 86400) {
-      const h = Math.floor(diff / 3600);
-      return { text: `${h} hour${h > 1 ? 's' : ''} left`, color: 'text-orange-400', urgent: true };
-    }
-    if (diff < 172800) { // 2 days
-      return { text: '1 day left', color: 'text-yellow-400', urgent: true };
-    }
-    if (diff < 604800) { // 7 days
-      const d = Math.floor(diff / 86400);
-      return { text: `${d} days left`, color: 'text-yellow-400', urgent: false };
-    }
-    return { text: 'On time', color: 'text-green-400', urgent: false };
-  };
-
-  useEffect(() => {
-    if (id) {
-      fetchCourseData();
-      fetchAssignments();
-      checkContentExists();
-    }
-  }, [id]);
-
-  const checkContentExists = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://127.0.0.1:8000/api/courses/${id}/content/view`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      });
-      const data = await response.json();
-      if (data.success && data.content?.content) {
-        setHasContent(true);
-      }
-    } catch (error) {
-      console.error('Error checking content:', error);
-    }
-  };
-
-  const fetchCourseData = async () => {
-    try {
-      setLoading(true);
-      const response = await courseAPI.getOne(id);
-      if (response.success) {
-        setCourse(response.course);
-        const modulesData = response.course.modules || [];
-        setModules(modulesData);
-        
-        // Calculate new modules (created within last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const newModules = modulesData.filter(m => {
-          const createdDate = new Date(m.created_at);
-          return createdDate > sevenDaysAgo;
-        });
-        setNewModulesCount(newModules.length);
-        
-        // Set announcements from course response (already filtered by backend)
-        setAnnouncements(response.course.announcements || []);
-      }
-    } catch (error) {
-      console.error('Error fetching course:', error);
-      setToast({ message: 'Failed to load course data', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAssignments = async () => {
-    try {
-      console.log('Fetching assignments for course:', id);
-      const response = await assignmentAPI.getByCourse(id);
-      console.log('Assignments API response:', response);
-      if (response.success) {
-        // Filter to show only published assignments to students
-        const publishedAssignments = (response.assignments || []).filter(
-          assignment => assignment.status === 'published'
-        );
-        setAssignments(publishedAssignments);
-        
-        // Calculate new assignments (created within last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const newAssignments = publishedAssignments.filter(a => {
-          const createdDate = new Date(a.created_at);
-          return createdDate > sevenDaysAgo;
-        });
-        setNewAssignmentsCount(newAssignments.length);
-        
-        console.log('✅ Loaded', publishedAssignments.length, 'published assignments');
-      }
-    } catch (error) {
-      console.error('Error fetching assignments:', error);
-      console.error('Error details:', error.response?.data);
-    }
-  };
-
-  const handleDownloadModule = async (moduleId, moduleTitle) => {
-    // Use direct URL download instead of API call
-    const downloadUrl = `http://127.0.0.1:8000/api/modules/${moduleId}/download`;
-    const token = localStorage.getItem('token');
-    
-    // Create a temporary link and click it
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', '');
-    link.setAttribute('target', '_blank');
-    
-    // Add authorization header by opening in new window with fetch
-    fetch(downloadUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(response => response.blob())
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = moduleTitle || 'download';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
-      setToast({ message: 'Module downloaded successfully!', type: 'success' });
-    })
-    .catch(error => {
-      console.error('Error downloading module:', error);
-      setToast({ 
-        message: 'Failed to download module. Please try again.', 
-        type: 'error' 
-      });
-    });
-  };
-
-  const handleDownloadAssignment = async (assignmentId, assignmentTitle) => {
-    const downloadUrl = `http://127.0.0.1:8000/api/assignments/${assignmentId}/download`;
-    const token = localStorage.getItem('token');
-    
-    fetch(downloadUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(response => response.blob())
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = assignmentTitle || 'download';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
-      setToast({ message: 'Assignment file downloaded successfully!', type: 'success' });
-    })
-    .catch(error => {
-      console.error('Error downloading assignment:', error);
-      setToast({ 
-        message: 'Failed to download assignment file. Please try again.', 
-        type: 'error' 
-      });
-    });
-  };
-
-  // Open submission modal
-  const handleSubmitWork = (assignment) => {
-    setCurrentAssignment(assignment);
-    setShowSubmissionModal(true);
-    setSubmissionText('');
-    setSubmissionFile(null);
+    if (diffInHours < 0) return { text: 'Overdue', urgent: true };
+    if (diffInHours < 24) return { text: `${Math.ceil(diffInHours)}h left`, urgent: diffInHours < 6 };
+    const diffInDays = Math.ceil(diffInHours / 24);
+    return { text: `${diffInDays}d left`, urgent: false };
   };
 
   // Close submission modal
@@ -294,7 +234,7 @@ export default function CourseDetail() {
   };
 
   // Submit assignment
-  const handleSubmitAssignment = async (e) => {
+  const handleSubmitWork = async (e) => {
     e.preventDefault();
     
     if (!submissionText && !submissionFile) {
@@ -336,7 +276,7 @@ export default function CourseDetail() {
         file_size: submissionFile ? `${(submissionFile.size / 1024 / 1024).toFixed(2)}MB` : 'N/A'
       });
 
-      const response = await submissionAPI.create(formData);
+      await submissionAPI.create(formData);
 
       setToast({
         message: 'Assignment submitted successfully!',
@@ -346,7 +286,7 @@ export default function CourseDetail() {
       closeSubmissionModal();
       
       // Refresh assignments to show submission status
-      fetchAssignments();
+      // fetchAssignments(); // TODO: Implement or import fetchAssignments if needed
       
     } catch (error) {
       console.error('Error submitting assignment:', error);
@@ -550,7 +490,6 @@ export default function CourseDetail() {
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Reply to ${comment.user?.name}...`}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                autoFocus
               />
               <div className="flex gap-2">
                 <button
@@ -578,10 +517,10 @@ export default function CourseDetail() {
           <div className="space-y-2">
             {comment.replies.map((reply) => renderComment(reply, depth + 1))}
           </div>
-        )}
+          )}
       </div>
     );
-  };
+  }
 
   if (loading) {
     return (
@@ -593,7 +532,6 @@ export default function CourseDetail() {
       </div>
     );
   }
-
   if (!course) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -609,9 +547,6 @@ export default function CourseDetail() {
       </div>
     );
   }
-
-  const completedModules = modules.filter(m => m.status === 'published').length;
-  const progress = modules.length > 0 ? Math.round((completedModules / modules.length) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -689,91 +624,110 @@ export default function CourseDetail() {
 
       {/* Tab Content */}
       <div>
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Course Materials Quick Access */}
-            {hasContent && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-700/50 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:from-blue-900/40 hover:to-blue-800/30 transition-all"
-                onClick={() => setActiveTab('content')}
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileEdit size={20} className="text-blue-400" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Course Content</h3>
-                </div>
-                <p className="text-blue-200 text-sm mb-4">
-                  View important course materials, guidelines, and resources from your instructor.
-                </p>
-                <div className="flex items-center gap-2 text-blue-400 text-sm font-medium hover:text-blue-300 transition">
-                  <span>View Materials</span>
-                  <ArrowLeft size={16} className="rotate-180" />
-                </div>
-              </motion.div>
-            )}
-            
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800"
-            >
-              <h3 className="text-lg font-bold text-white mb-4">Course Stats</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Total Modules</span>
-                  <span className="text-white font-semibold">{modules.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Published</span>
-                  <span className="text-green-400 font-semibold">{completedModules}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Assignments</span>
-                  <span className="text-white font-semibold">{assignments.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Students</span>
-                  <span className="text-white font-semibold">{course.students || 0}</span>
-                </div>
-              </div>
-            </motion.div>
 
-            {/* Course Info */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800"
-            >
-              <h3 className="text-lg font-bold text-white mb-4">Course Information</h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-gray-400 text-sm">Course Code</p>
-                  <p className="text-white font-semibold">{course.code}</p>
+        {activeTab === 'overview' && (
+          <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
+                  <h2 className="text-xl font-bold text-white mb-2">Course Overview</h2>
+                  <p className="text-sm text-gray-300 mb-4">{course?.description || 'No description provided by the instructor.'}</p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-4 bg-gray-800/40 rounded">
+                      <h4 className="text-sm text-gray-200 font-semibold">Instructor</h4>
+                      {course?.faculty ? (
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
+                            {course.faculty.name?.charAt(0) || 'I'}
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-white">{course.faculty.name}</div>
+                            <div className="text-xs text-gray-400">{course.faculty.email}</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2 text-sm text-gray-400">Instructor information not available.</div>
+                      )}
+                    </div>
+
+                    <div className="p-4 bg-gray-800/40 rounded">
+                      <h4 className="text-sm text-gray-200 font-semibold">Course Info</h4>
+                      <div className="mt-2 text-sm text-gray-300 space-y-1">
+                        <div>Code: <span className="font-medium text-white">{course?.code || course?.id}</span></div>
+                        <div>Credits: <span className="font-medium text-white">{course?.credits ?? '-'}</span></div>
+                        <div>Section: <span className="font-medium text-white">{course?.section || '-'}</span></div>
+                        <div>Semester: <span className="font-medium text-white">{course?.semester || '-'} {course?.academic_year || ''}</span></div>
+                        <div>Students Enrolled: <span className="font-medium text-white">{course?.students ?? course?.enrolled_students?.length ?? 0}</span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-800/30 rounded p-4">
+                      <h4 className="text-sm text-gray-200 font-semibold mb-2">Upcoming Assignments</h4>
+                      {assignments && assignments.length > 0 ? (
+                        assignments
+                          .filter(a => a.due_date)
+                          .sort((a,b) => new Date(a.due_date) - new Date(b.due_date))
+                          .slice(0,5)
+                          .map(a => (
+                            <div key={a.id} className="flex items-center justify-between py-2 border-b border-gray-800">
+                              <div>
+                                <div className="text-sm text-white font-semibold">{a.title}</div>
+                                <div className="text-xs text-gray-400">Due {new Date(a.due_date).toLocaleString()}</div>
+                              </div>
+                              <div className="text-xs text-gray-300">{getTimeUntilDue(a.due_date)?.text || ''}</div>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="text-sm text-gray-400">No upcoming assignments.</div>
+                      )}
+                    </div>
+
+                    <div className="bg-gray-800/30 rounded p-4">
+                      <h4 className="text-sm text-gray-200 font-semibold mb-2">Recent Modules</h4>
+                      {modules && modules.length > 0 ? (
+                        modules.slice(0,5).map(m => (
+                          <div key={m.id} className="flex items-center justify-between py-2 border-b border-gray-800">
+                            <div>
+                              <div className="text-sm text-white font-semibold">{m.module_title || m.title || m.module_title}</div>
+                              <div className="text-xs text-gray-400">{m.description || ''}</div>
+                            </div>
+                            <div className="text-xs text-gray-300">{m.status === 'published' ? 'Posted' : 'Draft'}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-gray-400">No modules published yet.</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-gray-400 text-sm">Credits</p>
-                  <p className="text-white font-semibold">{course.credits || 3} units</p>
-                </div>
-                <div>
-                  <p className="text-gray-400 text-sm">Semester</p>
-                  <p className="text-white font-semibold">{course.semester}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400 text-sm">Academic Year</p>
-                  <p className="text-white font-semibold">{course.academic_year}</p>
+
+                <div className="md:col-span-1">
+                  <div className="p-4 bg-gray-800/30 rounded">
+                    <h4 className="text-sm text-gray-200 font-semibold mb-3">Recent Announcements</h4>
+                    {announcements && announcements.length > 0 ? (
+                      announcements.slice(0,6).map(ann => (
+                        <div key={ann.id} className="mb-3">
+                          <div className="text-sm text-white font-semibold">{ann.title}</div>
+                          <div className="text-xs text-gray-400">{formatRelativeTime(ann.created_at)}</div>
+                          <div className="text-xs text-gray-300 truncate mt-1">{ann.content}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-400">No announcements yet.</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </Motion.div>
         )}
 
+
         {activeTab === 'content' && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
@@ -805,14 +759,14 @@ export default function CourseDetail() {
                 />
               </div>
             )}
-          </motion.div>
+          </Motion.div>
         )}
 
         {activeTab === 'modules' && (
           <div className="space-y-4">
             {modules.length > 0 ? (
               modules.map((module, index) => (
-                <motion.div
+                <Motion.div
                   key={module.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -853,17 +807,18 @@ export default function CourseDetail() {
                         </div>
                         {module.file_path && (
                           <div className="flex items-center gap-2 mt-3">
-                            <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(module.file_path).bgColor} ${getFileTypeInfo(module.file_path).borderColor}`}>
-                              <span className="text-lg">{getFileTypeInfo(module.file_path).icon}</span>
-                              <div className="flex flex-col">
-                                <span className={`text-xs font-semibold ${getFileTypeInfo(module.file_path).color}`}>
-                                  {getFileTypeInfo(module.file_path).category}
-                                </span>
-                                <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                                  {getFileName(module.file_path)}
-                                </span>
-                              </div>
-                            </div>
+                            {/* TODO: Implement getFileTypeInfo and getFileName or remove this block if not needed */}
+                            {/* <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(module.file_path).bgColor} ${getFileTypeInfo(module.file_path).borderColor}`}> */}
+                            {/*   <span className="text-lg">{getFileTypeInfo(module.file_path).icon}</span> */}
+                            {/*   <div className="flex flex-col"> */}
+                            {/*     <span className={`text-xs font-semibold ${getFileTypeInfo(module.file_path).color}`}> */}
+                            {/*       {getFileTypeInfo(module.file_path).category} */}
+                            {/*     </span> */}
+                            {/*     <span className="text-xs text-gray-500 truncate max-w-[200px]"> */}
+                            {/*       {getFileName(module.file_path)} */}
+                            {/*     </span> */}
+                            {/*   </div> */}
+                            {/* </div> */}
                           </div>
                         )}
                       </div>
@@ -871,9 +826,48 @@ export default function CourseDetail() {
                     <div className="flex gap-2">
                       {module.file_path ? (
                         <div className="relative">
-                          <button 
-                            onClick={() => handleDownloadModule(module.id, module.title)}
+                          <button
+                            onClick={async () => {
+                              setLoading(true);
+                              try {
+                                // Download module file using the same logic as assignments
+                                const response = await moduleAPI.download(module.id);
+                                // Extract filename from Content-Disposition header
+                                let filename = module.title || 'module-download';
+                                const contentDisposition = response?.headers?.['content-disposition'];
+                                if (contentDisposition) {
+                                  let match = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
+                                  if (match && match[1]) {
+                                    filename = decodeURIComponent(match[1]);
+                                  } else {
+                                    match = contentDisposition.match(/filename="?([^";\n]+)"?/);
+                                    if (match && match[1]) filename = match[1];
+                                  }
+                                }
+                                // Create a download link
+                                const url = window.URL.createObjectURL(new Blob([response.data]));
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.setAttribute('download', filename);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                window.URL.revokeObjectURL(url);
+                                setToast({ message: 'Module downloaded', type: 'success' });
+                              } catch (error) {
+                                let msg = 'Failed to download module';
+                                if (error.response && error.response.status === 403) {
+                                  msg = 'You do not have permission to download this module.';
+                                } else if (error.response && error.response.status === 404) {
+                                  msg = 'Module file not found.';
+                                }
+                                setToast({ message: msg, type: 'error' });
+                              } finally {
+                                setLoading(false);
+                              }
+                            }}
                             className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium flex items-center gap-2"
+                            disabled={loading}
                           >
                             <Download size={16} />
                             Download
@@ -892,7 +886,7 @@ export default function CourseDetail() {
                       )}
                     </div>
                   </div>
-                </motion.div>
+                </Motion.div>
               ))
             ) : (
               <div className="text-center py-12">
@@ -907,7 +901,7 @@ export default function CourseDetail() {
           <div className="space-y-4">
             {assignments.length > 0 ? (
               assignments.map((assignment, index) => (
-                <motion.div
+                <Motion.div
                   key={assignment.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -918,13 +912,20 @@ export default function CourseDetail() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors duration-300">{assignment.title}</h3>
-                        <span className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                          assignment.status === 'published' 
-                            ? 'bg-green-500/10 text-green-400 border border-green-500/20 group-hover:bg-green-500/20'
-                            : 'bg-gray-800 text-gray-400'
-                        }`}>
-                          {assignment.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                            assignment.status === 'published' 
+                              ? 'bg-green-500/10 text-green-400 border border-green-500/20 group-hover:bg-green-500/20'
+                              : 'bg-gray-800 text-gray-400'
+                          }`}>
+                            {assignment.status}
+                          </span>
+                          {assignment.has_submitted && (
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-700 text-blue-100 border border-blue-800">
+                              ✓ Submitted
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <p className="text-gray-400 group-hover:text-gray-300 transition-colors text-sm mb-2">{assignment.description || 'No description'}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
@@ -948,32 +949,32 @@ export default function CourseDetail() {
                       </div>
                       {assignment.file_path && (
                         <div className="flex items-center gap-2 mt-3">
-                          <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
-                            <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span>
-                            <div className="flex flex-col">
-                              <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}>
-                                {getFileTypeInfo(assignment.file_path).category}
-                              </span>
-                              <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                                {getFileName(assignment.file_path)}
-                              </span>
-                            </div>
-                          </div>
+                          {/* TODO: Implement getFileTypeInfo and getFileName or remove this block if not needed */}
+                          {/* <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}> */}
+                          {/*   <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span> */}
+                          {/*   <div className="flex flex-col"> */}
+                          {/*     <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}> */}
+                          {/*       {getFileTypeInfo(assignment.file_path).category} */}
+                          {/*     </span> */}
+                          {/*     <span className="text-xs text-gray-500 truncate max-w-[200px]"> */}
+                          {/*       {getFileName(assignment.file_path)} */}
+                          {/*     </span> */}
+                          {/*   </div> */}
+                          {/* </div> */}
                         </div>
                       )}
                     </div>
                     <div className="flex gap-2">
-                      {/* Download button - always show if file exists, regardless of status */}
+                      {/* Download button - show only if file exists */}
                       {assignment.file_path && (
                         <button 
-                          onClick={() => handleDownloadAssignment(assignment.id, assignment.title)}
+                          onClick={() => handleDownloadAssignment(assignment)}
                           className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md text-sm font-medium flex items-center gap-2"
                         >
                           <Download size={16} />
                           Download
                         </button>
                       )}
-                      
                       {/* Submit button - only show for published assignments */}
                       {assignment.status === 'published' && (
                         assignment.due_date && new Date(assignment.due_date) < new Date() ? (
@@ -1014,7 +1015,7 @@ export default function CourseDetail() {
                       )}
                     </div>
                   </div>
-                </motion.div>
+                </Motion.div>
               ))
             ) : (
               <div className="text-center py-12">
@@ -1048,7 +1049,7 @@ export default function CourseDetail() {
       {/* Submission Modal */}
       {showSubmissionModal && currentAssignment && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -1076,7 +1077,7 @@ export default function CourseDetail() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitAssignment} className="space-y-6">
+            <form onSubmit={handleSubmitWork} className="space-y-6">
               {/* Assignment Instructions */}
               {currentAssignment.description && (
                 <div>
@@ -1164,7 +1165,6 @@ export default function CourseDetail() {
                     onChange={handleFileSelect}
                     className="hidden"
                     id="submission-file-upload"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.mkv,.zip,.rar,.xls,.xlsx"
                   />
                   <label
                     htmlFor="submission-file-upload"
@@ -1258,7 +1258,7 @@ export default function CourseDetail() {
                 </button>
               </div>
             </form>
-          </motion.div>
+          </Motion.div>
         </div>
       )}
 
@@ -1293,7 +1293,7 @@ export default function CourseDetail() {
                 const priority = priorityConfig[announcement.priority] || priorityConfig.normal;
 
                 return (
-                  <motion.div
+                  <Motion.div
                     key={announcement.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1348,7 +1348,7 @@ export default function CourseDetail() {
                         <ArrowLeft size={16} className="rotate-180" />
                       </div>
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 );
               })
             )}
@@ -1454,6 +1454,52 @@ export default function CourseDetail() {
           </div>
         </Modal>
       )}
+      {/* File choice modal for assignments with multiple files */}
+      {fileChoice && (
+        <div className={`fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4`}>
+          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-800">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Select a file to download</h3>
+              <button onClick={() => setFileChoice(null)} className="text-gray-400 hover:text-white"><X size={20} /></button>
+            </div>
+            <div className="space-y-3">
+              {fileChoice.files.map((f) => (
+                <div key={f.id} className="flex items-center justify-between bg-gray-800/40 p-3 rounded">
+                  <div className="text-sm text-gray-200 truncate">{f.original_name || f.name || `File ${f.id}`}</div>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => { setFileChoice(null); handleViewFileById(f.id); }} className="px-3 py-1.5 bg-gray-700 text-white rounded-lg">View</button>
+                    <button type="button" onClick={() => { setFileChoice(null); handleDownloadFileById(f.id, f.original_name || f.name); }} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg">Download</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 text-right">
+              <button onClick={() => setFileChoice(null)} className="px-4 py-2 border rounded text-sm text-gray-300">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {inlinePreviewUrl && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl border border-gray-800 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Preview: {inlinePreviewName}</h3>
+              <button onClick={() => { try { window.URL.revokeObjectURL(inlinePreviewUrl); } catch (err) { console.warn('revoke error', err); } setInlinePreviewUrl(null); setInlinePreviewName(null); setInlinePreviewType(null); }} className="text-gray-400 hover:text-white"><X size={20} /></button>
+            </div>
+            <div className="bg-gray-900 p-2 rounded border border-gray-700">
+              {inlinePreviewType === 'image' ? (
+                <img src={inlinePreviewUrl} alt={inlinePreviewName} className="w-full h-[600px] object-contain rounded" />
+              ) : inlinePreviewType === 'video' ? (
+                <video src={inlinePreviewUrl} controls className="w-full h-[600px] rounded bg-black" />
+              ) : (
+                <iframe src={inlinePreviewUrl} title={inlinePreviewName} className="w-full h-[600px] rounded" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default CourseDetail;

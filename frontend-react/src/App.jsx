@@ -71,6 +71,7 @@ import DashboardLayout from './components/DashboardLayout';
 // Protected Route Component
 function ProtectedRoute({ children, requiredRole }) {
   const { user } = useAuth();
+  console.log('[ProtectedRoute] Rendered. user:', user, 'requiredRole:', requiredRole, 'token:', localStorage.getItem('token'));
 
   // Check if user is authenticated
   if (!user) {

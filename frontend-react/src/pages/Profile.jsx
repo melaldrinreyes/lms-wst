@@ -326,7 +326,6 @@ export default function Profile() {
                 <input
                   id="profile-image-input"
                   type="file"
-                  accept="image/*"
                   onChange={handleImageSelect}
                   className="hidden"
                 />

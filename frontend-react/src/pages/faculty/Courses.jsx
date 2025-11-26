@@ -209,7 +209,7 @@ export default function FacultyCourses() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 overflow-hidden hover:border-orange-500/50 transition-all group"
+            className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
           >
             {/* Thumbnail */}
             <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-500/10 to-purple-500/10">
@@ -235,7 +235,7 @@ export default function FacultyCourses() {
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-6 flex-1 flex flex-col justify-between">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <span className="text-sm font-semibold text-orange-500">{course.code}</span>
@@ -272,7 +272,7 @@ export default function FacultyCourses() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-4">
                 <Link
                   to={`/faculty/courses/${course.id}`}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all text-center text-sm font-semibold shadow-lg shadow-orange-500/30"

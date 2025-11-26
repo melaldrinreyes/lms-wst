@@ -937,7 +937,6 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 placeholder="e.g., Chapter 1: Getting Started"
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                 onKeyPress={(e) => e.key === 'Enter' && addSubLecture(showAddSubModal)}
-                autoFocus
               />
             </div>
             <div className="flex gap-3">

@@ -67,8 +67,13 @@ export const authAPI = {
   },
 
   getUser: async () => {
-    const response = await api.get('/user');
-    return response.data;
+    try {
+      const response = await api.get('/user');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error; // Re-throw the error to be handled by the caller
+    }
   },
 
   updateProfile: async (data) => {
@@ -154,7 +159,7 @@ export const moduleAPI = {
   create: async (data, onUploadProgress) => {
     const response = await api.post('/modules', data, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined,
       },
       timeout: 600000, // 10 minutes for large file uploads
       onUploadProgress: onUploadProgress, // Progress tracking
@@ -168,7 +173,7 @@ export const moduleAPI = {
     
     const response = await api.post(`/modules/${id}`, data, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined,
       },
       timeout: 600000, // 10 minutes for large file uploads
       onUploadProgress: onUploadProgress, // Progress tracking
@@ -186,28 +191,32 @@ export const moduleAPI = {
       const response = await api.get(`/modules/${id}/download`, {
         responseType: 'blob',
       });
-      
+
+      // Extract filename from Content-Disposition header
+      let filename = 'module-download';
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        // Try UTF-8 filename first
+        let match = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
+        if (match && match[1]) {
+          filename = decodeURIComponent(match[1]);
+        } else {
+          // Fallback to normal filename
+          match = contentDisposition.match(/filename="?([^";\n]+)"?/);
+          if (match && match[1]) filename = match[1];
+        }
+      }
+
       // Create a download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      
-      // Extract filename from Content-Disposition header or use default
-      const contentDisposition = response.headers['content-disposition'];
-      let filename = 'module-download';
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, '');
-        }
-      }
-      
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       return { success: true };
     } catch (error) {
       console.error('Download error:', error);
@@ -231,7 +240,7 @@ export const assignmentAPI = {
   create: async (data) => {
     const response = await api.post('/assignments', data, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined,
       },
     });
     return response.data;
@@ -243,7 +252,7 @@ export const assignmentAPI = {
     
     const response = await api.post(`/assignments/${id}`, data, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined,
       },
     });
     return response.data;
@@ -261,7 +270,10 @@ export const assignmentAPI = {
       });
       
       // Create a download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // Use the response blob to preserve MIME type; fall back to header if needed
+      const blobType2 = response.data.type || response.headers['content-type'] || 'application/octet-stream';
+      const blob2 = response.data instanceof Blob ? response.data : new Blob([response.data], { type: blobType2 });
+      const url = window.URL.createObjectURL(blob2);
       const link = document.createElement('a');
       link.href = url;
       
@@ -303,8 +315,9 @@ export const submissionAPI = {
 
   create: async (data, onUploadProgress) => {
     const response = await api.post('/submissions', data, {
+      // Let the browser/axios set the correct multipart boundary
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined,
       },
       timeout: 600000, // 10 minutes for large file uploads
       onUploadProgress: onUploadProgress, // Progress tracking
@@ -334,19 +347,45 @@ export const submissionAPI = {
       const response = await api.get(`/submissions/${id}/download`, {
         responseType: 'blob',
       });
-      
-      // Extract filename from Content-Disposition header or use default
-      const contentDisposition = response.headers['content-disposition'];
+
+      // Extract filename from Content-Disposition header or fallback to basename
       let filename = 'submission-download';
+      const contentDisposition = response.headers['content-disposition'];
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        // Try to match filename="..." or filename=...
+        let filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/); // RFC 5987
         if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, '');
+          filename = decodeURIComponent(filenameMatch[1]);
+        } else {
+          filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].trim();
+          }
         }
+      }
+      // Fallback: if filename is still empty, use the basename from the file path in response (if available)
+      if (!filename || filename === 'submission-download') {
+        // Try to get from Content-FilePath custom header (if you want to add it in backend), or just leave as default
+        // Optionally, you can add a custom header in backend for the original file path
       }
 
       // Use the correct MIME type from the response
-      const mimeType = response.data.type || response.headers['content-type'] || 'application/octet-stream';
+      let mimeType = response.headers['content-type'] || 'application/octet-stream';
+      // Fallback: infer from filename extension if content-type is generic or missing
+      if (mimeType === 'application/octet-stream' && filename.includes('.')) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const extToMime = {
+          'pdf': 'application/pdf', 'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'ppt': 'application/vnd.ms-powerpoint', 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          'txt': 'text/plain', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'gif': 'image/gif',
+          'mp4': 'video/mp4', 'mov': 'video/quicktime', 'avi': 'video/x-msvideo', 'mkv': 'video/x-matroska', 'webm': 'video/webm',
+          'flv': 'video/x-flv', 'wmv': 'video/x-ms-wmv', 'zip': 'application/zip', 'rar': 'application/x-rar-compressed',
+          'pkt': 'application/octet-stream', 'pk': 'application/octet-stream', 'csv': 'text/csv', 'xls': 'application/vnd.ms-excel',
+          'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'json': 'application/json', 'xml': 'application/xml',
+          // Add more as needed
+        };
+        if (extToMime[ext]) mimeType = extToMime[ext];
+      }
       const blob = new Blob([response.data], { type: mimeType });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -356,7 +395,7 @@ export const submissionAPI = {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       return { success: true };
     } catch (error) {
       console.error('Download error:', error);
@@ -401,17 +440,39 @@ export const studentAPI = {
     return response;
   },
 
-  submitAssignment: async (data) => {
-    const formData = new FormData();
-    formData.append('assignment_id', data.assignment_id);
-    if (data.submission_text) {
-      formData.append('submission_text', data.submission_text);
+  // Download a specific assignment file by its file record id (for assignments with multiple files)
+  downloadAssignmentFile: async (fileId) => {
+    const response = await api.get(`/assignments/files/${fileId}/download`, {
+      responseType: 'blob',
+    });
+    return response;
+  },
+
+  // submitAssignment accepts either a plain object { assignment_id, submission_text, file }
+  // or a FormData instance. An optional `config` param may include axios options
+  // such as `onUploadProgress` to report upload progress.
+  submitAssignment: async (data, config = {}) => {
+    let formData;
+    if (data instanceof FormData) {
+      formData = data;
+    } else {
+      formData = new FormData();
+      formData.append('assignment_id', data.assignment_id);
+      if (data.submission_text) {
+        formData.append('submission_text', data.submission_text);
+      }
+      if (data.file) {
+        formData.append('file', data.file);
+      }
     }
-    if (data.file) {
-      formData.append('file', data.file);
-    }
+
+    // Ensure the browser sets Content-Type with boundary
+    const headers = { ...(config.headers || {}) };
+    if (!headers['Content-Type']) headers['Content-Type'] = undefined;
+
     const response = await api.post('/submissions', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      ...config,
+      headers,
     });
     return response.data;
   },

@@ -20,6 +20,8 @@ export const getFileTypeInfo = (filePath) => {
   const extension = getFileExtension(filePath);
   
   const fileTypes = {
+    // Cisco Packet Tracer
+    'pkt': { category: 'Packet Tracer File', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/20', icon: '🖧' },
     // Documents
     'pdf': { category: 'PDF Document', color: 'text-red-400', bgColor: 'bg-red-500/10', borderColor: 'border-red-500/20', icon: '📄' },
     'doc': { category: 'Word Document', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20', icon: '📝' },

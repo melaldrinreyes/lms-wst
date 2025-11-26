@@ -20,6 +20,8 @@ use App\Http\Controllers\AnnouncementCommentController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// (Debug route removed) Temporary local-only debug route removed after verification.
+
 // Test route
 Route::get('/test', function () {
     return response()->json([
@@ -124,6 +126,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses/{courseId}/assignments', [AssignmentController::class, 'index']);
     Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
     Route::get('/assignments/{id}/download', [AssignmentController::class, 'download']);
+    // Download a specific assignment file by file id (assignment may have multiple files)
+    Route::get('/assignments/files/{fileId}/download', [AssignmentController::class, 'downloadFile']);
     
     // Assignment management (Faculty and Admin only)
     Route::middleware(['check.role:2'])->group(function () {

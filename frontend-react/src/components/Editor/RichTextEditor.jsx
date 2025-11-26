@@ -72,6 +72,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         heading: {
           levels: [1, 2, 3],
         },
+        link: false, // Disable built-in link to avoid duplicate
       }),
       Link.configure({
         openOnClick: false,
@@ -265,6 +266,10 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         },
       });
       backendUrl = res.data.url;
+      console.log('Video uploaded successfully. URL:', backendUrl);
+      console.log('Video file type:', file.type);
+      console.log('Video file size:', file.size);
+      console.log('Backend response:', res.data);
     } catch (e) {
       console.error('Video upload error:', e);
       const msg = e.response?.data?.message || e.message || 'Video upload failed';
@@ -280,15 +285,117 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
       setUploadProgress(0);
       return false;
     }
+    // Insert video using the Video extension node
+    console.log('Inserting video node with src:', backendUrl);
     editor.chain().focus().insertContent({
       type: 'video',
       attrs: {
         src: backendUrl,
-        type: file.type,
+        type: file.type || 'video/mp4',
         controls: true,
-        style: 'max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;'
+        preload: 'metadata',
+        playsinline: true,
+        style: 'width: 100%; max-width: 100%; height: auto; min-height: 200px; border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 4px 24px rgba(0,0,0,0.25); display: block; background: #000; border: 2px solid #4b5563;'
       }
     }).run();
+    
+    // Also log the current editor content
+    setTimeout(() => {
+      console.log('Editor HTML after insertion:', editor.getHTML());
+      
+      // Check if video element exists in DOM
+      setTimeout(() => {
+        const editorElement = document.querySelector('.editor-content');
+        if (editorElement) {
+          const videos = editorElement.querySelectorAll('video');
+          console.log('Video elements found in DOM:', videos.length);
+          videos.forEach((video, index) => {
+            console.log(`Video ${index}:`, {
+              src: video.src,
+              controls: video.controls,
+              style: video.style.cssText,
+              error: video.error
+            });
+          });
+        }
+      }, 200);
+    }, 100);
+    
+    // Also log the current editor content
+    setTimeout(() => {
+      console.log('Editor HTML after insertion:', editor.getHTML());
+      
+      // Check if video element exists in DOM
+      setTimeout(() => {
+        const editorElement = document.querySelector('.editor-content');
+        if (editorElement) {
+          const videos = editorElement.querySelectorAll('video');
+          console.log('Video elements found in DOM:', videos.length);
+          videos.forEach((video, index) => {
+            console.log(`Video ${index}:`, {
+              src: video.src,
+              controls: video.controls,
+              style: video.style.cssText
+            });
+          });
+        }
+      }, 200);
+    }, 100);
+    
+    // Add a small delay to ensure the video element is rendered, then check for errors
+    setTimeout(() => {
+      const videoElements = document.querySelectorAll('.editor-content video');
+      console.log('Video elements found after insertion:', videoElements.length);
+      
+      videoElements.forEach((video, index) => {
+        console.log(`Video ${index} details:`, {
+          src: video.src,
+          currentSrc: video.currentSrc,
+          readyState: video.readyState,
+          networkState: video.networkState,
+          error: video.error
+        });
+
+        // Try to load the video manually
+        video.load();
+        
+        video.addEventListener('error', (e) => {
+          console.error('Video playback error:', e);
+          console.error('Video src:', video.src);
+          console.error('Video error code:', video.error?.code);
+          console.error('Video error message:', video.error?.message);
+          
+          // Try to fetch the video URL to see if it's accessible
+          fetch(video.src, { method: 'HEAD' })
+            .then(response => {
+              console.log('Video URL response:', {
+                status: response.status,
+                contentType: response.headers.get('content-type'),
+                contentLength: response.headers.get('content-length')
+              });
+            })
+            .catch(err => {
+              console.error('Failed to fetch video URL:', err);
+            });
+        });
+        
+        video.addEventListener('loadeddata', () => {
+          console.log('Video loaded successfully:', backendUrl);
+        });
+        
+        video.addEventListener('canplay', () => {
+          console.log('Video can play:', backendUrl);
+        });
+        
+        video.addEventListener('loadstart', () => {
+          console.log('Video load started');
+        });
+        
+        video.addEventListener('progress', () => {
+          console.log('Video loading progress');
+        });
+      });
+    }, 100);
     setIsUploading(false);
     setUploadProgress(0);
     setUploadError(null);
@@ -448,6 +555,22 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     }
   };
 
+  const addTestVideo = () => {
+    // Insert a test video from a public URL to check if video elements work
+    console.log('Adding test video using Video node');
+    editor.chain().focus().insertContent({
+      type: 'video',
+      attrs: {
+        src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        type: 'video/mp4',
+        controls: true,
+        preload: 'metadata',
+        playsinline: true,
+        style: 'width: 100%; max-width: 100%; height: auto; min-height: 200px; border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 4px 24px rgba(0,0,0,0.25); display: block; background: #000; border: 2px solid #4b5563;'
+      }
+    }).run();
+  };
+
   const setColor = (color) => {
     editor.chain().focus().setColor(color).run();
   };
@@ -565,6 +688,14 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             title="Upload Video (drag & drop)"
           >
             <Film size={18} />
+          </button>
+          <button
+            onClick={addTestVideo}
+            className="toolbar-btn"
+            title="Add Test Video"
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+          >
+            🎥
           </button>
                 {/* Video Drag-and-Drop Modal */}
                 {showVideoDropzone && (
@@ -693,7 +824,6 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*,video/*,.docx"
         multiple
         onChange={handleFileSelect}
         className="hidden"

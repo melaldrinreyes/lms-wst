@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Module;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\DownloadService;
 
 class ModuleController extends Controller
 {
@@ -75,12 +76,14 @@ class ModuleController extends Controller
                             'application/octet-stream', // For some video files
                             // Archives
                             'application/zip', 'application/x-rar-compressed', 'application/x-rar',
+                            // Cisco Packet Tracer and similar
+                            'application/octet-stream', 'application/x-pk', 'application/x-pkt',
                         ];
                         
                         $allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 
                                              'jpg', 'jpeg', 'png', 'gif', 
                                              'mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 
-                                             'zip', 'rar'];
+                                             'zip', 'rar', 'pk', 'pkt'];
                         
                         $extension = strtolower($value->getClientOriginalExtension());
                         $mimeType = $value->getMimeType();
@@ -201,7 +204,7 @@ class ModuleController extends Controller
                         $allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 
                                              'jpg', 'jpeg', 'png', 'gif', 
                                              'mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 
-                                             'zip', 'rar'];
+                                             'zip', 'rar', 'pk', 'pkt'];
                         
                         $extension = strtolower($value->getClientOriginalExtension());
                         
@@ -293,26 +296,29 @@ class ModuleController extends Controller
     {
         try {
             $module = Module::findOrFail($id);
-            
-            if (!$module->file_path) {
-                return response()->json(['error' => 'No file attached'], 404);
+            // Extract original filename from file_path (after first underscore)
+            $originalName = null;
+            if ($module->file_path) {
+                $basename = basename($module->file_path);
+                $underscorePos = strpos($basename, '_');
+                if ($underscorePos !== false) {
+                    $originalName = substr($basename, $underscorePos + 1);
+                } else {
+                    $originalName = $basename;
+                }
+                // Ensure extension is present
+                if (!str_contains($originalName, '.')) {
+                    $ext = pathinfo($basename, PATHINFO_EXTENSION);
+                    if ($ext) {
+                        $originalName .= '.' . $ext;
+                    }
+                }
             }
-
-            // Check if file exists in storage
-            if (!Storage::disk('public')->exists($module->file_path)) {
-                return response()->json([
-                    'error' => 'File not found',
-                    'path' => $module->file_path,
-                    'full_path' => storage_path('app/public/' . $module->file_path)
-                ], 404);
-            }
-
-            // Get the file path
-            $path = storage_path('app/public/' . $module->file_path);
-            
-            // Return file download response
-            return response()->download($path);
-            
+            \Log::info('Module download:', [
+                'file_path' => $module->file_path,
+                'original_name' => $originalName,
+            ]);
+            return DownloadService::serveFromStorage('public', $module->file_path, $originalName);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Download failed',
@@ -332,9 +338,32 @@ class ModuleController extends Controller
         }
 
         $file = $request->file('file');
+
+        // Validate file type
+        $allowedMimeTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov', 'video/quicktime',
+            'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/pdf'
+        ];
+
+        if (!in_array($file->getMimeType(), $allowedMimeTypes)) {
+            return response()->json(['error' => 'Unsupported file type'], 400);
+        }
+
+        // Validate file size (500MB)
+        if ($file->getSize() > 524288000) {
+            return response()->json(['error' => 'File size exceeds 500MB limit'], 400);
+        }
+
         $path = $file->store('uploads', 'public');
         $url = asset('storage/' . $path);
 
-        return response()->json(['url' => $url]);
+        return response()->json([
+            'url' => $url,
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'original_name' => $file->getClientOriginalName()
+        ]);
     }
 }

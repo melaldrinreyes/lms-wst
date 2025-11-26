@@ -269,6 +269,46 @@
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.2);
 }
 
+/* Video styling */
+.editor-content video {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  background: #000;
+  display: block;
+  outline: none;
+  border: 2px solid #4b5563;
+}
+
+.editor-content video:focus {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.editor-content video::-webkit-media-controls-panel {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border-radius: 8px;
+}
+
+.editor-content video::-webkit-media-controls-current-time-display,
+.editor-content video::-webkit-media-controls-time-remaining-display {
+  color: #f3f4f6;
+}
+
+.editor-content video::-webkit-media-controls-timeline {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.editor-content video::-webkit-media-controls-play-button {
+  background: #f97316;
+  border-radius: 50%;
+}
+
 /* Scrollbar styling */
 .editor-content::-webkit-scrollbar {
   width: 10px;
