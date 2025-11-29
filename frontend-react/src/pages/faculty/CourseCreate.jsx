@@ -102,7 +102,7 @@ const CourseCreate = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-orange-500 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course Code and Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

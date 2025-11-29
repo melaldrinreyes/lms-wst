@@ -107,7 +107,7 @@ function AdminUsers() {
   return (
     <>
       <div className="min-h-screen bg-gray-900 text-white p-6">
-        <div className="bg-gray-800 rounded-xl p-6 mb-6">
+        <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-orange-500">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white">User Management</h1>
@@ -146,7 +146,7 @@ function AdminUsers() {
             </select>
           </div>
         </div>
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="bg-gray-800 rounded-xl p-6 border border-orange-500">
           {loading ? (
             <div className="p-16 text-center text-gray-400">Loading users...</div>
           ) : filteredUsers.length === 0 ? (
@@ -176,7 +176,7 @@ function AdminUsers() {
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
-                    <tr key={user.id} className="bg-gray-900 hover:bg-gray-800 transition-colors">
+                    <tr key={user.id} className="bg-gray-900 hover:bg-gray-800 transition-colors border-b border-orange-500/20">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
@@ -211,21 +211,21 @@ function AdminUsers() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleViewDetails(user)}
-                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
                             title="View Details"
                           >
                             <Eye size={18} />
                           </button>
                           <button
                             onClick={() => handleEdit(user)}
-                            className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
+                            className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
                             title="Edit"
                           >
                             <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(user.id)}
-                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
                             title="Delete"
                           >
                             <Trash2 size={18} />
@@ -242,7 +242,7 @@ function AdminUsers() {
             <div className="sm:hidden">
               <div className="space-y-3">
                 {filteredUsers.map((user) => (
-                  <div key={`card-${user.id}`} className="bg-gray-900 rounded-lg p-3 flex flex-col gap-2 shadow-sm">
+                  <div key={`card-${user.id}`} className="bg-gray-900 rounded-lg p-3 flex flex-col gap-2 shadow-sm border border-orange-500">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700">
@@ -260,21 +260,21 @@ function AdminUsers() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleViewDetails(user)}
-                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
                           title="View Details"
                         >
                           <Eye size={18} />
                         </button>
                         <button
                           onClick={() => handleEdit(user)}
-                          className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
+                          className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
                           title="Edit"
                         >
                           <Edit size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
                           title="Delete"
                         >
                           <Trash2 size={18} />
@@ -378,19 +378,19 @@ function AdminUsers() {
             {/* Faculty statistics */}
             {selectedUser && selectedUser.role === 'faculty' && userDetails.statistics && (
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="bg-gray-800 rounded-xl p-4 text-center">
+                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
                   <div className="text-xs text-gray-400">Courses</div>
                   <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.courses}</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-4 text-center">
+                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
                   <div className="text-xs text-gray-400">Students</div>
                   <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.students}</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-4 text-center">
+                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
                   <div className="text-xs text-gray-400">Graded</div>
                   <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.graded}</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-4 text-center">
+                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
                   <div className="text-xs text-gray-400">Pending</div>
                   <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.pending}</div>
                 </div>

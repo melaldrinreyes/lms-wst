@@ -38,9 +38,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`modal-panel modal-panel--${size} bg-gray-900 border border-gray-800 rounded-xl shadow-xl mx-auto w-full ${sizes[size]} max-h-[90vh] overflow-auto`}
+              className={`modal-panel modal-panel--${size} bg-gray-900 border border-orange-500 rounded-xl shadow-xl mx-auto w-full ${sizes[size]} max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800`}
             >
-              <div className="flex items-center justify-between p-6 border-b border-gray-800">
+              <div className="flex items-center justify-between p-6 border-b border-orange-500">
                 <h2 className="text-xl font-semibold text-white">{title}</h2>
                 <button
                   onClick={onClose}

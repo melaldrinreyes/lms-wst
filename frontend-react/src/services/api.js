@@ -39,19 +39,11 @@ api.interceptors.response.use(
       message: error.message,
     });
     
-    const status = error.response?.status;
-    if (status === 401) {
-      // Token expired or invalid: clear local state and notify app
+    if (error.response?.status === 401) {
+      // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      try {
-        // Dispatch an event so React app can listen and show a message if desired
-        window.dispatchEvent(new CustomEvent('unauthenticated', { detail: { message: 'Session expired' } }));
-      } catch {
-        // ignore
-      }
-      // Redirect to login page (replace so back button doesn't return to protected page)
-      try { window.location.replace('/login'); } catch { window.location.href = '/login'; }
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }

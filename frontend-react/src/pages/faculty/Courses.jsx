@@ -159,7 +159,7 @@ export default function FacultyCourses() {
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
       {/* Header */}
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
+      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-orange-500">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function FacultyCourses() {
       </div>
 
       {/* Filters */}
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-4">
+      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -217,7 +217,7 @@ export default function FacultyCourses() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
+            className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
           >
             {/* Thumbnail */}
             <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-500/10 to-purple-500/10">
@@ -317,7 +317,7 @@ export default function FacultyCourses() {
 
       {/* Empty State */}
       {filteredCourses.length === 0 && (
-        <div className="text-center py-12 bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800">
+        <div className="text-center py-12 bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500">
           <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
             No courses found
@@ -341,9 +341,9 @@ export default function FacultyCourses() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="modal-panel modal-panel--lg bg-gray-900 dark:bg-gray-950 rounded-xl shadow-2xl border border-gray-800 w-full max-h-[90vh] overflow-y-auto"
+            className="modal-panel modal-panel--lg bg-gray-900 dark:bg-gray-950 rounded-xl shadow-2xl border border-orange-500 w-full max-h-[90vh] overflow-y-auto"
           >
-            <div className="p-6 border-b border-gray-800">
+            <div className="p-6 border-b border-orange-500">
               <h2 className="text-2xl font-bold text-white">Edit Course</h2>
               <p className="text-sm text-gray-400 mt-1">Update course information</p>
             </div>

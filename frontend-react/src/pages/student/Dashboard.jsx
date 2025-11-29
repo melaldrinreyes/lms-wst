@@ -534,7 +534,7 @@ export default function StudentDashboard() {
                   <Link
                     key={classItem.id}
                     to={`/student/courses/${classItem.id}`}
-                    className="block bg-gray-800/50 rounded-xl p-4 border border-gray-800 hover:border-orange-500/50 transition cursor-pointer"
+                    className="block bg-gray-800/50 rounded-xl p-4 border border-orange-500 hover:border-orange-600 transition cursor-pointer"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

@@ -397,15 +397,34 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     try {
       setIsSaving(true);
       
+      // Check if this is a frontend-only lecture (unsaved)
+      const isFrontendOnly = !Number.isInteger(lectureId) || lectureId > 2147483647 || lectureId < 1;
+      
+      if (isFrontendOnly) {
+        // Just remove from local state for frontend-only lectures
+        const updatedLectures = lectures.filter(l => l.id !== lectureId && l.parent_lecture_id !== lectureId);
+        setLectures(updatedLectures);
+        setShowDeleteConfirm(null);
+        setToast({ message: 'Lecture deleted successfully!', type: 'success' });
+
+        if (onSave) {
+          onSave(updatedLectures);
+        }
+        return;
+      }
+      
       // Find all child lectures that need to be deleted
       const childrenToDelete = lectures.filter(l => l.parent_lecture_id === lectureId);
       
-      // Delete children first
+      // Delete children first (only database-saved ones)
       for (const child of childrenToDelete) {
-        await api.delete(`/courses/${courseId}/lectures/${child.id}`);
+        const isChildFrontendOnly = !Number.isInteger(child.id) || child.id > 2147483647 || child.id < 1;
+        if (!isChildFrontendOnly) {
+          await api.delete(`/courses/${courseId}/lectures/${child.id}`);
+        }
       }
       
-      // Delete the parent lecture
+      // Delete the parent lecture from database
       const response = await api.delete(`/courses/${courseId}/lectures/${lectureId}`);
 
       if (response.data.success) {
@@ -436,40 +455,78 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
   };
 
   // Render hierarchical lecture item
-  const LectureItem = ({ lecture, isChild = false }) => {
+  const LectureItem = ({ lecture }) => {
     const children = getChildren(lecture.id);
     const hasChildren = children.length > 0;
     const isExpanded = expandedLectures[lecture.id];
 
     return (
-      <div key={lecture.id} className={isChild ? 'ml-6' : ''}>
-        <div className="bg-gray-900 rounded-lg border border-gray-800 mb-2 overflow-hidden hover:border-orange-500/50 transition">
+      <div key={lecture.id} className={`${
+        lecture.level === 1 ? 'ml-8' :
+        lecture.level === 2 ? 'ml-16' :
+        lecture.level > 2 ? 'ml-24' : ''
+      }`}>
+        <div className={`rounded-lg border mb-2 overflow-hidden hover:border-orange-500/50 transition ${
+          lecture.level === 0
+            ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm'
+            : lecture.level === 1
+            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+            : 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200'
+        }`}>
           <div
             onClick={() => toggleLecture(lecture.id)}
-            className={`px-4 py-3 flex items-center gap-3 ${
-              'cursor-pointer hover:bg-gray-800'
-            } transition`}
+            className={`flex items-center gap-3 transition ${
+              lecture.level === 0
+                ? 'px-6 py-4 cursor-pointer hover:bg-blue-100/50'
+                : lecture.level === 1
+                ? 'px-5 py-3 cursor-pointer hover:bg-green-100/50'
+                : 'px-4 py-3 cursor-pointer hover:bg-purple-100/50'
+            }`}
           >
             {hasChildren ? (
               <div className="flex-shrink-0">
                 {isExpanded ? (
-                  <ChevronDown size={18} className="text-orange-500" />
+                  <ChevronDown size={18} className={`${
+                    lecture.level === 0 ? 'text-blue-600' :
+                    lecture.level === 1 ? 'text-green-600' : 'text-purple-600'
+                  }`} />
                 ) : (
-                  <ChevronRight size={18} className="text-gray-500" />
+                  <ChevronRight size={18} className={`${
+                    lecture.level === 0 ? 'text-blue-500' :
+                    lecture.level === 1 ? 'text-green-500' : 'text-purple-500'
+                  }`} />
                 )}
               </div>
             ) : (
-              <Indent size={18} className="text-gray-500" />
+              <div className={`flex-shrink-0 w-4 h-4 rounded-full ${
+                lecture.level === 0 ? 'bg-blue-500' :
+                lecture.level === 1 ? 'bg-green-500' : 'bg-purple-500'
+              } flex items-center justify-center`}>
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
             )}
 
             <div className="flex-1">
-              <h4 className={`font-semibold ${
-                lecture.level === 0 ? 'text-lg text-white' : 'text-gray-300'
-              }`}>
-                {lecture.title}
-              </h4>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  lecture.level === 0
+                    ? 'bg-blue-100 text-blue-700'
+                    : lecture.level === 1
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-purple-100 text-purple-700'
+                }`}>
+                  {lecture.level === 0 ? 'Module' : lecture.level === 1 ? 'Chapter' : 'Topic'}
+                </span>
+                <h4 className={`font-semibold ${
+                  lecture.level === 0 ? 'text-xl text-gray-900' :
+                  lecture.level === 1 ? 'text-lg text-gray-800' : 'text-base text-gray-700'
+                }`}>
+                  {lecture.title}
+                </h4>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
                 {lecture.content ? '✓ Has content' : 'No content yet'}
+                {hasChildren && ` • ${children.length} ${children.length === 1 ? 'item' : 'items'}`}
               </p>
             </div>
 
@@ -480,7 +537,13 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     e.stopPropagation();
                     setShowAddSubModal(lecture.id);
                   }}
-                  className="p-1.5 hover:bg-green-600/20 rounded text-green-400 transition"
+                  className={`p-1.5 rounded transition ${
+                    lecture.level === 0
+                      ? 'hover:bg-blue-100 text-blue-600'
+                      : lecture.level === 1
+                      ? 'hover:bg-green-100 text-green-600'
+                      : 'hover:bg-purple-100 text-purple-600'
+                  }`}
                   title="Add Sub-Lecture"
                 >
                   <Plus size={16} />
@@ -490,7 +553,13 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     e.stopPropagation();
                     editLecture(lecture);
                   }}
-                  className="p-1.5 hover:bg-blue-600/20 rounded text-blue-400 transition"
+                  className={`p-1.5 rounded transition ${
+                    lecture.level === 0
+                      ? 'hover:bg-blue-100 text-blue-500'
+                      : lecture.level === 1
+                      ? 'hover:bg-green-100 text-green-500'
+                      : 'hover:bg-purple-100 text-purple-500'
+                  }`}
                   title="Edit"
                 >
                   <Edit size={16} />
@@ -500,7 +569,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     e.stopPropagation();
                     setShowDeleteConfirm(lecture.id);
                   }}
-                  className="p-1.5 hover:bg-red-600/20 rounded text-red-400 transition"
+                  className="p-1.5 hover:bg-red-100 rounded text-red-500 transition"
                   title="Delete"
                 >
                   <Trash2 size={16} />
@@ -511,25 +580,31 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
           {/* Show content if expanded and this is a leaf node (no children) */}
           {isExpanded && !hasChildren && lecture.content && (
-            <div className="border-t border-gray-700 p-4 bg-gray-800/30">
+            <div className={`border-t p-4 ${
+              lecture.level === 0
+                ? 'border-blue-200 bg-blue-50/30'
+                : lecture.level === 1
+                ? 'border-green-200 bg-green-50/30'
+                : 'border-purple-200 bg-purple-50/30'
+            }`}>
               <style>{`
-                .lecture-content h1 { font-size: 2.25rem; font-weight: bold; margin: 1.5rem 0 0.75rem 0; color: #f97316; line-height: 1.2; }
-                .lecture-content h2 { font-size: 1.875rem; font-weight: bold; margin: 1.25rem 0 0.75rem 0; color: #fb923c; line-height: 1.3; }
-                .lecture-content h3 { font-size: 1.5rem; font-weight: bold; margin: 1rem 0 0.5rem 0; color: #fdba74; line-height: 1.4; }
-                .lecture-content p { margin: 0.75rem 0; line-height: 1.8; color: #e5e7eb; }
+                .lecture-content h1 { font-size: 2.25rem; font-weight: bold; margin: 1.5rem 0 0.75rem 0; color: #ea580c; line-height: 1.2; }
+                .lecture-content h2 { font-size: 1.875rem; font-weight: bold; margin: 1.25rem 0 0.75rem 0; color: #c2410c; line-height: 1.3; }
+                .lecture-content h3 { font-size: 1.5rem; font-weight: bold; margin: 1rem 0 0.5rem 0; color: #9a3412; line-height: 1.4; }
+                .lecture-content p { margin: 0.75rem 0; line-height: 1.8; color: #374151; }
                 .lecture-content ul { list-style-type: disc; margin-left: 2rem; margin: 0.75rem 0 0.75rem 2rem; }
                 .lecture-content ol { list-style-type: decimal; margin-left: 2rem; margin: 0.75rem 0 0.75rem 2rem; }
-                .lecture-content li { margin: 0.5rem 0; color: #d1d5db; }
-                .lecture-content blockquote { border-left: 4px solid #f97316; padding-left: 1.5rem; margin: 1rem 0; color: #d1d5db; font-style: italic; background: linear-gradient(90deg, #f97316 0%, rgba(249, 115, 22, 0.1) 10%, transparent 20%); padding: 1rem; border-radius: 0.5rem; }
-                .lecture-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-                .lecture-content video { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #4b5563; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-                .lecture-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; background: #111827; border: 2px solid #4b5563; border-radius: 0.75rem; }
+                .lecture-content li { margin: 0.5rem 0; color: #4b5563; }
+                .lecture-content blockquote { border-left: 4px solid #f97316; padding-left: 1.5rem; margin: 1rem 0; color: #4b5563; font-style: italic; background: linear-gradient(90deg, #fef3c7 0%, rgba(249, 115, 22, 0.1) 10%, transparent 20%); padding: 1rem; border-radius: 0.5rem; }
+                .lecture-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+                .lecture-content video { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; border: 2px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+                .lecture-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; background: #ffffff; border: 2px solid #e5e7eb; border-radius: 0.75rem; }
                 .lecture-content table th { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); font-weight: bold; color: white; padding: 1rem; }
-                .lecture-content table td { border: 1px solid #4b5563; padding: 1rem; color: #d1d5db; background: #1f2937; }
-                .lecture-content iframe { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; aspect-ratio: 16 / 9; border: 2px solid #4b5563; }
+                .lecture-content table td { border: 1px solid #e5e7eb; padding: 1rem; color: #374151; background: #f9fafb; }
+                .lecture-content iframe { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; aspect-ratio: 16 / 9; border: 2px solid #e5e7eb; }
               `}</style>
               <div 
-                className="lecture-content prose prose-invert max-w-none text-gray-300"
+                className="lecture-content prose max-w-none text-gray-700"
                 dangerouslySetInnerHTML={{ __html: lecture.content }}
               />
             </div>
@@ -537,9 +612,15 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
           {/* Render children if expanded */}
           {hasChildren && isExpanded && (
-            <div className="border-t border-gray-700 p-3 bg-gray-900/50">
+            <div className={`border-t p-3 ${
+              lecture.level === 0
+                ? 'border-blue-200 bg-blue-50/20'
+                : lecture.level === 1
+                ? 'border-green-200 bg-green-50/20'
+                : 'border-purple-200 bg-purple-50/20'
+            }`}>
               {children.map(child => (
-                <LectureItem key={child.id} lecture={child} isChild={true} />
+                <LectureItem key={child.id} lecture={child} />
               ))}
             </div>
           )}
@@ -684,8 +765,8 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4">
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <div className="bg-white border-b border-gray-200 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div>
                     {/* Warning for blob URLs in content */}
@@ -704,10 +785,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                       );
                     })()}
 
-                    <h2 className="text-xl font-bold text-white mb-1">
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">
                       Edit: {editingLecture?.title}
                     </h2>
-                    <p className="text-sm text-gray-400">Lecture content editor</p>
+                    <p className="text-sm text-gray-600">Lecture content editor</p>
                   </div>
                   <button
                     onClick={() => setShowPreview(!showPreview)}
@@ -718,9 +799,9 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   </button>
                 </div>
               </div>
-              <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-700">
+              <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
                 <div className="flex-1 p-6">
-                  <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                  <label className="text-sm font-semibold text-gray-700 mb-2 block">
                     📝 Editor
                   </label>
                   <RichTextEditor
@@ -732,14 +813,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   />
                 </div>
                 {showPreview && (
-                  <div className="flex-1 p-6 bg-gradient-to-b from-gray-800/50 to-gray-900/50">
-                    <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                  <div className="flex-1 p-6 bg-gray-50">
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
                       👁️ Live Preview
                     </label>
-                    <div className="bg-gray-900 rounded-xl border border-gray-700 p-4 max-h-[600px] overflow-y-auto">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 max-h-[600px] overflow-y-auto">
                       {currentContent ? (
                         <div 
-                          className="prose prose-invert max-w-none text-gray-300"
+                          className="prose max-w-none text-gray-700"
                           dangerouslySetInnerHTML={{ __html: currentContent }}
                         />
                       ) : (
@@ -751,14 +832,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   </div>
                 )}
               </div>
-              <div className="bg-gray-800/50 border-t border-gray-700 px-6 py-4 flex gap-3 justify-end">
+              <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3 justify-end">
                 <button
                   onClick={() => {
                     setIsEditing(false);
                     setEditingLectureId(null);
                     setCurrentContent('');
                   }}
-                  className="flex items-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700 transition"
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
                 >
                   <X size={18} />
                   Cancel
@@ -815,8 +896,8 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
       {isTeacher && (
         <div className="space-y-3">
-          <div className="bg-gradient-to-r from-blue-900/20 to-orange-900/20 border border-blue-700/50 rounded-xl p-4">
-            <label className="text-sm font-semibold text-gray-300 mb-2 block">
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <label className="text-sm font-semibold text-gray-700 mb-2 block">
               ➕ Add New Module/Lecture
             </label>
             <div className="flex gap-2">
@@ -825,7 +906,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 value={newLectureTitle}
                 onChange={(e) => setNewLectureTitle(e.target.value)}
                 placeholder="e.g., Module 1: Introduction"
-                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 onKeyPress={(e) => e.key === 'Enter' && addLecture()}
               />
               <button
@@ -836,19 +917,19 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 Add
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-gray-500 mt-2">
               Tip: Add modules first, then expand to add sub-lectures
             </p>
           </div>
 
           {/* Show Save All if any unsaved lectures (modules or sub-lectures) exist */}
           {lectures.some(l => !Number.isInteger(l.id) || l.id > 2147483647 || l.id < 1) && (
-            <div className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-700/50 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-green-400">
+                <p className="text-sm font-semibold text-green-700">
                   ✓ Unsaved changes detected
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Click "Save All" to save all new modules and topics to the database
                 </p>
               </div>
@@ -868,8 +949,8 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       {/* Root lectures (modules) */}
       <div className="space-y-2">
         {getRootLectures().length === 0 ? (
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 p-12 text-center">
-            <p className="text-gray-400">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-12 text-center">
+            <p className="text-gray-600">
               {isTeacher
                 ? 'No modules yet. Click "Add Module" to create one.'
                 : 'No course materials available yet.'}

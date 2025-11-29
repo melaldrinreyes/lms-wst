@@ -387,7 +387,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     try {
       // No poster upload for images
 
-      const res = await api.post('/modules/upload', formData, {
+      const res = await api.post('/media/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 600000, // 10 minutes for very large images
         onUploadProgress: (progressEvent) => {
@@ -453,7 +453,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
           console.warn('Failed to convert poster data URL to blob. Poster will not be uploaded.', err);
         }
       }
-      const res = await api.post('/modules/upload', formData, {
+      const res = await api.post('/media/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 600000, // 10 minutes for large video uploads
         onUploadProgress: (progressEvent) => {
@@ -704,7 +704,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     formData.append('file', file);
     let backendUrl = '';
     try {
-      const res = await api.post('/modules/upload', formData, {
+      const res = await api.post('/media/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 600000, // 10 minutes for very large uploads
         onUploadProgress: (progressEvent) => {

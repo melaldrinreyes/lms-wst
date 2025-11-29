@@ -7,7 +7,6 @@ export default function Courses() {
   const [activeTab, setActiveTab] = useState('all');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     fetchEnrolledCourses();
@@ -17,24 +16,11 @@ export default function Courses() {
     try {
       setLoading(true);
       const response = await studentAPI.getMyCourses();
-      if (response && response.success) {
+      if (response.success) {
         setCourses(response.classes || []);
-        setErrorMessage(null);
       }
     } catch (error) {
       console.error('Error fetching enrolled courses:', error);
-      const status = error.response?.status;
-      if (status === 401) {
-        setErrorMessage('Session expired. Redirecting to login...');
-        // Allow api interceptor to redirect, but also make explicit
-        setTimeout(() => { window.location.replace('/login'); }, 900);
-        return;
-      }
-      if (status === 0 || !status) {
-        setErrorMessage('Unable to reach server. Please check your connection.');
-      } else {
-        setErrorMessage(error.response?.data?.message || 'Error fetching courses.');
-      }
     } finally {
       setLoading(false);
     }
@@ -87,11 +73,6 @@ export default function Courses() {
           <div className="col-span-full text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
             <p className="text-gray-400 mt-4">Loading your courses...</p>
-          </div>
-        ) : errorMessage ? (
-          <div className="col-span-full text-center py-12">
-            <h3 className="text-lg font-semibold text-white mb-2">{errorMessage}</h3>
-            <p className="text-gray-400">Please sign in again or contact support if the problem persists.</p>
           </div>
         ) : filteredCourses.length === 0 ? (
           <div className="col-span-full text-center py-12">
@@ -161,17 +142,13 @@ export default function Courses() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="bg-gray-800/50 border border-orange-500 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400 mb-1">Credits</p>
                     <p className="text-lg font-bold text-white">{course.credits || 'N/A'}</p>
                   </div>
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="bg-gray-800/50 border border-orange-500 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400 mb-1">Status</p>
-                    <p className={`text-lg font-bold capitalize ${
-                      course.status === 'inactive' ? 'text-orange-400' : 'text-green-400'
-                    }`}>
-                      {course.status || 'Active'}
-                    </p>
+                    <p className="text-lg font-bold text-green-400 capitalize">{course.status || 'Active'}</p>
                   </div>
                 </div>
 

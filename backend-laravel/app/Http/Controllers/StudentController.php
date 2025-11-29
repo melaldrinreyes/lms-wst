@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Enrollment;
 use App\Models\Submission;
 use App\Models\Assignment;
+use App\Models\Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -13,16 +14,80 @@ use Illuminate\Support\Facades\Validator;
 class StudentController extends Controller
 {
     /**
-     * Register a new student (Faculty only)
+     * Update a student (Admin only)
      */
+    public function update(Request $request, $id)
+    {
+        try {
+            // Check if user is admin
+            if ($request->user()->role_id !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Only admin can update students.',
+                ], 403);
+            }
+
+            $student = User::where('role_id', 3)->findOrFail($id);
+
+            // Validate input
+            $validator = Validator::make($request->all(), [
+                'student_id' => 'required|string|unique:users,student_id,' . $id,
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $id,
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'date_of_birth' => 'nullable|date',
+                'gender' => 'nullable|in:male,female,other',
+                'status' => 'required|in:active,inactive,suspended',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            // Update student
+            $student->update([
+                'student_id' => $request->student_id,
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'date_of_birth' => $request->date_of_birth,
+                'gender' => $request->gender,
+                'status' => $request->status,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student updated successfully',
+                'student' => [
+                    'id' => $student->id,
+                    'student_id' => $student->student_id,
+                    'name' => $student->name,
+                    'email' => $student->email,
+                    'phone' => $student->phone,
+                    'status' => $student->status,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating student: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     public function store(Request $request)
     {
         try {
-            // Check if user is faculty
-            if ($request->user()->role_id !== 2) {
+            // Check if user is admin
+            if ($request->user()->role_id !== 1) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized. Only faculty can register students.',
+                    'message' => 'Unauthorized. Only admin can register students.',
                 ], 403);
             }
 
@@ -494,6 +559,45 @@ class StudentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching assignments: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a student (Admin only)
+     */
+    public function destroy(Request $request, $id)
+    {
+        try {
+            // Check if user is admin
+            if ($request->user()->role_id !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Only admin can delete students.',
+                ], 403);
+            }
+
+            $student = User::where('role_id', 3)->findOrFail($id);
+
+            // Check if student has any enrollments
+            $enrollmentsCount = Enrollment::where('student_id', $id)->count();
+            if ($enrollmentsCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete student with active enrollments. Please remove enrollments first.',
+                ], 400);
+            }
+
+            $student->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting student: ' . $e->getMessage(),
             ], 500);
         }
     }

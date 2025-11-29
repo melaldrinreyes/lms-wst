@@ -144,7 +144,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setRegisterModalOpen(true)}
-                className="px-8 py-4 bg-gray-800/50 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all border border-gray-700 hover:border-gray-600 flex items-center justify-center gap-2"
+                className="px-8 py-4 bg-gray-800/50 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all border border-orange-500 hover:border-orange-600 flex items-center justify-center gap-2"
               >
                 Create Account
               </button>
@@ -161,7 +161,7 @@ export default function Home() {
               Why Choose MINSU E-LEARN?
             </h2>
             <p className="text-gray-400 text-base sm:text-lg">
-              Discover the features that make learning management seamless and effective
+              Everything you need to succeed in your learning journey
             </p>
           </div>
 
@@ -169,38 +169,38 @@ export default function Home() {
             {[
               {
                 icon: BookOpen,
-                title: 'Comprehensive Course Management',
-                description: 'Access all your enrolled courses, lecture materials, and course content in one centralized platform.',
+                title: 'Expert-Led Courses',
+                description: 'Learn from industry professionals with real-world experience across 200+ courses.',
                 color: 'orange',
               },
               {
                 icon: MessageCircle,
-                title: 'Interactive Learning',
-                description: 'Engage with course content through hierarchical lectures, assignments, and real-time announcements.',
+                title: '24/7 AI Assistant',
+                description: 'Get instant help anytime with our intelligent chatbot that understands your needs.',
                 color: 'blue',
               },
               {
                 icon: Users,
-                title: 'Student-Teacher Collaboration',
-                description: 'Connect directly with instructors, submit assignments, and receive personalized feedback on your work.',
+                title: 'Thriving Community',
+                description: 'Connect with 5,000+ active learners, share knowledge, and grow together.',
                 color: 'green',
               },
               {
                 icon: GraduationCap,
-                title: 'Progress Tracking',
-                description: 'Monitor your academic progress, view grades, and track assignment submissions across all courses.',
+                title: 'Industry Certifications',
+                description: 'Earn recognized certificates that boost your career and validate your skills.',
                 color: 'purple',
               },
               {
                 icon: CheckCircle,
-                title: 'Secure & Reliable',
-                description: 'Experience a secure learning environment with reliable access to course materials and resources.',
+                title: 'Proven Success',
+                description: '95% of our students achieve their learning goals and advance their careers.',
                 color: 'pink',
               },
               {
                 icon: CheckCircle,
-                title: 'Flexible Access',
-                description: 'Study anytime, anywhere with 24/7 access to course materials, assignments, and learning resources.',
+                title: 'Flexible Learning',
+                description: 'Study at your own pace, anytime, anywhere. Access course materials 24/7.',
                 color: 'yellow',
               },
             ].map((feature, index) => (
@@ -361,7 +361,7 @@ export default function Home() {
               </button>
               <Link
                 to="/courses"
-                className="px-10 py-5 bg-gray-800/50 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all border border-gray-700 hover:border-gray-600 text-lg inline-flex items-center justify-center gap-2"
+                className="px-10 py-5 bg-gray-800/50 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all border border-orange-500 hover:border-orange-600 text-lg inline-flex items-center justify-center gap-2"
               >
                 Explore Courses
                 <BookOpen size={20} />

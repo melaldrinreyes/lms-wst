@@ -16,7 +16,7 @@ echo "Total courses: " . count($courses) . "\n\n";
 
 foreach ($courses as $course) {
     echo "Course ID: {$course->id}\n";
-    echo "  Name: {$course->course_name}\n";
+    echo "  Name: {$course->name}\n";
     echo "  Faculty ID: {$course->faculty_id}\n";
     echo "  Created: {$course->created_at}\n\n";
 }

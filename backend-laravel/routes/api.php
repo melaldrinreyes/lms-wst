@@ -14,16 +14,12 @@ use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\ClassMaterialController;
-use App\Http\Controllers\ModuleUploadController;
 use App\Http\Controllers\AnnouncementCommentController;
+use App\Http\Controllers\MediaUploadController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
-// Public course details for inviting
-Route::get('/courses', [CourseController::class, 'index']);
-Route::get('/courses/{id}', [CourseController::class, 'show']);
 
 // (Debug route removed) Temporary local-only debug route removed after verification.
 
@@ -64,6 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
     
+    // Media upload route for rich text editor
+    Route::post('/media/upload', [MediaUploadController::class, 'upload']);
+    
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
@@ -72,6 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Course routes (All authenticated users can view courses)
     Route::get('/courses/statistics/all', [CourseController::class, 'statistics']);
+    Route::get('/courses', [CourseController::class, 'index']);
+    Route::get('/courses/{id}', [CourseController::class, 'show']);
     
     // Course creation and modification (Faculty only)
     Route::middleware(['check.role:2'])->group(function () {
@@ -108,9 +109,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/courses/{courseId}/materials', [ClassMaterialController::class, 'store']);
         Route::delete('/class-materials/{id}', [ClassMaterialController::class, 'destroy']);
     });
-
-    // Generic module/media upload used by the rich text editor and other front-end modules
-    Route::post('/modules/upload', [ModuleUploadController::class, 'upload']);
     
     // Enrollment management (Faculty and Admin)
     Route::middleware(['check.role:2'])->group(function () {
@@ -162,6 +160,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(['check.role:1,2'])->group(function () {
         Route::get('/students', [StudentController::class, 'index']);
         Route::get('/students/{id}', [StudentController::class, 'show']);
+        Route::put('/students/{id}', [StudentController::class, 'update']);
+        Route::delete('/students/{id}', [StudentController::class, 'destroy']);
         Route::get('/courses/{courseId}/students', [StudentController::class, 'byCourse']);
     });
     

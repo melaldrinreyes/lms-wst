@@ -163,7 +163,7 @@ export default function Instructors() {
           ))}
         </div>
       ) : filteredInstructors.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-orange-500 p-12 text-center">
           <UsersIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
             {searchTerm ? 'No instructors found' : 'No instructors yet'}
@@ -346,7 +346,7 @@ export default function Instructors() {
             {detailsModal.instructor && (
               <div className="flex flex-col md:flex-row gap-8 p-8">
                 {/* Left: Instructor Info */}
-                <div className="md:w-1/3 w-full flex flex-col items-center bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-md">
+                <div className="md:w-1/3 w-full flex flex-col items-center bg-gray-800 rounded-2xl p-6 border border-orange-500 shadow-md">
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-3xl mb-4 border-4 border-gray-900">
                     {detailsModal.instructor.name.charAt(0).toUpperCase()}
                   </div>
@@ -381,11 +381,11 @@ export default function Instructors() {
                 <div className="md:w-2/3 w-full flex flex-col gap-8">
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-6 mb-2">
-                    <div className="bg-gray-800 rounded-xl p-6 flex flex-col items-center border border-blue-900">
+                    <div className="bg-gray-800 rounded-xl p-6 flex flex-col items-center border border-orange-500">
                       <div className="text-4xl font-bold text-blue-400 mb-1">{detailsModal.instructor.statistics?.courses || 0}</div>
                       <div className="text-base font-medium text-blue-300">Courses</div>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-6 flex flex-col items-center border border-green-900">
+                    <div className="bg-gray-800 rounded-xl p-6 flex flex-col items-center border border-orange-500">
                       <div className="text-4xl font-bold text-green-400 mb-1">{detailsModal.instructor.statistics?.students || 0}</div>
                       <div className="text-base font-medium text-green-300">Students</div>
                     </div>
@@ -399,7 +399,7 @@ export default function Instructors() {
                     <div className="space-y-6">
                       {instructorDetails && instructorDetails.courses && Array.isArray(instructorDetails.courses) && instructorDetails.courses.length > 0 ? (
                         instructorDetails.courses.map((course) => (
-                          <div key={course.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                          <div key={course.id} className="bg-gray-800 rounded-lg p-4 border border-orange-500">
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
                               <div>
                                 <h5 className="font-semibold text-white text-base">{course.name}</h5>

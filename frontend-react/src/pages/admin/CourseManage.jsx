@@ -338,7 +338,7 @@ export default function CourseManage() {
       </div>
 
       {/* Course Info Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-orange-500">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Course Details</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
@@ -436,7 +436,7 @@ export default function CourseManage() {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-orange-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Students</p>
@@ -445,7 +445,7 @@ export default function CourseManage() {
               <Users className="w-12 h-12 text-blue-500" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-orange-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Modules</p>
@@ -454,7 +454,7 @@ export default function CourseManage() {
               <FileText className="w-12 h-12 text-purple-500" />
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-orange-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Assignments</p>
@@ -483,7 +483,7 @@ export default function CourseManage() {
           </div>
 
           {modules.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 text-center border-orange-500">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 dark:text-gray-400">No modules available</p>
             </div>
@@ -492,7 +492,7 @@ export default function CourseManage() {
               {modules.map((module) => (
                 <div
                   key={module.id}
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition"
+                  className="bg-white dark:bg-gray-800 border-orange-500 rounded-lg p-6 hover:shadow-md transition"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -568,7 +568,7 @@ export default function CourseManage() {
             {assignments.map((assignment) => (
               <div
                 key={assignment.id}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition"
+                className="bg-white dark:bg-gray-800 border-orange-500 rounded-lg p-6 hover:shadow-md transition"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -753,7 +753,7 @@ export default function CourseManage() {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Enrolled Students ({students.length})</h2>
           
           {students.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 text-center border-orange-500">
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 dark:text-gray-400">No students enrolled in this course</p>
             </div>

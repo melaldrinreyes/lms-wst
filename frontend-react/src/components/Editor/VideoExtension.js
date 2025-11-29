@@ -46,9 +46,9 @@ export const Video = Node.create({
   },
   renderHTML({ HTMLAttributes }) {
     const wrapperAttrs = {};
-    if (HTMLAttributes.aspectRatio) {
-      wrapperAttrs.style = `aspect-ratio: ${HTMLAttributes.aspectRatio};`;
-    }
+    // Always set a default aspect ratio if none provided
+    const aspectRatio = HTMLAttributes.aspectRatio || '16 / 9';
+    wrapperAttrs.style = `aspect-ratio: ${aspectRatio};`;
     return [
       'div',
       mergeAttributes({ class: 'video-wrapper' }, wrapperAttrs),
@@ -56,10 +56,11 @@ export const Video = Node.create({
         'video',
         mergeAttributes(HTMLAttributes, {
           controls: true,
-          preload: 'metadata',
+          preload: 'none',
           playsinline: true,
           src: HTMLAttributes.src,
-          'data-aspectratio': HTMLAttributes.aspectRatio || undefined,
+          type: HTMLAttributes.type || 'video/mp4',
+          'data-aspectratio': aspectRatio,
           poster: HTMLAttributes.poster || undefined,
           style: undefined // Remove inline style, use CSS
         }),

@@ -264,7 +264,7 @@ export default function SuperAdminDashboard() {
 
       {/* Admin Profile Section */}
       {adminProfile && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-orange-500">
           <div className="flex items-center gap-4">
             <img
               src={adminProfile.pictureUrl || '/default-profile.png'}
@@ -419,7 +419,7 @@ export default function SuperAdminDashboard() {
             <div className="mt-6 border-t border-gray-800 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Students List */}
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-gray-800 rounded-xl p-4 border border-orange-500">
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-sm text-gray-400">Total Students</div>
@@ -504,7 +504,7 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Active Courses List */}
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-gray-800 rounded-xl p-4 border border-orange-500">
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-sm text-gray-400">Active Courses</div>
@@ -608,7 +608,7 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Instructors List */}
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-gray-800 rounded-xl p-4 border border-orange-500">
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-sm text-gray-400">Instructors</div>

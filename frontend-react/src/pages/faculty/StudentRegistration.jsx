@@ -161,7 +161,7 @@ export default function StudentRegistration() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700"
+        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-orange-500"
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student ID */}

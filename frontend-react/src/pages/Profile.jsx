@@ -222,14 +222,14 @@ export default function Profile() {
     <div className="space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
+      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-orange-500">
         <h1 className="text-2xl font-bold text-white">
           Profile Settings
         </h1>
       </div>
 
       {loading ? (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-gray-800 text-center">
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-orange-500 text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
           <p className="text-gray-400">Loading profile...</p>
         </div>
@@ -260,9 +260,9 @@ export default function Profile() {
 
       {/* Account Info Tab */}
       {activeTab === 'account' && (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-6">
           <form onSubmit={handleSave} className="space-y-6">
-            <div className="flex items-center gap-6 pb-6 border-b border-gray-800">
+            <div className="flex items-center gap-6 pb-6 border-b border-orange-500">
               {imagePreview ? (
                 <img
                   src={imagePreview}
@@ -338,7 +338,7 @@ export default function Profile() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
                 />
               </div>
 
@@ -350,7 +350,7 @@ export default function Profile() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
                 />
               </div>
 
@@ -362,7 +362,7 @@ export default function Profile() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
                   placeholder="+63 XXX XXX XXXX"
                 />
               </div>
@@ -375,7 +375,7 @@ export default function Profile() {
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
                 />
               </div>
 
@@ -386,7 +386,7 @@ export default function Profile() {
                 <select
                   value={formData.gender}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -403,7 +403,7 @@ export default function Profile() {
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
                   placeholder="Enter your complete address"
                 />
               </div>
@@ -423,7 +423,7 @@ export default function Profile() {
 
       {/* Security Tab */}
       {activeTab === 'security' && (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-6">
           <form onSubmit={handlePasswordChange} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -433,7 +433,7 @@ export default function Profile() {
                 type="password"
                 value={passwordData.current_password}
                 onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                 placeholder="••••••••"
                 required
               />
@@ -447,7 +447,7 @@ export default function Profile() {
                 type="password"
                 value={passwordData.new_password}
                 onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -462,7 +462,7 @@ export default function Profile() {
                 type="password"
                 value={passwordData.new_password_confirmation}
                 onChange={(e) => setPasswordData({ ...passwordData, new_password_confirmation: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                 placeholder="••••••••"
                 required
                 minLength={8}
