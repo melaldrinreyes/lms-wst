@@ -1,8 +1,11 @@
-import { FileText, Check, Download } from 'lucide-react';
+import { FileText, Check, Download, X, Trash2 } from 'lucide-react';
 
 export default function StudentSubmissionsTable({
   submissions = [],
   onDownload,
+  onGrade,
+  onReject,
+  onDelete,
   loading = false,
   searchTerm = '',
 }) {
@@ -12,7 +15,7 @@ export default function StudentSubmissionsTable({
     return matchesSearch;
   });
 
-  // Use system palette: orange for submitted, green for graded, blue for returned, gray for default
+  // Use system palette: orange for submitted, green for graded, blue for returned, red for rejected, gray for default
   const getStatusColor = (status) => {
     switch (status) {
       case 'submitted':
@@ -21,6 +24,8 @@ export default function StudentSubmissionsTable({
         return 'bg-green-100 text-green-600';
       case 'returned':
         return 'bg-blue-100 text-blue-600';
+      case 'rejected':
+        return 'bg-red-100 text-red-600';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -45,13 +50,13 @@ export default function StudentSubmissionsTable({
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Submitted</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Grade</th>
-                <th className="px-6 py-3" />
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredSubmissions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8">
+                  <td colSpan={7} className="px-6 py-8">
                     <div className="flex flex-col items-center justify-center">
                       <FileText size={48} className="text-gray-400 mb-4" />
                       <p className="text-gray-600 text-lg">No submissions found</p>
@@ -101,19 +106,43 @@ export default function StudentSubmissionsTable({
                         <span className="text-sm text-gray-400">Not graded</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center gap-2 justify-end">
-                      <span className="text-orange-500">
-                        <Check className="w-4 h-4" />
-                      </span>
-                      {submission.file_path && (
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center gap-2 justify-end">
+                        {submission.file_path && (
+                          <button
+                            onClick={() => onDownload && onDownload(submission.id, submission.student_name)}
+                            className="text-blue-600 hover:text-blue-800 p-1"
+                            title="Download Submission"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                        )}
+                        {submission.status !== 'graded' && submission.status !== 'rejected' && (
+                          <button
+                            onClick={() => onGrade && onGrade(submission)}
+                            className="text-green-600 hover:text-green-800 p-1"
+                            title="Grade Submission"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        {submission.status === 'submitted' && (
+                          <button
+                            onClick={() => onReject && onReject(submission.id)}
+                            className="text-orange-600 hover:text-orange-800 p-1"
+                            title="Reject Submission"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
-                          onClick={() => onDownload && onDownload(submission.id, submission.student_name)}
-                          className="text-blue-600 hover:text-blue-800"
-                          title="Download Submission"
+                          onClick={() => onDelete && onDelete(submission.id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          title="Delete Submission"
                         >
-                          <Download className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))

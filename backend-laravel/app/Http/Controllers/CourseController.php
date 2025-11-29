@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
-use App\Models\Module;
 use App\Models\Assignment;
 use App\Models\Enrollment;
 use App\Models\EnrollmentRequest;
@@ -24,12 +23,12 @@ class CourseController extends Controller
             // If faculty, get only their courses
             if ($user->role_id == 2) { // Faculty
                 $courses = Course::where('faculty_id', $user->id)
-                    ->withCount(['enrollments', 'modules', 'assignments', 'announcements'])
+                    ->withCount(['enrollments', 'assignments', 'announcements'])
                     ->orderBy('created_at', 'desc')
                     ->get();
             } else {
                 // Admin can see all courses
-                $courses = Course::withCount(['enrollments', 'modules', 'assignments', 'announcements'])
+                $courses = Course::withCount(['enrollments', 'assignments', 'announcements'])
                     ->orderBy('created_at', 'desc')
                     ->get();
             }
@@ -50,7 +49,6 @@ class CourseController extends Controller
                         'thumbnail' => $course->thumbnail,
                         'status' => $course->status,
                         'students' => $course->enrollments_count,
-                        'modules' => $course->modules_count,
                         'assignments' => $course->assignments_count,
                         'announcements' => $course->announcements_count,
                     ];
@@ -71,7 +69,7 @@ class CourseController extends Controller
     {
         $user = request()->user();
         
-        $course = Course::with(['enrollments.user', 'modules', 'assignments', 'faculty'])
+        $course = Course::with(['enrollments.user', 'assignments.assignmentFiles', 'faculty'])
             ->findOrFail($id);
 
         // Get announcements for this course
@@ -104,8 +102,25 @@ class CourseController extends Controller
                 'thumbnail' => $course->thumbnail,
                 'status' => $course->status,
                 'students' => $course->enrollments->count(),
-                'modules' => $course->modules,
                 'assignments' => $course->assignments->map(function ($assignment) use ($course) {
+                    // Get current user's submission for this assignment
+                    $user = request()->user();
+                    $studentSubmission = null;
+                    if ($user && $user->role_id == 3) { // Student
+                        $studentSubmission = $assignment->submissions()
+                            ->where('student_id', $user->id)
+                            ->latest()
+                            ->first();
+                    }
+
+                    // Determine submission status
+                    $hasSubmitted = $studentSubmission !== null;
+                    $canResubmit = false;
+
+                    if ($studentSubmission && $assignment->updated_by_faculty_at) {
+                        $canResubmit = $assignment->updated_by_faculty_at > $studentSubmission->submitted_at;
+                    }
+
                     return [
                         'id' => $assignment->id,
                         'title' => $assignment->title,
@@ -114,9 +129,26 @@ class CourseController extends Controller
                         'max_points' => $assignment->max_points,
                         'status' => $assignment->status,
                         'file_path' => $assignment->file_path,
+                        'files' => $assignment->assignmentFiles->map(function ($file) {
+                            return [
+                                'id' => $file->id,
+                                'file_path' => $file->file_path,
+                                'original_name' => $file->original_name,
+                            ];
+                        }),
                         'submissions' => $assignment->submissions->count(),
                         'total_students' => $course->enrollments->count(),
                         'graded_submissions' => $assignment->submissions->whereNotNull('grade')->count(),
+                        'has_submitted' => $hasSubmitted,
+                        'can_resubmit' => $canResubmit,
+                        'submitted_at' => $studentSubmission ? $studentSubmission->submitted_at : null,
+                        'grade' => $studentSubmission ? $studentSubmission->grade : null,
+                        'feedback' => $studentSubmission ? $studentSubmission->feedback : null,
+                        'submission' => $studentSubmission ? [
+                            'id' => $studentSubmission->id,
+                            'file_path' => $studentSubmission->file_path,
+                            'submitted_at' => $studentSubmission->submitted_at,
+                        ] : null,
                     ];
                 }),
                 'announcements' => $announcements->map(function ($announcement) {
@@ -267,7 +299,6 @@ class CourseController extends Controller
             'statistics' => [
                 'total_courses' => $totalCourses,
                 'total_students' => $totalStudents,
-                'total_modules' => Module::count(),
                 'total_assignments' => Assignment::count(),
             ],
         ]);

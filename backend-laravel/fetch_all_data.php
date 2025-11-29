@@ -48,30 +48,9 @@ foreach ($courses as $course) {
     echo "  Faculty: {$facultyName} (ID: {$course->faculty_id})\n";
     echo "  Description: " . ($course->description ?? 'N/A') . "\n";
     echo "  Status: " . ($course->status ?? 'N/A') . "\n";
-    echo "  Modules: " . $course->modules()->count() . "\n";
     echo "  Assignments: " . $course->assignments()->count() . "\n";
     echo "  Enrolled Students: " . $course->enrollments()->count() . "\n";
     echo "  Created: {$course->created_at}\n";
-    echo "  ────────────────────────────────────────────────────────────\n";
-}
-
-// ====== MODULES ======
-echo "\n┌─────────────────────────────────────────────────────────────────┐\n";
-echo "│ MODULES                                                         │\n";
-echo "└─────────────────────────────────────────────────────────────────┘\n";
-$modules = Module::with('course')->get();
-echo "Total modules: " . $modules->count() . "\n\n";
-
-foreach ($modules as $module) {
-    $courseName = $module->course->course_name ?? 'Unknown course';
-    echo "ID: {$module->id}\n";
-    echo "  Title: {$module->title}\n";
-    echo "  Course: {$courseName} (ID: {$module->course_id})\n";
-    echo "  Description: " . ($module->description ?? 'N/A') . "\n";
-    echo "  Order: " . ($module->order ?? 'N/A') . "\n";
-    echo "  Status: " . ($module->status ?? 'N/A') . "\n";
-    echo "  File Path: " . ($module->file_path ?? 'No file') . "\n";
-    echo "  Created: {$module->created_at}\n";
     echo "  ────────────────────────────────────────────────────────────\n";
 }
 
@@ -155,7 +134,6 @@ $adminCount = User::where('role_id', 1)->count();
 $facultyCount = User::where('role_id', 2)->count();
 $studentCount = User::where('role_id', 3)->count();
 $totalCourses = Course::count();
-$totalModules = Module::count();
 $totalAssignments = Assignment::count();
 $totalSubmissions = Submission::count();
 $gradedSubmissions = Submission::whereNotNull('grade')->count();
@@ -169,7 +147,6 @@ echo "  - Total: {$users->count()}\n\n";
 
 echo "Content:\n";
 echo "  - Courses: {$totalCourses}\n";
-echo "  - Modules: {$totalModules}\n";
 echo "  - Assignments: {$totalAssignments}\n\n";
 
 echo "Submissions:\n";
@@ -182,17 +159,12 @@ echo "╔═══════════════════════�
 echo "║ COURSE 4 (Database) - DETAILED VIEW                           ║\n";
 echo "╚════════════════════════════════════════════════════════════════╝\n\n";
 
-$course4 = Course::with(['faculty', 'assignments.submissions.user', 'modules', 'enrollments.student'])->find(4);
+$course4 = Course::with(['faculty', 'assignments.submissions.user', 'enrollments.student'])->find(4);
 if ($course4) {
     echo "Course Name: {$course4->course_name}\n";
     echo "Course Code: {$course4->course_code}\n";
     echo "Faculty: " . ($course4->faculty->name ?? 'N/A') . " (ID: {$course4->faculty_id})\n";
     echo "Status: " . ($course4->status ?? 'active') . "\n\n";
-    
-    echo "Modules ({$course4->modules->count()}):\n";
-    foreach ($course4->modules as $mod) {
-        echo "  - {$mod->title} (ID: {$mod->id})\n";
-    }
     
     echo "\nAssignments ({$course4->assignments->count()}):\n";
     foreach ($course4->assignments as $assign) {

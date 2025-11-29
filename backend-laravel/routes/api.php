@@ -6,7 +6,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseContentController;
 use App\Http\Controllers\CourseLectureController;
-use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ClassController;
@@ -14,6 +13,7 @@ use App\Http\Controllers\EnrollmentRequestController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\ClassMaterialController;
 use App\Http\Controllers\AnnouncementCommentController;
 
 // Public routes
@@ -23,11 +23,10 @@ Route::post('/login', [AuthController::class, 'login']);
 // (Debug route removed) Temporary local-only debug route removed after verification.
 
 // Test route
-Route::get('/test', function () {
+Route::get('/test-materials', function () {
     return response()->json([
         'success' => true,
-        'message' => 'API is working!',
-        'timestamp' => now()->toDateTimeString(),
+        'message' => 'Materials route works',
     ]);
 });
 
@@ -98,6 +97,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/courses/{courseId}/lectures/{lectureId}', [CourseLectureController::class, 'destroy']);
     });
     
+    // Class materials routes (Faculty can manage, all enrolled can view)
+    Route::get('/courses/{courseId}/materials', [ClassMaterialController::class, 'index']);
+    Route::get('/class-materials/{id}/download', [ClassMaterialController::class, 'download']);
+    
+    Route::middleware(['check.role:2'])->group(function () {
+        Route::post('/courses/{courseId}/materials', [ClassMaterialController::class, 'store']);
+        Route::delete('/class-materials/{id}', [ClassMaterialController::class, 'destroy']);
+    });
+    
     // Enrollment management (Faculty and Admin)
     Route::middleware(['check.role:2'])->group(function () {
         Route::put('/courses/{courseId}/students/{studentId}/status', [CourseController::class, 'updateStudentStatus']);
@@ -107,19 +115,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Student enrollment (Students only)
     Route::middleware(['check.role:3'])->group(function () {
         Route::post('/courses/{id}/enroll', [CourseController::class, 'enroll']);
-    });
-    
-    // Module routes (Faculty and Admin can manage, all can view)
-    Route::get('/courses/{courseId}/modules', [ModuleController::class, 'index']);
-    Route::get('/modules/{id}/download', [ModuleController::class, 'download']);
-    // File upload endpoint for modules (for WYSIWYG uploads)
-    Route::post('/modules/upload', [ModuleController::class, 'upload']);
-
-    Route::middleware(['check.role:2'])->group(function () {
-        Route::post('/modules', [ModuleController::class, 'store']);
-        Route::put('/modules/{id}', [ModuleController::class, 'update']);
-        Route::post('/modules/{id}', [ModuleController::class, 'update']); // For FormData with _method=PUT
-        Route::delete('/modules/{id}', [ModuleController::class, 'destroy']);
     });
     
     // Assignment routes
@@ -141,10 +136,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Note: Specific routes must come before parameterized routes
     Route::get('/submissions', [SubmissionController::class, 'index']); // Faculty view all submissions
     
-    // Grade submissions and stats (Faculty and Admin only)
+    // Grade and reject submissions and stats (Faculty and Admin only)
     Route::middleware(['check.role:2,1'])->group(function () {
         Route::get('/submissions/pending/count', [SubmissionController::class, 'getPendingCount']);
         Route::post('/submissions/{id}/grade', [SubmissionController::class, 'grade']);
+        Route::post('/submissions/{id}/reject', [SubmissionController::class, 'reject']);
+        Route::delete('/submissions/{id}', [SubmissionController::class, 'destroy']);
     });
     
     Route::get('/submissions/{id}', [SubmissionController::class, 'show']);
@@ -165,6 +162,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Student-specific routes (role_id = 3)
     Route::middleware(['check.role:3'])->group(function () {
         Route::get('/student/classes', [StudentController::class, 'myClasses']);
+        Route::get('/student/courses', [StudentController::class, 'myClasses']); // Alias for frontend compatibility
+        Route::get('/student/courses/{courseId}', [StudentController::class, 'showCourse']);
         Route::get('/student/assignments', [AssignmentController::class, 'studentAssignments']);
         Route::get('/student/announcements', [AnnouncementController::class, 'studentAnnouncements']);
     });

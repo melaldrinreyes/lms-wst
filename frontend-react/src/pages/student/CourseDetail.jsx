@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Users, Clock, CheckCircle, PlayCircle, FileText, MessageSquare, Calendar, Download, Upload, X, Megaphone, Send, Trash2 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import { submissionAPI, announcementCommentAPI, courseAPI, moduleAPI, assignmentAPI, announcementAPI, studentAPI } from '../../services/api';
+import { submissionAPI, announcementCommentAPI, studentAPI, classMaterialAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
 import { File as FileEdit } from 'lucide-react';
 import { CornerDownLeft as Reply } from 'lucide-react';
+import StudentClassMaterialsTab from '../../components/StudentClassMaterialsTab';
 
 
 function CourseDetail() {
@@ -19,11 +20,10 @@ function CourseDetail() {
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
   const [course, setCourse] = useState(null);
-  const [modules, setModules] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [materials, setMaterials] = useState([]);
   const [hasContent, setHasContent] = useState(false);
-  const [newModulesCount, setNewModulesCount] = useState(0);
   const [newAssignmentsCount, setNewAssignmentsCount] = useState(0);
   const [fileChoice, setFileChoice] = useState(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
@@ -87,99 +87,47 @@ function CourseDetail() {
 
         // NOTE: inline preview creation is handled directly where needed.
 
-        // Download assignment: prefer per-file record if available, otherwise call legacy endpoint
-        const handleDownloadAssignment = async (assignment) => {
-          try {
-            if (assignment.files && assignment.files.length > 0) {
-              const f = assignment.files[0];
-              return await handleDownloadFileById(f.id, f.original_name || f.stored_name || f.file_path);
-            }
-
-            const response = await studentAPI.downloadAssignment(assignment.id);
-            const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            const contentDisposition = response.headers['content-disposition'];
-            let filename = assignment.title || 'assignment-download';
-            if (contentDisposition) {
-              const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
-              if (filenameMatch && filenameMatch[1]) filename = decodeURIComponent(filenameMatch[1]);
-              else {
-                const filenameMatch2 = contentDisposition.match(/filename="?([^";\n]+)"?/);
-                if (filenameMatch2 && filenameMatch2[1]) filename = filenameMatch2[1];
-              }
-            }
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
-            setToast({ message: 'File downloaded', type: 'success' });
-          } catch (error) {
-            if (error.response && error.response.status === 409 && error.response.data && error.response.data.files) {
-              setFileChoice({ assignmentId: assignment.id, files: error.response.data.files });
-              return;
-            }
-            console.error('Error downloading assignment:', error);
-            setToast({ message: 'Failed to download assignment', type: 'error' });
-          }
-        };
-
         // Fetch course details + related resources for student view
         useEffect(() => {
           if (!id) return;
 
 
-          const fetchAll = async () => {
-            setLoading(true);
-            try {
-              // Primary source: courseAPI.getOne returns course with modules, assignments, announcements
-              const resp = await courseAPI.getOne(id);
-              if (resp && resp.success) {
-                setCourse(resp.course || null);
-                setModules(resp.course?.modules || []);
-                setAssignments(resp.course?.assignments || []);
-                setAnnouncements(resp.course?.announcements || []);
-                setHasContent((resp.course?.modules && resp.course.modules.length > 0) || (resp.course?.assignments && resp.course.assignments.length > 0));
-                setNewModulesCount((resp.course?.modules && resp.course.modules.length) || 0);
-                setNewAssignmentsCount((resp.course?.assignments && resp.course.assignments.length) || 0);
-              } else {
-                // Fallback: call separate endpoints
-                try {
-                  const [mods, assigns, anns] = await Promise.all([
-                    moduleAPI.getByCourse(id),
-                    assignmentAPI.getByCourse(id),
-                    announcementAPI.getByCourse(id),
-                  ]);
-                  setModules(mods || []);
-                  setAssignments(assigns || []);
-                  setAnnouncements(anns || []);
-                  setHasContent((mods && mods.length > 0) || (assigns && assigns.length > 0));
-                  setNewModulesCount((mods && mods.length) || 0);
-                  setNewAssignmentsCount((assigns && assigns.length) || 0);
-                } catch {
-                  setModules([]);
-                  setAssignments([]);
-                  setAnnouncements([]);
-                  setHasContent(false);
-                  setNewModulesCount(0);
-                  setNewAssignmentsCount(0);
-                }
-              }
-            } catch {
-              setCourse(null);
-              setModules([]);
-              setAssignments([]);
-              setAnnouncements([]);
-              setHasContent(false);
-              setNewModulesCount(0);
-              setNewAssignmentsCount(0);
+        const fetchAll = async () => {
+          setLoading(true);
+          try {
+            // Use student-specific endpoint to ensure enrollment check
+            const resp = await studentAPI.getCourseDetails(id);
+            if (resp && resp.success) {
+              setCourse(resp.course || null);
+              setAssignments(resp.course?.assignments || []);
+              setAnnouncements(resp.course?.announcements || []);
+              setHasContent((resp.course?.assignments && resp.course.assignments.length > 0));
+              setNewAssignmentsCount((resp.course?.assignments && resp.course.assignments.length) || 0);
+            } else {
+              throw new Error(resp?.message || 'Failed to load course details');
             }
-            setLoading(false);
-          };
 
-          fetchAll();
+            // Fetch class materials
+            try {
+              const materialsResp = await classMaterialAPI.getByCourse(id);
+              if (materialsResp.success) {
+                setMaterials(materialsResp.materials || []);
+              }
+            } catch (materialsError) {
+              console.error('Error fetching class materials:', materialsError);
+              // Don't fail the whole page load if materials fail
+            }
+          } catch (error) {
+            console.error('Error fetching course details:', error);
+            setCourse(null);
+            setAssignments([]);
+            setAnnouncements([]);
+            setMaterials([]);
+            setHasContent(false);
+            setNewAssignmentsCount(0);
+          }
+          setLoading(false);
+        };          fetchAll();
         }, [id]);
 
   // Utility functions
@@ -202,10 +150,10 @@ function CourseDetail() {
     const diffInMs = due - now;
     const diffInHours = diffInMs / (1000 * 60 * 60);
 
-    if (diffInHours < 0) return { text: 'Overdue', urgent: true };
-    if (diffInHours < 24) return { text: `${Math.ceil(diffInHours)}h left`, urgent: diffInHours < 6 };
+    if (diffInHours < 0) return { text: 'Overdue', urgent: true, color: 'text-red-400' };
+    if (diffInHours < 24) return { text: `${Math.ceil(diffInHours)}h left`, urgent: diffInHours < 6, color: diffInHours < 6 ? 'text-red-400' : 'text-yellow-400' };
     const diffInDays = Math.ceil(diffInHours / 24);
-    return { text: `${diffInDays}d left`, urgent: false };
+    return { text: `${diffInDays}d left`, urgent: false, color: 'text-green-400' };
   };
 
   // Close submission modal
@@ -285,8 +233,12 @@ function CourseDetail() {
       
       closeSubmissionModal();
       
-      // Refresh assignments to show submission status
-      // fetchAssignments(); // TODO: Implement or import fetchAssignments if needed
+      // Refresh course data to update assignment status
+      const refreshedResp = await studentAPI.getCourseDetails(id);
+      if (refreshedResp && refreshedResp.success) {
+        setCourse(refreshedResp.course || null);
+        setAssignments(refreshedResp.course?.assignments || []);
+      }
       
     } catch (error) {
       console.error('Error submitting assignment:', error);
@@ -593,7 +545,7 @@ function CourseDetail() {
         {[
           { id: 'overview', label: 'Overview', icon: BookOpen, count: 0 },
           { id: 'content', label: 'Content', icon: FileEdit, count: hasContent ? 1 : 0, highlight: hasContent },
-          { id: 'modules', label: 'Modules', icon: PlayCircle, count: newModulesCount },
+          { id: 'materials', label: 'Class Materials', icon: FileText, count: materials.length || 0 },
           { id: 'assignments', label: 'Assignments', icon: FileText, count: newAssignmentsCount },
           { id: 'announcements', label: 'Announcements', icon: MessageSquare, count: 0 },
         ].map((tab) => (
@@ -665,6 +617,36 @@ function CourseDetail() {
 
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-gray-800/30 rounded p-4">
+                      <h4 className="text-sm text-gray-200 font-semibold mb-2">Class Materials</h4>
+                      {materials && materials.length > 0 ? (
+                        <div className="space-y-2">
+                          {materials.slice(0, 5).map((material) => (
+                            <div key={material.id} className="flex items-center justify-between py-2 border-b border-gray-700">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm text-white font-semibold truncate">{material.title}</div>
+                                <div className="text-xs text-gray-400">{formatRelativeTime(material.created_at)}</div>
+                              </div>
+                              <button
+                                onClick={() => classMaterialAPI.download(material.id)}
+                                className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium flex items-center gap-1 transition"
+                                title="Download material"
+                              >
+                                <Download size={12} />
+                              </button>
+                            </div>
+                          ))}
+                          {materials.length > 5 && (
+                            <div className="text-xs text-gray-400 text-center pt-2">
+                              +{materials.length - 5} more materials available in Materials tab
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-400">No class materials available.</div>
+                      )}
+                    </div>
+
+                    <div className="bg-gray-800/30 rounded p-4">
                       <h4 className="text-sm text-gray-200 font-semibold mb-2">Upcoming Assignments</h4>
                       {assignments && assignments.length > 0 ? (
                         assignments
@@ -673,7 +655,7 @@ function CourseDetail() {
                           .slice(0,5)
                           .map(a => (
                             <div key={a.id} className="flex items-center justify-between py-2 border-b border-gray-800">
-                              <div>
+                              <div className="flex-1">
                                 <div className="text-sm text-white font-semibold">{a.title}</div>
                                 <div className="text-xs text-gray-400">Due {new Date(a.due_date).toLocaleString()}</div>
                               </div>
@@ -685,22 +667,7 @@ function CourseDetail() {
                       )}
                     </div>
 
-                    <div className="bg-gray-800/30 rounded p-4">
-                      <h4 className="text-sm text-gray-200 font-semibold mb-2">Recent Modules</h4>
-                      {modules && modules.length > 0 ? (
-                        modules.slice(0,5).map(m => (
-                          <div key={m.id} className="flex items-center justify-between py-2 border-b border-gray-800">
-                            <div>
-                              <div className="text-sm text-white font-semibold">{m.module_title || m.title || m.module_title}</div>
-                              <div className="text-xs text-gray-400">{m.description || ''}</div>
-                            </div>
-                            <div className="text-xs text-gray-300">{m.status === 'published' ? 'Posted' : 'Draft'}</div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-sm text-gray-400">No modules published yet.</div>
-                      )}
-                    </div>
+
                   </div>
                 </div>
 
@@ -762,268 +729,14 @@ function CourseDetail() {
           </Motion.div>
         )}
 
-        {activeTab === 'modules' && (
-          <div className="space-y-4">
-            {modules.length > 0 ? (
-              modules.map((module, index) => (
-                <Motion.div
-                  key={module.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800 hover:border-orange-500/50 transition"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex gap-4 flex-1">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        module.status === 'published' ? 'bg-green-500/10 border border-green-500/20' : 'bg-gray-800'
-                      }`}>
-                        {module.status === 'published' ? (
-                          <CheckCircle size={24} className="text-green-400" />
-                        ) : (
-                          <PlayCircle size={24} className="text-gray-400" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white mb-1">{module.title}</h3>
-                        <p className="text-gray-400 text-sm mb-2">{module.description || 'No description available'}</p>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <BookOpen size={14} />
-                            Order: {module.order}
-                          </span>
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                            module.status === 'published' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-800 text-gray-400'
-                          }`}>
-                            {module.status === 'published' ? 'Posted' : 'Draft'}
-                          </span>
-                          {/* Show updated indicator when module was modified after creation */}
-                          {module.updated_at && module.created_at && module.updated_at !== module.created_at && (
-                            <span className="flex items-center gap-1 text-yellow-400 text-xs" title={new Date(module.updated_at).toLocaleString()}>
-                              <Clock size={12} />
-                              Updated {formatRelativeTime(module.updated_at)}
-                            </span>
-                          )}
-                        </div>
-                        {module.file_path && (
-                          <div className="flex items-center gap-2 mt-3">
-                            {/* TODO: Implement getFileTypeInfo and getFileName or remove this block if not needed */}
-                            {/* <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(module.file_path).bgColor} ${getFileTypeInfo(module.file_path).borderColor}`}> */}
-                            {/*   <span className="text-lg">{getFileTypeInfo(module.file_path).icon}</span> */}
-                            {/*   <div className="flex flex-col"> */}
-                            {/*     <span className={`text-xs font-semibold ${getFileTypeInfo(module.file_path).color}`}> */}
-                            {/*       {getFileTypeInfo(module.file_path).category} */}
-                            {/*     </span> */}
-                            {/*     <span className="text-xs text-gray-500 truncate max-w-[200px]"> */}
-                            {/*       {getFileName(module.file_path)} */}
-                            {/*     </span> */}
-                            {/*   </div> */}
-                            {/* </div> */}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {module.file_path ? (
-                        <div className="relative">
-                          <button
-                            onClick={async () => {
-                              setLoading(true);
-                              try {
-                                // Download module file using the same logic as assignments
-                                const response = await moduleAPI.download(module.id);
-                                // Extract filename from Content-Disposition header
-                                let filename = module.title || 'module-download';
-                                const contentDisposition = response?.headers?.['content-disposition'];
-                                if (contentDisposition) {
-                                  let match = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
-                                  if (match && match[1]) {
-                                    filename = decodeURIComponent(match[1]);
-                                  } else {
-                                    match = contentDisposition.match(/filename="?([^";\n]+)"?/);
-                                    if (match && match[1]) filename = match[1];
-                                  }
-                                }
-                                // Create a download link
-                                const url = window.URL.createObjectURL(new Blob([response.data]));
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.setAttribute('download', filename);
-                                document.body.appendChild(link);
-                                link.click();
-                                link.remove();
-                                window.URL.revokeObjectURL(url);
-                                setToast({ message: 'Module downloaded', type: 'success' });
-                              } catch (error) {
-                                let msg = 'Failed to download module';
-                                if (error.response && error.response.status === 403) {
-                                  msg = 'You do not have permission to download this module.';
-                                } else if (error.response && error.response.status === 404) {
-                                  msg = 'Module file not found.';
-                                }
-                                setToast({ message: msg, type: 'error' });
-                              } finally {
-                                setLoading(false);
-                              }
-                            }}
-                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium flex items-center gap-2"
-                            disabled={loading}
-                          >
-                            <Download size={16} />
-                            Download
-                          </button>
-                          {/* Show "Updated" badge on download button if file was modified */}
-                          {module.updated_at && module.created_at && module.updated_at !== module.created_at && (
-                            <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-yellow-500 text-black text-[10px] font-bold rounded-full animate-pulse">
-                              NEW
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="px-4 py-2 text-gray-500 text-sm italic">
-                          No file uploaded
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Motion.div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <BookOpen size={48} className="mx-auto text-gray-600 mb-4" />
-                <p className="text-gray-400">No modules available yet</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'assignments' && (
-          <div className="space-y-4">
-            {assignments.length > 0 ? (
-              assignments.map((assignment, index) => (
-                <Motion.div
-                  key={assignment.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800 hover:border-orange-500 hover:bg-gray-800/60 hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-0.5 transition-all duration-300 group"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors duration-300">{assignment.title}</h3>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                            assignment.status === 'published' 
-                              ? 'bg-green-500/10 text-green-400 border border-green-500/20 group-hover:bg-green-500/20'
-                              : 'bg-gray-800 text-gray-400'
-                          }`}>
-                            {assignment.status}
-                          </span>
-                          {assignment.has_submitted && (
-                            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-700 text-blue-100 border border-blue-800">
-                              ✓ Submitted
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-gray-400 group-hover:text-gray-300 transition-colors text-sm mb-2">{assignment.description || 'No description'}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                        <span className="flex items-center gap-1">
-                          <Calendar size={14} className="group-hover:text-orange-400 transition-colors" />
-                          Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
-                        </span>
-                        {assignment.due_date && (() => {
-                          const timeInfo = getTimeUntilDue(assignment.due_date);
-                          return timeInfo ? (
-                            <span className={`flex items-center gap-1 ${timeInfo.color} font-medium ${timeInfo.urgent ? 'animate-pulse' : ''}`}>
-                              <Clock size={14} />
-                              {timeInfo.text}
-                            </span>
-                          ) : null;
-                        })()}
-                        <span className="flex items-center gap-1">
-                          <FileText size={14} className="group-hover:text-orange-400 transition-colors" />
-                          Max Points: {assignment.max_points || 100}
-                        </span>
-                      </div>
-                      {assignment.file_path && (
-                        <div className="flex items-center gap-2 mt-3">
-                          {/* TODO: Implement getFileTypeInfo and getFileName or remove this block if not needed */}
-                          {/* <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}> */}
-                          {/*   <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span> */}
-                          {/*   <div className="flex flex-col"> */}
-                          {/*     <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}> */}
-                          {/*       {getFileTypeInfo(assignment.file_path).category} */}
-                          {/*     </span> */}
-                          {/*     <span className="text-xs text-gray-500 truncate max-w-[200px]"> */}
-                          {/*       {getFileName(assignment.file_path)} */}
-                          {/*     </span> */}
-                          {/*   </div> */}
-                          {/* </div> */}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {/* Download button - show only if file exists */}
-                      {assignment.file_path && (
-                        <button 
-                          onClick={() => handleDownloadAssignment(assignment)}
-                          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md text-sm font-medium flex items-center gap-2"
-                        >
-                          <Download size={16} />
-                          Download
-                        </button>
-                      )}
-                      {/* Submit button - only show for published assignments */}
-                      {assignment.status === 'published' && (
-                        assignment.due_date && new Date(assignment.due_date) < new Date() ? (
-                          <button 
-                            disabled
-                            className="px-4 py-2 bg-gray-700 text-gray-400 rounded-lg transition text-sm font-medium cursor-not-allowed"
-                            title="Past due date"
-                          >
-                            Past Due
-                          </button>
-                        ) : assignment.has_submitted ? (
-                          assignment.can_resubmit ? (
-                            <button 
-                              onClick={() => handleSubmitWork(assignment)}
-                              className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md text-sm font-medium"
-                              title="Assignment was updated - you can resubmit"
-                            >
-                              Resubmit Work
-                            </button>
-                          ) : (
-                            <button 
-                              disabled
-                              className="px-4 py-2 bg-green-700 text-green-300 rounded-lg transition text-sm font-medium cursor-default"
-                              title="Already submitted"
-                            >
-                              ✓ Submitted
-                            </button>
-                          )
-                        ) : (
-                          <button 
-                            onClick={() => handleSubmitWork(assignment)}
-                            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md text-sm font-medium"
-                            title="Submit your work"
-                          >
-                            Submit Work
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </div>
-                </Motion.div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <FileText size={48} className="mx-auto text-gray-600 mb-4" />
-                <p className="text-gray-400">No assignments available yet</p>
-              </div>
-            )}
-          </div>
+        {activeTab === 'materials' && (
+          <Motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <StudentClassMaterialsTab courseId={id} />
+          </Motion.div>
         )}
 
         {activeTab === 'announcements' && (
@@ -1259,6 +972,166 @@ function CourseDetail() {
               </div>
             </form>
           </Motion.div>
+        </div>
+      )}
+
+      {/* Assignments Tab */}
+      {activeTab === 'assignments' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Assignments</h2>
+              <p className="text-gray-400 text-sm">View assignments for this course</p>
+            </div>
+          </div>
+          <div className="grid gap-4">
+            {course.assignments && course.assignments.length > 0 ? (
+              course.assignments.map((assignment) => (
+                <Motion.div
+                  key={assignment.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gray-900 dark:bg-gray-950 border-2 border-gray-800 rounded-xl overflow-hidden hover:border-orange-500/50 transition-all"
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-white mb-2">{assignment.title}</h3>
+                        {assignment.description && (
+                          <p className="text-gray-300 leading-relaxed mb-4">{assignment.description}</p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                          {assignment.due_date && (
+                            <div className="flex items-center gap-2">
+                              <Clock size={14} />
+                              <span>Due: {new Date(assignment.due_date).toLocaleString()}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <FileText size={14} />
+                            <span>Points: {assignment.max_points || 100}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {assignment.files && assignment.files.length > 0 && (
+                      <div className="border-t border-gray-700 pt-4">
+                        <h4 className="text-sm font-semibold text-gray-200 mb-3">Attached Materials</h4>
+                        <div className="space-y-2">
+                          {assignment.files.map((file) => (
+                            <div key={file.id} className="flex items-center justify-between bg-gray-800/50 p-3 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <FileText size={16} className="text-blue-400" />
+                                <span className="text-sm text-gray-300 truncate">{file.original_name || file.name}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleViewFileById(file.id)}
+                                  className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                                >
+                                  View
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadFileById(file.id, file.original_name || file.name)}
+                                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                >
+                                  Download
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Action Buttons */}
+                    <div className="border-t border-gray-700 pt-4">
+                      <div className="flex gap-3">
+                        {/* Download Assignment Files Button - Only if files exist */}
+                        {(assignment.files && assignment.files.length > 0) && (
+                          <button
+                            onClick={() => {
+                              if (assignment.files.length === 1) {
+                                // Download single file directly
+                                const file = assignment.files[0];
+                                handleDownloadFileById(file.id, file.original_name || file.name);
+                              } else {
+                                // Show file choice modal for multiple files
+                                setFileChoice({ 
+                                  assignmentId: assignment.id, 
+                                  files: assignment.files 
+                                });
+                              }
+                            }}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2 transition"
+                            title="Download assignment files from instructor"
+                          >
+                            <Download size={16} />
+                            Download Assignment ({assignment.files.length})
+                          </button>
+                        )}
+                        
+                        {/* Submit Assignment Button */}
+                        <button
+                          onClick={() => {
+                            setCurrentAssignment(assignment);
+                            setShowSubmissionModal(true);
+                          }}
+                          disabled={assignment.status === 'submitted' || assignment.status === 'graded'}
+                          className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition ${
+                            assignment.status === 'submitted' || assignment.status === 'graded'
+                              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                              : 'bg-orange-600 hover:bg-orange-700 text-white'
+                          }`}
+                        >
+                          <Upload size={16} />
+                          {assignment.status === 'submitted' ? 'Submitted' : 
+                           assignment.status === 'graded' ? 'Graded' : 
+                           'Submit Assignment'}
+                        </button>
+                      </div>
+                      
+                      {/* Status and Grade Display */}
+                      {assignment.status && (
+                        <div className="mt-3 flex items-center gap-4 text-sm">
+                          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            assignment.status === 'graded' ? 'bg-green-900/30 text-green-400 border border-green-700' :
+                            assignment.status === 'submitted' ? 'bg-blue-900/30 text-blue-400 border border-blue-700' :
+                            assignment.status === 'late' ? 'bg-red-900/30 text-red-400 border border-red-700' :
+                            'bg-gray-900/30 text-gray-400 border border-gray-700'
+                          }`}>
+                            Status: {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                          </div>
+                          
+                          {assignment.grade !== null && assignment.grade !== undefined && (
+                            <div className="px-3 py-1 bg-purple-900/30 text-purple-400 border border-purple-700 rounded-full text-xs font-medium">
+                              Grade: {assignment.grade}/{assignment.max_points || 100}
+                            </div>
+                          )}
+                          
+                          {assignment.submitted_date && (
+                            <div className="text-gray-400 text-xs">
+                              Submitted: {new Date(assignment.submitted_date).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Motion.div>
+              ))
+            ) : (
+              <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="h-10 w-10 text-gray-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">No assignments yet</h3>
+                <p className="text-gray-400">
+                  Your instructor hasn't posted any assignments for this course yet.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

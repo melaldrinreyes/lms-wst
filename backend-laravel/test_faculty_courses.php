@@ -22,7 +22,7 @@ echo "   Role ID: {$faculty->role_id}\n\n";
 
 // Get faculty courses
 $courses = App\Models\Course::where('faculty_id', $faculty->id)
-    ->withCount(['enrollments', 'modules', 'assignments', 'announcements'])
+    ->withCount(['enrollments', 'assignments', 'announcements'])
     ->get();
 
 echo "📚 Faculty Courses: {$courses->count()}\n\n";
@@ -33,7 +33,6 @@ foreach ($courses as $course) {
     echo "  ID: {$course->id}\n";
     echo "  Faculty ID: {$course->faculty_id}\n";
     echo "  Students: {$course->enrollments_count}\n";
-    echo "  Modules: {$course->modules_count}\n";
     echo "  Assignments: {$course->assignments_count}\n";
     echo "  Status: {$course->status}\n\n";
 }

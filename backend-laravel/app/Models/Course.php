@@ -52,14 +52,6 @@ class Course extends Model
     }
 
     /**
-     * Get the modules for the course
-     */
-    public function modules()
-    {
-        return $this->hasMany(Module::class);
-    }
-
-    /**
      * Get the assignments for the course
      */
     public function assignments()

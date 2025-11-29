@@ -18,7 +18,6 @@ export default function MobileBottomNav({ onLoginClick }) {
   const studentNavItems = [
     { to: '/student', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/student/courses', label: 'Courses', icon: BookOpen },
-    { to: '/student/assignments', label: 'Tasks', icon: ClipboardList },
     { to: '/profile', label: 'Profile', icon: User },
   ];
 

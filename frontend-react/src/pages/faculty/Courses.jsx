@@ -255,10 +255,6 @@ export default function FacultyCourses() {
                   <span>{course.students}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <FileText className="w-4 h-4 text-blue-500" />
-                  <span>{course.modules} Modules</span>
-                </div>
-                <div className="flex items-center gap-1">
                   <BarChart className="w-4 h-4 text-purple-500" />
                   <span>{course.assignments}</span>
                 </div>

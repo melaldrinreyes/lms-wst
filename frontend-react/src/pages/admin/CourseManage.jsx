@@ -7,6 +7,7 @@ import {
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
 import { courseAPI } from '../../services/api';
+import { studentAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 export default function CourseManage() {
   const { id } = useParams();
@@ -21,6 +22,7 @@ export default function CourseManage() {
   const [assignments, setAssignments] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [students, setStudents] = useState([]);
+  const [fileChoice, setFileChoice] = useState(null);
 
   const fetchCourseData = useCallback(async () => {
     try {
@@ -220,6 +222,37 @@ export default function CourseManage() {
           type: 'error' 
         });
       }
+    }
+  };
+
+  const handleDownloadAssignment = (assignment) => {
+    if (assignment.files && assignment.files.length > 1) {
+      setFileChoice(assignment);
+    } else if (assignment.files && assignment.files.length === 1) {
+      handleDownloadFileById(assignment.files[0].id);
+    } else {
+      setToast({ message: 'No files available for download', type: 'error' });
+    }
+  };
+
+  const handleDownloadFileById = async (fileId) => {
+    try {
+      setToast({ message: 'Downloading file...', type: 'info' });
+      await studentAPI.downloadAssignmentFile(fileId);
+      setToast({ message: 'File downloaded successfully!', type: 'success' });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      setToast({ message: 'Failed to download file', type: 'error' });
+    }
+  };
+
+  const handleViewFileById = async (fileId) => {
+    try {
+      await studentAPI.downloadAssignmentFile(fileId);
+      // For viewing, the download will handle opening the file
+    } catch (error) {
+      console.error('Error viewing file:', error);
+      setToast({ message: 'Failed to view file', type: 'error' });
     }
   };
 
@@ -537,6 +570,13 @@ export default function CourseManage() {
                       title="View assignment"
                     >
                       <Eye size={18} />
+                    </button>
+                    <button 
+                      onClick={() => handleDownloadAssignment(assignment)}
+                      className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
+                      title="Download assignment files"
+                    >
+                      <Download size={18} />
                     </button>
                     {user?.role === 'faculty' && (
                       <>
@@ -907,6 +947,63 @@ export default function CourseManage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* File Choice Modal */}
+      <Modal
+        isOpen={fileChoice !== null}
+        onClose={() => setFileChoice(null)}
+        title="Select File to Download"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            This assignment has multiple files. Please select which file you want to download:
+          </p>
+          <div className="space-y-2">
+            {fileChoice?.files?.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center justify-between p-3 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {file.original_name || file.name}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Size unknown'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleViewFileById(file.id)}
+                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                    title="View file"
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDownloadFileById(file.id);
+                      setFileChoice(null);
+                    }}
+                    className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
+                    title="Download file"
+                  >
+                    <Download size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setFileChoice(null)}
+              className="px-4 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

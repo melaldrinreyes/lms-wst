@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Submission;
@@ -23,6 +22,20 @@ class SubmissionController extends Controller
             'max_execution_time' => ini_get('max_execution_time'),
         ]);
 
+        // Log all request data for debugging
+        \Log::info('Submission request data:', [
+            'method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+            'all_data' => $request->all(),
+            'has_file' => $request->hasFile('file'),
+            'file_info' => $request->hasFile('file') ? [
+                'original_name' => $request->file('file')->getClientOriginalName(),
+                'size' => $request->file('file')->getSize(),
+                'mime' => $request->file('file')->getMimeType(),
+            ] : null,
+            'user_id' => $request->user() ? $request->user()->id : 'no user',
+        ]);
+
         try {
             $validated = $request->validate([
                 'assignment_id' => 'required|exists:assignments,id',
@@ -35,6 +48,8 @@ class SubmissionController extends Controller
                 'errors' => $e->errors(),
                 'file_size' => $request->hasFile('file') ? $request->file('file')->getSize() : 'No file',
                 'file_mime' => $request->hasFile('file') ? $request->file('file')->getMimeType() : 'N/A',
+                'request_data' => $request->all(),
+                'user_id' => $request->user() ? $request->user()->id : 'no user',
             ]);
 
             // If a file exists, check against a 10GB byte threshold to provide clearer error message
@@ -299,5 +314,33 @@ class SubmissionController extends Controller
             'success' => true,
             'count' => $pendingCount,
         ]);
+    }
+
+    /**
+     * Reject a submission (Faculty/Admin only)
+     */
+    public function reject($id)
+    {
+        $submission = Submission::findOrFail($id);
+        $submission->status = 'rejected';
+        $submission->save();
+        return response()->json(['success' => true, 'message' => 'Submission rejected.']);
+    }
+
+    /**
+     * Delete a submission (Faculty/Admin only)
+     */
+    public function destroy($id)
+    {
+        $submission = Submission::findOrFail($id);
+
+        // Delete associated file if exists
+        if ($submission->file_path && Storage::disk('public')->exists($submission->file_path)) {
+            Storage::disk('public')->delete($submission->file_path);
+        }
+
+        $submission->delete();
+
+        return response()->json(['success' => true, 'message' => 'Submission deleted successfully.']);
     }
 }

@@ -111,9 +111,9 @@ class AnnouncementCommentController extends Controller
     /**
      * Delete a comment (Only comment owner can delete)
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $user = request()->user();
+        $user = $request->user();
         $comment = AnnouncementComment::findOrFail($id);
 
         // Verify the user owns the comment

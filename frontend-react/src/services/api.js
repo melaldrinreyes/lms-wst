@@ -149,82 +149,6 @@ export const courseAPI = {
   },
 };
 
-// Module API calls
-export const moduleAPI = {
-  getByCourse: async (courseId) => {
-    const response = await api.get(`/courses/${courseId}/modules`);
-    return response.data;
-  },
-
-  create: async (data, onUploadProgress) => {
-    const response = await api.post('/modules', data, {
-      headers: {
-        'Content-Type': undefined,
-      },
-      timeout: 600000, // 10 minutes for large file uploads
-      onUploadProgress: onUploadProgress, // Progress tracking
-    });
-    return response.data;
-  },
-
-  update: async (id, data, onUploadProgress) => {
-    // Add _method field for Laravel to recognize PUT request with FormData
-    data.append('_method', 'PUT');
-    
-    const response = await api.post(`/modules/${id}`, data, {
-      headers: {
-        'Content-Type': undefined,
-      },
-      timeout: 600000, // 10 minutes for large file uploads
-      onUploadProgress: onUploadProgress, // Progress tracking
-    });
-    return response.data;
-  },
-
-  delete: async (id) => {
-    const response = await api.delete(`/modules/${id}`);
-    return response.data;
-  },
-
-  download: async (id) => {
-    try {
-      const response = await api.get(`/modules/${id}/download`, {
-        responseType: 'blob',
-      });
-
-      // Extract filename from Content-Disposition header
-      let filename = 'module-download';
-      const contentDisposition = response.headers['content-disposition'];
-      if (contentDisposition) {
-        // Try UTF-8 filename first
-        let match = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
-        if (match && match[1]) {
-          filename = decodeURIComponent(match[1]);
-        } else {
-          // Fallback to normal filename
-          match = contentDisposition.match(/filename="?([^";\n]+)"?/);
-          if (match && match[1]) filename = match[1];
-        }
-      }
-
-      // Create a download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Download error:', error);
-      throw error;
-    }
-  },
-};
-
 // Assignment API calls
 export const assignmentAPI = {
   getByCourse: async (courseId) => {
@@ -402,6 +326,18 @@ export const submissionAPI = {
       throw error;
     }
   },
+
+  // Reject a submission by ID
+  reject: async (id) => {
+    const response = await api.post(`/submissions/${id}/reject`);
+    return response.data;
+  },
+
+  // Delete a submission by ID
+  delete: async (id) => {
+    const response = await api.delete(`/submissions/${id}`);
+    return response.data;
+  },
 };
 
 // Student API calls
@@ -425,6 +361,16 @@ export const studentAPI = {
 
   getMyClasses: async () => {
     const response = await api.get('/student/classes');
+    return response.data;
+  },
+
+  getMyCourses: async () => {
+    const response = await api.get('/student/courses');
+    return response.data;
+  },
+
+  getCourseDetails: async (courseId) => {
+    const response = await api.get(`/student/courses/${courseId}`);
     return response.data;
   },
 
@@ -690,6 +636,66 @@ export const superAdminAPI = {
 
   getInstructorComparison: async () => {
     const response = await api.get('/admin/instructors-comparison');
+    return response.data;
+  },
+};
+
+// Class Material API calls
+export const classMaterialAPI = {
+  getByCourse: async (courseId) => {
+    const response = await api.get(`/courses/${courseId}/materials`);
+    return response.data;
+  },
+
+  create: async (courseId, data, onUploadProgress) => {
+    const response = await api.post(`/courses/${courseId}/materials`, data, {
+      headers: {
+        'Content-Type': undefined,
+      },
+      timeout: 600000, // 10 minutes for large file uploads
+      onUploadProgress: onUploadProgress, // Progress tracking
+    });
+    return response.data;
+  },
+
+  download: async (id) => {
+    try {
+      const response = await api.get(`/class-materials/${id}/download`, {
+        responseType: 'blob',
+      });
+      
+      // Create a download link
+      const blobType = response.data.type || response.headers['content-type'] || 'application/octet-stream';
+      const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: blobType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'class-material-download';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Download error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/class-materials/${id}`);
     return response.data;
   },
 };

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, ClipboardList, Bell, User, Megaphone, Clock, AlertCircle, Calendar, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import { studentAPI, announcementAPI } from '../../services/api';
+import { useState, useEffect, useCallback, useRef } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { studentAPI, announcementAPI, assignmentAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function StudentDashboard() {
@@ -13,77 +14,243 @@ export default function StudentDashboard() {
   const [allAssignments, setAllAssignments] = useState([]); // Store all assignments
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [classesError, setClassesError] = useState(null);
   const assignmentsPerPage = 5;
+  // Dev debug panel state removed
 
-  useEffect(() => {
-    fetchEnrolledClasses();
-    fetchRecentAnnouncements();
-    fetchUpcomingAssignments();
-  }, []);
+  
 
-  const fetchEnrolledClasses = async () => {
+  const fetchEnrolledClasses = useCallback(async () => {
+    // Helper to add a timeout to API calls
+    const fetchWithTimeout = (promise, ms = 10000) => {
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms));
+      return Promise.race([promise, timeout]);
+    };
+
     try {
       setLoading(true);
-      const response = await studentAPI.getMyClasses();
-      if (response.success) {
-        setClasses(response.classes || []);
+      setClassesError(null);
+      const response = await fetchWithTimeout(studentAPI.getMyClasses(), 10000);
+      console.log('getMyClasses response (dashboard):', response);
+      // Helper: find first array in common wrapper keys or nested objects
+      const findArray = (obj) => {
+        if (!obj) return null;
+        if (Array.isArray(obj)) return obj;
+        const commonKeys = ['classes', 'data', 'payload', 'items', 'result', 'rows'];
+        for (const k of commonKeys) {
+          if (Array.isArray(obj[k])) return obj[k];
+          if (obj[k] && typeof obj[k] === 'object') {
+            // sometimes nested under data.data
+            for (const kk of commonKeys) {
+              if (Array.isArray(obj[k][kk])) return obj[k][kk];
+            }
+          }
+        }
+        // fallback: search values for first array
+        const arr = Object.values(obj).find(v => Array.isArray(v));
+        if (arr) return arr;
+        return null;
+      };
+
+      let classesResult = findArray(response);
+      // If not found, try a secondary endpoint
+      if (!classesResult || classesResult.length === 0) {
+        try {
+          const fallback = await fetchWithTimeout(studentAPI.getMyCourses(), 10000);
+          console.log('getMyCourses fallback response:', fallback);
+          classesResult = findArray(fallback) || classesResult || [];
+        } catch (err) {
+          console.warn('Fallback getMyCourses failed:', err);
+          setClassesError(String(err?.message || err));
+        }
       }
+
+      if (classesResult && classesResult.length > 0) {
+        setClasses(classesResult);
+      } else {
+        setClasses([]);
+        console.warn('No enrolled classes found (response shape may differ).');
+        if (!classesError) setClassesError('No enrolled classes found');
+      }
+      return classesResult || [];
     } catch (error) {
       console.error('Error fetching enrolled classes:', error);
+      setClassesError(String(error?.message || error));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchRecentAnnouncements = async () => {
+  // Dev debug fetch removed
+
+  const fetchAssignmentsForEnrolledClasses = useCallback(async (classList = []) => {
+    try {
+      const classesToUse = Array.isArray(classList) && classList.length > 0 ? classList : classes;
+      if (!classesToUse || classesToUse.length === 0) {
+        setAllAssignments([]);
+        setAssignments([]);
+        return [];
+      }
+
+      // Fetch assignments per class in parallel
+      const promises = classesToUse.map((c) => {
+        const courseId = c.id || c.course_id || c.class_id;
+        if (!courseId) return Promise.resolve({ status: 'skipped', value: [] });
+        return assignmentAPI.getByCourse(courseId).then(res => ({ status: 'fulfilled', value: res })).catch(err => ({ status: 'rejected', reason: err }));
+      });
+
+      const settled = await Promise.all(promises);
+      let all = [];
+      settled.forEach((r, idx) => {
+        if (!r) return;
+        if (r.status === 'rejected') {
+          console.warn('Assignment fetch failed for class', classesToUse[idx]?.id, r.reason);
+          return;
+        }
+        const response = r.value;
+        // Normalize response to an array
+        let payload = [];
+        if (!response) payload = [];
+        else if (Array.isArray(response)) payload = response;
+        else if (Array.isArray(response.assignments)) payload = response.assignments;
+        else if (Array.isArray(response.data)) payload = response.data;
+        else if (Array.isArray(response.payload)) payload = response.payload;
+        else if (Array.isArray(response.items)) payload = response.items;
+        else if (Array.isArray(response.result)) payload = response.result;
+        else if (Array.isArray(response.rows)) payload = response.rows;
+        else {
+          const arr = Object.values(response).find(v => Array.isArray(v));
+          payload = arr || [];
+        }
+
+        // Ensure each assignment has course_id/class mapping
+        const withCourse = (payload || []).map(a => ({ ...a, course_id: a.course_id || classesToUse[idx]?.course_id || classesToUse[idx]?.id }));
+        all = all.concat(withCourse);
+      });
+
+      // Deduplicate by assignment id if present
+      const unique = [];
+      const seen = new Set();
+      all.forEach(a => {
+        const key = a?.id || JSON.stringify(a);
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(a);
+        }
+      });
+
+      // Sort by due date ascending
+      const sorted = unique.slice().sort((a, b) => {
+        const dueA = a?.due_date || a?.due || a?.dueDate || null;
+        const dueB = b?.due_date || b?.due || b?.dueDate || null;
+        if (dueA && dueB) return new Date(dueA) - new Date(dueB);
+        if (dueA && !dueB) return -1;
+        if (!dueA && dueB) return 1;
+        const createdA = new Date(a?.created_at || a?.createdAt || 0).getTime();
+        const createdB = new Date(b?.created_at || b?.createdAt || 0).getTime();
+        return createdB - createdA;
+      });
+
+      setAllAssignments(sorted);
+      const startIndex = (currentPage - 1) * assignmentsPerPage;
+      const endIndex = startIndex + assignmentsPerPage;
+      setAssignments(sorted.slice(startIndex, endIndex));
+      console.log('Fetched and normalized assignments for enrolled classes:', sorted.length);
+      return sorted;
+    } catch (error) {
+      console.error('Error fetching assignments for enrolled classes:', error);
+      return [];
+    }
+  }, [classes, currentPage]);
+
+  const fetchRecentAnnouncements = useCallback(async () => {
     try {
       const response = await announcementAPI.getAll();
-      if (response.success) {
-        // Filter only published announcements and get the 3 most recent
+      console.log('announcementAPI.getAll response:', response);
+      if (response && response.success) {
         const recentAnnouncements = (response.announcements || [])
           .filter(a => a.status === 'published')
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
           .slice(0, 3);
         setAnnouncements(recentAnnouncements);
+      } else if (Array.isArray(response)) {
+        setAnnouncements(response.slice(0,3));
       }
     } catch (error) {
       console.error('Error fetching announcements:', error);
     }
-  };
+  }, []);
 
-  const fetchUpcomingAssignments = async () => {
+  const fetchUpcomingAssignments = useCallback(async () => {
     try {
       console.log('Fetching upcoming assignments...');
       const response = await studentAPI.getMyAssignments();
-      console.log('Assignments API response:', response);
-      
-      if (response.success) {
-        const now = new Date();
-        console.log('Current time:', now);
-        console.log('All assignments:', response.assignments);
-        
-        // Show most recent assignments (by created date) regardless of due date
-        // Sort by created_at descending (newest first)
-        const sortedAssignments = (response.assignments || [])
-          .sort((a, b) => {
-            // Sort by created_at if available, otherwise by due_date
-            const dateA = new Date(a.created_at || a.due_date);
-            const dateB = new Date(b.created_at || b.due_date);
-            return dateB - dateA; // Descending (newest first)
-          });
-        
-        console.log('Sorted assignments:', sortedAssignments);
-        setAllAssignments(sortedAssignments);
-        
-        // Set initial page
-        const startIndex = (currentPage - 1) * assignmentsPerPage;
-        const endIndex = startIndex + assignmentsPerPage;
-        setAssignments(sortedAssignments.slice(startIndex, endIndex));
+      console.log('Assignments API response (raw):', response);
+
+      // Try several common places where the backend might put the assignments array
+      let payload = [];
+      if (!response) payload = [];
+      else if (Array.isArray(response)) payload = response;
+      else if (Array.isArray(response.assignments)) payload = response.assignments;
+      else if (Array.isArray(response.data)) payload = response.data;
+      else if (Array.isArray(response.payload)) payload = response.payload;
+      else if (Array.isArray(response.items)) payload = response.items;
+      else if (Array.isArray(response.result)) payload = response.result;
+      else if (Array.isArray(response.rows)) payload = response.rows;
+      else {
+        // Fallback: search object values for first array
+        const arr = Object.values(response).find(v => Array.isArray(v));
+        payload = arr || [];
       }
+
+      console.log('Normalized assignments payload length:', (payload && payload.length) || 0);
+
+      // Sort by due date ascending (earliest first), fallback to created_at desc for tie
+      const sortedAssignments = (payload || []).slice().sort((a, b) => {
+        const dueA = a?.due_date || a?.due || a?.dueDate || null;
+        const dueB = b?.due_date || b?.due || b?.dueDate || null;
+        if (dueA && dueB) return new Date(dueA) - new Date(dueB);
+        if (dueA && !dueB) return -1;
+        if (!dueA && dueB) return 1;
+        const createdA = new Date(a?.created_at || a?.createdAt || 0).getTime();
+        const createdB = new Date(b?.created_at || b?.createdAt || 0).getTime();
+        return createdB - createdA;
+      });
+
+      console.log('Sorted assignments (first 5):', sortedAssignments.slice(0,5));
+
+      setAllAssignments(sortedAssignments);
+      const startIndex = (currentPage - 1) * assignmentsPerPage;
+      const endIndex = startIndex + assignmentsPerPage;
+      setAssignments(sortedAssignments.slice(startIndex, endIndex));
     } catch (error) {
       console.error('Error fetching assignments:', error);
     }
-  };
+  }, [currentPage]);
+
+  const initRun = useRef(false);
+  // Run init once on mount. We intentionally omit the callback deps to avoid re-running
+  // when callbacks change during normal state updates.
+  useEffect(() => {
+    if (initRun.current) return;
+    initRun.current = true;
+    const init = async () => {
+      console.log('Dashboard init start');
+      const cls = await fetchEnrolledClasses();
+      await fetchRecentAnnouncements();
+      // Fetch assignments per-enrolled-class (prefer per-class endpoint). If no classes returned, fallback to student's assignments endpoint
+      if (Array.isArray(cls) && cls.length > 0) {
+        await fetchAssignmentsForEnrolledClasses(cls);
+      } else {
+        await fetchUpcomingAssignments();
+      }
+      console.log('Dashboard init complete');
+      // Ensure loading is cleared after init (defensive)
+      setLoading(false);
+    };
+    init();
+    // run only once on mount
+  }, []);
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -184,7 +351,11 @@ export default function StudentDashboard() {
     return date.toLocaleDateString('en-US', options);
   };
 
-  const activeClasses = classes.filter(c => c.status === 'active');
+  const activeClasses = classes.filter(c => {
+    // Treat classes without an explicit status as active (backend may omit status)
+    if (!('status' in c)) return true;
+    return String(c.status).toLowerCase() === 'active';
+  });
   const displayClasses = activeClasses.slice(0, 3);
 
   return (
@@ -204,7 +375,7 @@ export default function StudentDashboard() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              to="/student/assignments"
+              to="/student/courses"
               className="px-6 py-3 bg-white text-orange-600 rounded-xl font-semibold hover:bg-orange-50 transition text-center shadow-lg"
             >
               View Assignments
@@ -263,11 +434,20 @@ export default function StudentDashboard() {
                 See All →
               </Link>
             </div>
+            {/* Dev debug panel removed */}
             <div className="space-y-4">
               {loading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
                   <p className="text-gray-400 mt-2">Loading classes...</p>
+                </div>
+              ) : classesError ? (
+                <div className="text-center py-8">
+                  <div className="text-red-400 mb-3">Failed to load classes</div>
+                  <p className="text-gray-500 text-sm mb-3">{classesError}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <button onClick={async () => { setLoading(true); setClassesError(null); await fetchEnrolledClasses(); setLoading(false); }} className="px-4 py-2 bg-orange-500 text-white rounded-lg">Retry</button>
+                  </div>
                 </div>
               ) : displayClasses.length === 0 ? (
                 <div className="text-center py-8">
@@ -395,7 +575,7 @@ export default function StudentDashboard() {
             Upcoming Assignments
           </h2>
           <Link
-            to="/student/assignments"
+            to="/student/courses"
             className="text-orange-500 text-sm font-medium hover:text-orange-600 transition"
           >
             See All →

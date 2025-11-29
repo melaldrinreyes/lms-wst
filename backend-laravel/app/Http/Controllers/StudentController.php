@@ -267,7 +267,7 @@ class StudentController extends Controller
             // Get all enrollments for this student
             $enrollments = Enrollment::where('student_id', $user->id)
                 ->where('status', 'enrolled') // Only show active enrollments
-                ->with(['course.faculty', 'course.modules', 'course.assignments'])
+                ->with(['course.faculty', 'course.assignments'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -276,10 +276,8 @@ class StudentController extends Controller
                 'classes' => $enrollments->map(function ($enrollment) {
                     $course = $enrollment->course;
                     
-                    // Get modules and assignments
-                    $modules = $course->modules ?? collect([]);
+                    // Get assignments
                     $assignments = $course->assignments ?? collect([]);
-                    $publishedModules = $modules->where('status', 'published')->count();
                     
                     return [
                         'id' => $course->id,
@@ -296,17 +294,6 @@ class StudentController extends Controller
                         'year_level' => $course->year_level ?? 'N/A',
                         'section' => $course->section ?? 'N/A',
                         'progress' => 0, // Placeholder - can calculate actual progress
-                        // Add modules data
-                        'modules' => $modules->map(function ($module) {
-                            return [
-                                'id' => $module->id,
-                                'title' => $module->title,
-                                'status' => $module->status,
-                                'order' => $module->order,
-                            ];
-                        }),
-                        'modules_count' => $modules->count(),
-                        'published_modules_count' => $publishedModules,
                         // Add assignments data
                         'assignments' => $assignments->map(function ($assignment) {
                             return [
@@ -333,6 +320,109 @@ class StudentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching enrolled courses: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get details of a specific enrolled course for the authenticated student
+     */
+    public function showCourse($courseId, Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Check if student is enrolled in this course
+            $enrollment = Enrollment::where('student_id', $user->id)
+                ->where('course_id', $courseId)
+                ->where('status', 'enrolled')
+                ->with(['course.faculty', 'course.assignments', 'course.announcements'])
+                ->first();
+
+            if (!$enrollment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not enrolled in this course or the course does not exist.',
+                ], 403);
+            }
+
+            $course = $enrollment->course;
+            
+            // Get assignments with submission status
+            $assignments = $course->assignments->map(function ($assignment) use ($user) {
+                // Check if student has submitted this assignment
+                $submission = Submission::where('assignment_id', $assignment->id)
+                    ->where('student_id', $user->id)
+                    ->first();
+
+                $status = 'pending';
+                $grade = null;
+                $submittedDate = null;
+
+                if ($submission) {
+                    if ($submission->grade !== null) {
+                        $status = 'graded';
+                        $grade = $submission->grade;
+                    } else {
+                        $status = 'submitted';
+                    }
+                    $submittedDate = $submission->submitted_at;
+                } else {
+                    // Check if assignment is overdue
+                    if (now()->gt($assignment->due_date)) {
+                        $status = 'late';
+                    }
+                }
+
+                return [
+                    'id' => $assignment->id,
+                    'title' => $assignment->title,
+                    'description' => $assignment->description,
+                    'due_date' => $assignment->due_date,
+                    'max_points' => $assignment->max_points,
+                    'status' => $status,
+                    'grade' => $grade,
+                    'submitted_date' => $submittedDate,
+                    'files' => $assignment->files ?? [],
+                ];
+            });
+
+            // Get announcements
+            $announcements = $course->announcements ?? collect([]);
+
+            return response()->json([
+                'success' => true,
+                'course' => [
+                    'id' => $course->id,
+                    'course_code' => $course->course_code,
+                    'course_name' => $course->course_name,
+                    'name' => $course->course_name, // Alias for frontend compatibility
+                    'code' => $course->course_code, // Alias for frontend compatibility
+                    'description' => $course->description,
+                    'credits' => $course->credits,
+                    'semester' => $course->semester,
+                    'academic_year' => $course->academic_year,
+                    'thumbnail' => $course->thumbnail,
+                    'status' => $course->status,
+                    'year_level' => $course->year_level ?? 'N/A',
+                    'section' => $course->section ?? 'N/A',
+                    'students' => Enrollment::where('course_id', $course->id)
+                        ->where('status', 'enrolled')
+                        ->count(),
+                    'faculty' => $course->faculty ? [
+                        'id' => $course->faculty->id,
+                        'name' => $course->faculty->name,
+                        'email' => $course->faculty->email,
+                        'profile_image' => $course->faculty->profile_image,
+                    ] : null,
+                    'assignments' => $assignments,
+                    'announcements' => $announcements,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching course details: ' . $e->getMessage(),
             ], 500);
         }
     }

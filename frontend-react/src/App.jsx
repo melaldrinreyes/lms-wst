@@ -46,7 +46,6 @@ import CourseInvite from './pages/CourseInvite';
 import StudentDashboard from './pages/student/Dashboard';
 import StudentCourses from './pages/student/Courses';
 import StudentCourseDetail from './pages/student/CourseDetail';
-import Assignments from './pages/student/Assignments';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
@@ -153,7 +152,7 @@ function App() {
             <Route index element={<StudentDashboard />} />
             <Route path="courses" element={<StudentCourses />} />
             <Route path="courses/:id" element={<StudentCourseDetail />} />
-            <Route path="assignments" element={<Assignments />} />
+            {/* Assignments page removed */}
           </Route>
 
           {/* Admin Routes */}

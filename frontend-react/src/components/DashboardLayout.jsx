@@ -4,7 +4,6 @@ import {
   BookOpen, 
   ClipboardList, 
   MessageSquare, 
-  Bot, 
   User, 
   LogOut,
   Menu,
@@ -56,7 +55,6 @@ export default function DashboardLayout({ role }) {
     student: [
       { to: '/student', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/student/courses', icon: BookOpen, label: 'My Courses' },
-      { to: '/student/assignments', icon: ClipboardList, label: 'Assignments' },
       { to: '/profile', icon: User, label: 'Profile', external: true },
     ],
     admin: [
@@ -77,7 +75,6 @@ export default function DashboardLayout({ role }) {
     student: [
       { to: '/student', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/student/courses', icon: BookOpen, label: 'Courses' },
-      { to: '/student/assignments', icon: ClipboardList, label: 'Tasks' },
       { to: '/profile', icon: User, label: 'Profile' },
     ],
     admin: [
@@ -128,20 +125,6 @@ export default function DashboardLayout({ role }) {
               className="md:hidden fixed bottom-20 right-4 left-4 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-40 overflow-hidden"
             >
               <div className="p-2">
-                <NavLink
-                  to="/chatbot"
-                  onClick={() => setShowMobileMenu(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-                      isActive
-                        ? 'bg-orange-500/10 text-orange-500'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-orange-500'
-                    }`
-                  }
-                >
-                  <Bot size={20} />
-                  <span className="font-medium">AI Assistant</span>
-                </NavLink>
                 <NavLink
                   to="/profile"
                   onClick={() => setShowMobileMenu(false)}

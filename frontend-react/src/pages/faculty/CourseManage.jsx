@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
+import ClassMaterialsTab from '../../components/ClassMaterialsTab';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
-import { courseAPI, moduleAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI } from '../../services/api';
+import { courseAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI, studentAPI, classMaterialAPI } from '../../services/api';
 import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
 
 
@@ -20,7 +21,6 @@ export default function CourseManage() {
   const [formData, setFormData] = useState({});
   const [linkCopied, setLinkCopied] = useState(false);
   const [course, setCourse] = useState(null);
-  const [modules, setModules] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [students, setStudents] = useState([]);
@@ -32,6 +32,8 @@ export default function CourseManage() {
   const [replyText, setReplyText] = useState('');
   const [loading, setLoading] = useState(true);
   const [newSubmissionsCount, setNewSubmissionsCount] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const fetchCourseData = useCallback(async () => {
     try {
@@ -40,7 +42,6 @@ export default function CourseManage() {
       if (response.success) {
         const courseData = response.course;
         setCourse(courseData);
-        setModules(courseData.modules || []);
         // Format assignments - API returns submissions count, not array
         const formattedAssignments = (courseData.assignments || []).map(assignment => ({
           ...assignment,
@@ -50,20 +51,14 @@ export default function CourseManage() {
         }));
         setAssignments(formattedAssignments);
         setStudents(courseData.enrolled_students || []);
-        // Submissions will be managed separately when needed
-        // For now, we create mock submissions data from assignments
-        const allSubmissions = formattedAssignments.map((assignment, index) => ({
-          id: `${assignment.id}-submission-${index}`,
-          student: 'Student Name',
-          student_id: `STU-${index + 1}`,
-          assignment: assignment.title,
-          assignment_id: assignment.id,
-          submitted_at: new Date().toISOString(),
-          status: 'pending',
-          grade: null,
-          feedback: ''
-        }));
-        setSubmissions(allSubmissions);
+        // Fetch real submissions from backend
+        const realSubmissions = await submissionAPI.getAll({ course_id: id });
+        // API may return either an array or an object { submissions: [] }
+        const submissionsList = Array.isArray(realSubmissions)
+          ? realSubmissions
+          : (realSubmissions?.submissions || []);
+        if (!Array.isArray(realSubmissions)) console.debug('submissionAPI.getAll returned non-array, using submissions property if available', realSubmissions);
+        setSubmissions(submissionsList);
       } else {
         setToast({ message: 'Failed to load course details', type: 'error' });
       }
@@ -80,12 +75,17 @@ export default function CourseManage() {
 
   const fetchAssignments = useCallback(async () => {
     try {
-      // This function can be used to fetch assignments separately if needed
-      // For now, assignments are fetched in fetchCourseData
+      setLoading(true);
+      const response = await assignmentAPI.getByCourse(id);
+      if (response.success) {
+        setAssignments(response.assignments || []);
+      }
     } catch (error) {
       console.error('Error fetching assignments:', error);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [id]);
 
   const fetchAllSubmissions = useCallback(async () => {
     try {
@@ -118,16 +118,7 @@ export default function CourseManage() {
     }
   };
 
-  const handleAddModule = () => {
-    setFormData({
-      title: '',
-      description: '',
-      content: '',
-      order: modules.length + 1,
-      status: 'draft'
-    });
-    setIsModalOpen('module');
-  };
+
 
   const handleAddAssignment = () => {
     setFormData({
@@ -184,50 +175,41 @@ export default function CourseManage() {
     }
   };
 
-  const handleDownloadModule = async (module) => {
-    try {
-      if (!module.file_path) {
-        setToast({ message: 'No file attached to this module', type: 'error' });
-        return;
-      }
 
-      const response = await moduleAPI.download(module.id);
-      if (response.success) {
-        setToast({ message: 'Module file downloaded successfully!', type: 'success' });
-      } else {
-        setToast({ message: 'Failed to download module file', type: 'error' });
+
+  const handleDownloadAssignmentFile = async (fileId, fallbackName) => {
+    try {
+      const response = await studentAPI.downloadAssignmentFile(fileId);
+      const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = fallbackName || 'downloaded_file';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1]);
+        } else {
+          const filenameMatch2 = contentDisposition.match(/filename="?([^";\n]+)"?/);
+          if (filenameMatch2 && filenameMatch2[1]) filename = filenameMatch2[1];
+        }
       }
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setToast({ message: 'File downloaded', type: 'success' });
     } catch (error) {
-      console.error('Error downloading module:', error);
-      setToast({ message: 'Failed to download module file', type: 'error' });
+      console.error('Error downloading assignment file:', error);
+      setToast({ message: 'Failed to download file', type: 'error' });
     }
   };
 
-  const handleEditModule = (module) => {
-    setFormData({
-      id: module.id,
-      title: module.title,
-      description: module.description,
-      content: module.content || '',
-      order: module.order || 1,
-      status: module.status || 'draft',
-      existingFile: module.file_path
-    });
-    setIsModalOpen('module');
-  };
 
-  const handleDeleteModule = async (moduleId, moduleTitle) => {
-    if (!window.confirm(`Are you sure you want to delete the module "${moduleTitle}"?`)) return;
 
-    try {
-      await moduleAPI.delete(moduleId);
-      setToast({ message: 'Module deleted successfully!', type: 'success' });
-      await fetchCourseData();
-    } catch (error) {
-      console.error('Error deleting module:', error);
-      setToast({ message: 'Failed to delete module', type: 'error' });
-    }
-  };
+
 
   const handleEditAssignment = (assignment) => {
     setFormData({
@@ -391,56 +373,8 @@ export default function CourseManage() {
     e.preventDefault();
     
     try {
-      if (isModalOpen === 'module') {
-        // Validate required fields
-        if (!formData.title || formData.title.trim() === '') {
-          setToast({ message: 'Module title is required', type: 'error' });
-          return;
-        }
+      if (isModalOpen === 'assignment') {
 
-        // Create FormData for file upload
-        const submitData = new FormData();
-        submitData.append('title', formData.title.trim());
-        submitData.append('description', formData.description || '');
-        submitData.append('content', formData.content || '');
-        
-        // Only add course_id for new modules
-        if (!formData.id) {
-          submitData.append('course_id', id);
-        }
-        
-        submitData.append('order', formData.order || modules.length + 1);
-        submitData.append('status', formData.status || 'draft');
-        
-        // Append file (single file, not array)
-        if (formData.files && formData.files.length > 0) {
-          const file = formData.files[0]; // Get first file
-          console.log('Appending file:', file.name, file.size, file.type);
-          submitData.append('file', file); // Send as 'file' not 'files[0]'
-        } else {
-          console.log('No files to upload');
-        }
-
-        // Debug: Log FormData contents
-        console.log('FormData contents:');
-        for (let [key, value] of submitData.entries()) {
-          console.log(key, value);
-        }
-
-        if (formData.id) {
-          // Update existing module
-          await moduleAPI.update(formData.id, submitData);
-          setToast({ message: 'Module updated successfully!', type: 'success' });
-        } else {
-          // Create new module
-          await moduleAPI.create(submitData);
-          setToast({ message: 'Module created successfully!', type: 'success' });
-        }
-        
-        // Refresh modules list
-        await fetchCourseData();
-        
-      } else if (isModalOpen === 'assignment') {
         // Validate required fields
         if (!formData.title || formData.title.trim() === '') {
           setToast({ message: 'Assignment title is required', type: 'error' });
@@ -457,7 +391,7 @@ export default function CourseManage() {
         submitData.append('title', formData.title.trim());
         submitData.append('description', formData.description || '');
         submitData.append('due_date', formData.due_date);
-        submitData.append('max_points', parseInt(formData.max_points) || 100);
+        submitData.append('max_points', formData.max_points || 100);
         submitData.append('status', formData.status || 'published');
         
         // Only add course_id for new assignments
@@ -465,10 +399,15 @@ export default function CourseManage() {
           submitData.append('course_id', id);
         }
         
-        // Append file if any
+        // Append file(s) if any
         if (formData.files && formData.files.length > 0) {
-          const file = formData.files[0];
-          console.log('Appending file:', file.name, file.size, file.type);
+          // For new assignments, append all files as files[]
+          if (!formData.id) {
+            formData.files.forEach((f) => submitData.append('files[]', f));
+          } else {
+            // For updates, backend accepts 'file' (single file update)
+            const file = formData.files[0];
+            console.log('Appending file:', file.name, file.size, file.type);
           
           // Check file size (500MB = 524288000 bytes)
           if (file.size > 524288000) {
@@ -476,7 +415,8 @@ export default function CourseManage() {
             return;
           }
           
-          submitData.append('file', file);
+            if (formData.id) submitData.append('file', file);
+          }
         } else {
           console.log('No files to upload for assignment');
         }
@@ -556,6 +496,49 @@ export default function CourseManage() {
           console.error('Grading error:', error);
           throw error; // Let the outer catch handle it
         }
+      } else if (isModalOpen === 'classMaterial') {
+        // Validate required fields
+        if (!formData.title || formData.title.trim() === '') {
+          setToast({ message: 'Material title is required', type: 'error' });
+          return;
+        }
+
+        if (!formData.files || formData.files.length === 0) {
+          setToast({ message: 'Please select a file to upload', type: 'error' });
+          return;
+        }
+
+        // Create FormData for file upload
+        const submitData = new FormData();
+        submitData.append('title', formData.title.trim());
+        submitData.append('description', formData.description || '');
+        submitData.append('course_id', id);
+        
+        // Append file
+        const file = formData.files[0];
+        console.log('Uploading class material file:', file.name, file.size, file.type);
+        
+        // Check file size (500MB = 524288000 bytes)
+        if (file.size > 524288000) {
+          setToast({ message: 'File size exceeds 500MB limit. Please choose a smaller file.', type: 'error' });
+          return;
+        }
+        
+        submitData.append('file', file);
+
+        // Set uploading state
+        setUploading(true);
+        setUploadProgress(0);
+
+        // Upload class material with progress tracking
+        await classMaterialAPI.create(id, submitData, (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        });
+
+        setToast({ message: 'Class material uploaded successfully!', type: 'success' });
+        setUploading(false);
+        setUploadProgress(0);
       }
       
       setIsModalOpen(null);
@@ -865,17 +848,6 @@ export default function CourseManage() {
       <div className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg border border-gray-800 overflow-hidden">
         <div className="flex overflow-x-auto scrollbar-hide">
           <button
-            onClick={() => setActiveTab('modules')}
-            className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
-              activeTab === 'modules'
-                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
-            }`}
-          >
-            <FileText size={20} />
-            <span>Modules</span>
-          </button>
-          <button
             onClick={() => setActiveTab('assignments')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
               activeTab === 'assignments'
@@ -925,6 +897,17 @@ export default function CourseManage() {
             <span>Announcements</span>
           </button>
           <button
+            onClick={() => setActiveTab('materials')}
+            className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
+              activeTab === 'materials'
+                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+            }`}
+          >
+            <FileText size={20} />
+            <span>Class Materials</span>
+          </button>
+          <button
             onClick={() => setActiveTab('content')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 relative ${
               activeTab === 'content'
@@ -941,113 +924,7 @@ export default function CourseManage() {
         </div>
       </div>
 
-      {/* Modules Tab */}
-      {activeTab === 'modules' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Course Modules</h2>
-              <p className="text-gray-400 text-sm">Organize your course content into modules</p>
-            </div>
-            <button
-              onClick={handleAddModule}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
-            >
-              <Plus size={20} />
-              Add Module
-            </button>
-          </div>
 
-          <div className="space-y-4">
-            {modules.length === 0 ? (
-              <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
-                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="h-10 w-10 text-gray-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">No modules yet</h3>
-                <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                  Start building your course by creating modules. Each module can contain lessons, videos, and resources.
-                </p>
-                <button
-                  onClick={handleAddModule}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-semibold"
-                >
-                  <Plus size={20} />
-                  Create First Module
-                </button>
-              </div>
-            ) : (
-              modules.map((module) => (
-                <div
-                  key={module.id}
-                  className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl p-6 hover:border-orange-500/50 transition-all group"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium">
-                          Module {module.order}
-                        </span>
-                        <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                          module.status === 'published' 
-                            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                            : 'bg-gray-800 text-gray-400 border border-gray-700'
-                        }`}>
-                          {module.status}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-orange-400 transition">
-                        {module.title}
-                      </h3>
-                      <p className="text-sm text-gray-400 mb-3">
-                        {module.description}
-                      </p>
-                      {module.file_path && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(module.file_path).bgColor} ${getFileTypeInfo(module.file_path).borderColor}`}>
-                            <span className="text-lg">{getFileTypeInfo(module.file_path).icon}</span>
-                            <div className="flex flex-col">
-                              <span className={`text-xs font-semibold ${getFileTypeInfo(module.file_path).color}`}>
-                                {getFileTypeInfo(module.file_path).category}
-                              </span>
-                              <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                                {getFileName(module.file_path)}
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            className="ml-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-semibold shadow"
-                            onClick={() => handleDownloadModule(module)}
-                            title="Download module file"
-                          >
-                            <Download size={16} /> Download
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <button 
-                        onClick={() => handleEditModule(module)}
-                        className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all"
-                        title="Edit module"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteModule(module.id, module.title)}
-                        className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all"
-                        title="Delete module"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Assignments Tab */}
       {activeTab === 'assignments' && (
@@ -1098,20 +975,43 @@ export default function CourseManage() {
                       <p className="text-sm text-gray-400 mb-4">
                         {assignment.description}
                       </p>
-                      {assignment.file_path && (
+                      {(assignment.files && assignment.files.length > 0) ? (
                         <div className="flex items-center gap-2 mb-4">
-                          <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
-                            <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span>
-                            <div className="flex flex-col">
-                              <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}>
-                                {getFileTypeInfo(assignment.file_path).category}
-                              </span>
-                              <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                                {getFileName(assignment.file_path)}
-                              </span>
+                          {assignment.files.map((f) => (
+                            <div key={f.id} className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(f.file_path).bgColor} ${getFileTypeInfo(f.file_path).borderColor}`}>
+                              <span className="text-lg">{getFileTypeInfo(f.file_path).icon}</span>
+                              <div className="flex flex-col">
+                                <span className={`text-xs font-semibold ${getFileTypeInfo(f.file_path).color}`}>
+                                  {getFileTypeInfo(f.file_path).category}
+                                </span>
+                                <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                                  {f.original_name || getFileName(f.file_path)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 ml-2">
+                                <button type="button" onClick={() => handleDownloadAssignmentFile(f.id, f.original_name || f.file_path)} className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs">
+                                  <Download size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        assignment.file_path && (
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
+                              <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span>
+                              <div className="flex flex-col">
+                                <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}>
+                                  {getFileTypeInfo(assignment.file_path).category}
+                                </span>
+                                <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                                  {getFileName(assignment.file_path)}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )
                       )}
                       <div className="flex flex-wrap gap-4 text-sm">
                         <div className="flex items-center gap-2 text-gray-300">
@@ -1212,7 +1112,7 @@ export default function CourseManage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {submissions.length === 0 ? (
+                  {(!Array.isArray(submissions) || submissions.length === 0) ? (
                     <tr>
                       <td colSpan="6" className="py-16 text-center">
                         <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1225,7 +1125,7 @@ export default function CourseManage() {
                       </td>
                     </tr>
                   ) : (
-                    submissions.map((submission) => (
+                    (Array.isArray(submissions) ? submissions : []).map((submission) => (
                       <tr key={submission.id} className="hover:bg-gray-800/50 transition">
                         <td className="py-4 px-6">
                           <div>
@@ -1544,191 +1444,6 @@ export default function CourseManage() {
         </div>
       )}
 
-      {/* Module Modal */}
-      <Modal
-        isOpen={isModalOpen === 'module'}
-        onClose={() => setIsModalOpen(null)}
-        title={formData.id ? "Edit Module" : "Create New Module"}
-      >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title Section */}
-          <div>
-            <label htmlFor="module-title" className="block text-sm font-semibold text-gray-200 mb-2">
-              Module Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="module-title"
-              type="text"
-              value={formData.title || ''}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
-              placeholder="Enter module title (e.g., Introduction to React)"
-              required
-            />
-          </div>
-
-          {/* Description Section */}
-          <div>
-            <label htmlFor="module-description" className="block text-sm font-semibold text-gray-200 mb-2">
-              Short Description
-            </label>
-            <input
-              id="module-description"
-              type="text"
-              value={formData.description || ''}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
-              placeholder="Brief overview of the module"
-            />
-            <p className="mt-1 text-xs text-gray-400">
-              A brief summary that appears in the module list
-            </p>
-          </div>
-
-          {/* Content Section */}
-          <div>
-            <label htmlFor="module-content" className="block text-sm font-semibold text-gray-200 mb-2">
-              Module Content
-            </label>
-            <textarea
-              id="module-content"
-              rows={8}
-              value={formData.content || ''}
-              onChange={(e) => setFormData({...formData, content: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white resize-none transition font-mono text-sm"
-              placeholder="Enter detailed module content, learning objectives, resources, etc."
-            />
-            <p className="mt-1 text-xs text-gray-400">
-              Supports markdown formatting for rich content
-            </p>
-          </div>
-
-          {/* File Upload Section */}
-          <div>
-            <div className="block text-sm font-semibold text-gray-200 mb-2">
-              📎 Attachments (Videos, PDFs, Documents, etc.)
-            </div>
-            <div className="space-y-3">
-              {/* File Upload Input */}
-              <div className="flex items-center gap-3">
-                <label className="flex-1 cursor-pointer">
-                  <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-orange-500 transition">
-                    <Upload className="mx-auto mb-2 text-gray-400" size={32} />
-                    <p className="text-sm text-gray-300">
-                      <span className="text-orange-400 font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Videos (MP4, MOV, AVI), PDFs, Documents, Images (up to 500MB each)
-                    </p>
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-
-              {/* Uploaded Files List */}
-              {formData.files && formData.files.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-200">
-                    Uploaded Files ({formData.files.length})
-                  </p>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {formData.files.map((file, index) => (
-                      <div 
-                        key={index} 
-                        className="flex items-center justify-between p-3 bg-gray-800 border border-gray-700 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="flex-shrink-0">
-                            {file.type?.startsWith('video/') ? (
-                              <div className="w-10 h-10 bg-purple-900/30 rounded flex items-center justify-center">
-                                <span className="text-purple-400 text-xs font-bold">🎬</span>
-                              </div>
-                            ) : file.type?.startsWith('image/') ? (
-                              <div className="w-10 h-10 bg-blue-900/30 rounded flex items-center justify-center">
-                                <span className="text-blue-400 text-xs font-bold">🖼️</span>
-                              </div>
-                            ) : file.type?.includes('pdf') ? (
-                              <div className="w-10 h-10 bg-red-900/30 rounded flex items-center justify-center">
-                                <span className="text-red-400 text-xs font-bold">📄</span>
-                              </div>
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
-                                <FileText size={20} className="text-gray-400" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-100 truncate">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className="flex-shrink-0 p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <p className="mt-2 text-xs text-gray-400">
-              💡 Students will be able to view and download these files
-            </p>
-          </div>
-
-          {/* Warning Message - No File Uploaded */}
-          {!formData.files?.length && !formData.id && (
-            <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">
-                  <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-yellow-300 mb-1">
-                    ⚠️ No file attached
-                  </p>
-                  <p className="text-xs text-yellow-400/80">
-                    Consider uploading learning materials or adding content/links in the module content field to provide students with resources.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-700">
-            <button 
-              type="button" 
-              onClick={() => setIsModalOpen(null)} 
-              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium shadow-sm hover:shadow-md"
-            >
-              {formData.id ? 'Update Module' : 'Create Module'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
       {/* Assignment Modal */}
       <Modal
         isOpen={isModalOpen === 'assignment'}
@@ -1757,7 +1472,7 @@ export default function CourseManage() {
             <label htmlFor="assignment-description" className="block text-sm font-semibold text-gray-200 mb-2">
               Instructions & Description
             </label>
-            <textarea
+                                                                            <textarea
               id="assignment-description"
               rows={5}
               value={formData.description || ''}
@@ -1836,6 +1551,7 @@ export default function CourseManage() {
               <Upload className="mx-auto text-gray-500 mb-3" size={32} />
               <input
                 type="file"
+                multiple
                 onChange={handleFileChange}
                 className="hidden"
                 id="assignment-file-upload"
@@ -1982,7 +1698,7 @@ export default function CourseManage() {
                 <button
                   type="button"
                   onClick={() => handleDownloadSubmission(formData.id, formData.student)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium shadow-sm hover:shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium shadow-sm"
                 >
                   <Download size={16} />
                   Download
@@ -2095,14 +1811,14 @@ export default function CourseManage() {
                   value="enrolled"
                   checked={formData.currentStatus === 'enrolled'}
                   onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
-                  className="w-5 h-5 text-green-600 focus:ring-green-500"
+                  className="sr-only"
                 />
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20">
+                  <CheckCircle size={16} className="text-green-500" />
+                </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={18} className="text-green-400" />
-                    <span className="font-semibold text-white">Enrolled</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Student has active access to the course</p>
+                  <div className="text-sm font-medium text-white">Enrolled</div>
+                  <div className="text-xs text-gray-400">Student has active access to the course</div>
                 </div>
               </label>
 
@@ -2118,14 +1834,14 @@ export default function CourseManage() {
                   value="completed"
                   checked={formData.currentStatus === 'completed'}
                   onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
-                  className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                  className="sr-only"
                 />
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20">
+                  <CheckCircle size={16} className="text-blue-500" />
+                </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={18} className="text-blue-400" />
-                    <span className="font-semibold text-white">Completed</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Student has finished the course</p>
+                  <div className="text-sm font-medium text-white">Completed</div>
+                  <div className="text-xs text-gray-400">Student has finished the course</div>
                 </div>
               </label>
 
@@ -2141,14 +1857,14 @@ export default function CourseManage() {
                   value="dropped"
                   checked={formData.currentStatus === 'dropped'}
                   onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
-                  className="w-5 h-5 text-red-600 focus:ring-red-500"
+                  className="sr-only"
                 />
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/20">
+                  <XCircle size={16} className="text-red-500" />
+                </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <XCircle size={18} className="text-red-400" />
-                    <span className="font-semibold text-white">Dropped</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Student will lose access to the course</p>
+                  <div className="text-sm font-medium text-white">Dropped</div>
+                  <div className="text-xs text-gray-400">Student will lose access to the course</div>
                 </div>
               </label>
             </div>
@@ -2159,7 +1875,7 @@ export default function CourseManage() {
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 mt-0.5">
                 <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="flex-1">
@@ -2372,9 +2088,9 @@ export default function CourseManage() {
               <div className="flex items-center gap-3 mb-3">
                 {(() => {
                   const priorityConfig = {
-                    high: { emoji: '🔴', label: 'High Priority', color: 'bg-red-900/20 border-red-700 text-red-400' },
-                    normal: { emoji: '🟡', label: 'Normal', color: 'bg-yellow-900/20 border-yellow-700 text-yellow-400' },
-                    low: { emoji: '🟢', label: 'Low Priority', color: 'bg-green-900/20 border-green-700 text-green-400' }
+                    high: { emoji: '🔴', label: 'High Priority', color: 'bg-red-900/20 border-red-700' },
+                    normal: { emoji: '🟡', label: 'Normal', color: 'bg-yellow-900/20 border-yellow-700' },
+                    low: { emoji: '🟢', label: 'Low Priority', color: 'bg-green-900/20 border-green-700' }
                   };
                   const priority = priorityConfig[selectedAnnouncement.priority] || priorityConfig.normal;
                   return (
@@ -2462,6 +2178,11 @@ export default function CourseManage() {
         </Modal>
       )}
 
+      {/* Class Materials Tab */}
+      {activeTab === 'materials' && (
+        <ClassMaterialsTab courseId={id} courseName={course?.name || 'this course'} />
+      )}
+
       {/* Content Tab */}
       {activeTab === 'content' && (
         <div className="space-y-6">
@@ -2501,6 +2222,143 @@ export default function CourseManage() {
           </div>
         </div>
       )}
+
+      {/* Class Material Modal */}
+      <Modal
+        isOpen={isModalOpen === 'classMaterial'}
+        onClose={() => setIsModalOpen(null)}
+        title="Upload Class Material"
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title Section */}
+          <div>
+            <label htmlFor="material-title" className="block text-sm font-semibold text-gray-200 mb-2">
+              Material Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="material-title"
+              type="text"
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+              placeholder="Enter material title (e.g., Lecture Notes - Week 1)"
+              required
+            />
+          </div>
+
+          {/* Description Section */}
+          <div>
+            <label htmlFor="material-description" className="block text-sm font-semibold text-gray-200 mb-2">
+              Description (Optional)
+            </label>
+            <textarea
+              id="material-description"
+              rows={3}
+              value={formData.description || ''}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white resize-none transition"
+              placeholder="Brief description of the material..."
+            />
+          </div>
+
+          {/* File Upload Section */}
+          <div>
+            <div className="block text-sm font-semibold text-gray-200 mb-2">
+              📎 Upload File <span className="text-red-500">*</span>
+            </div>
+            <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center bg-gray-800/50 hover:border-orange-500/50 transition">
+              <Upload className="mx-auto text-gray-500 mb-3" size={32} />
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+                id="material-file-upload"
+                required
+              />
+              <label 
+                htmlFor="material-file-upload"
+                className="cursor-pointer inline-block px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+              >
+                Choose File
+              </label>
+              <p className="mt-2 text-xs text-gray-400">
+                PDF, DOC, PPT, images, videos, ZIP, Excel (Max 500MB)
+              </p>
+            </div>
+
+            {/* Show selected file */}
+            {formData.files && formData.files.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <div className="text-xs text-gray-400 font-medium mb-1">Selected File:</div>
+                {formData.files.map((file, index) => (
+                  <div key={index} className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <FileText size={18} className="text-orange-400 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-white truncate">{file.name}</p>
+                          <p className="text-xs text-gray-400">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        className="flex-shrink-0 p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Info Tip */}
+          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+            <p className="text-sm text-blue-300">
+              <span className="font-semibold">💡 Tip:</span> Upload course materials like lecture notes, handouts, reference documents, or supplementary resources that students can download and access anytime.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-700">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(null)} 
+              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+              disabled={uploading}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading...' : 'Upload Material'}
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          {uploading && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-200">Uploading...</span>
+                <span className="text-sm font-medium text-gray-200">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-orange-500 h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+        </form>
+      </Modal>
 
     </div>
   );

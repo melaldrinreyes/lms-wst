@@ -10,7 +10,7 @@ import { Color } from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
 import { Video } from './VideoExtension';
 import mammoth from 'mammoth';
-import { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useState, useRef, useImperativeHandle, forwardRef, useEffect, useCallback } from 'react';
 import {
   Bold,
   Italic,
@@ -30,6 +30,7 @@ import {
   Upload,
 } from 'lucide-react';
 import './RichTextEditor.css';
+import { toast } from 'react-toastify';
 
 function VideoDropzone({ onVideoDrop }) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -130,6 +131,13 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             handleVideoFile(file);
             return true;
           }
+          // Handle PDFs
+          if (item.type === 'application/pdf') {
+            event.preventDefault();
+            const file = item.getAsFile();
+            handlePdfFile(file);
+            return true;
+          }
         }
       }
       return false;
@@ -144,6 +152,8 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             handleImageFile(file);
           } else if (file.type.startsWith('video/')) {
             handleVideoFile(file);
+          } else if (file.type === 'application/pdf') {
+            handlePdfFile(file);
           } else if (file.name.endsWith('.docx')) {
             handleWordFile(file);
           }
@@ -161,12 +171,8 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     }
   }, [value, editor]);
 
-  if (!editor) {
-    return null;
-  }
-
-  // Store local files for later upload, sync with prop
-  const [localPendingFiles, setLocalPendingFiles] = useState(pendingFiles);
+  // Move hooks to the top of the component
+  const [localPendingFiles, setLocalPendingFiles] = useState(pendingFiles || []);
 
   // Sync localPendingFiles with prop
   useEffect(() => {
@@ -174,16 +180,183 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
   }, [pendingFiles]);
 
   // Helper to update both local and parent
-  const updatePendingFiles = (files) => {
+  const updatePendingFiles = useCallback((files) => {
     setLocalPendingFiles(files);
     if (onPendingFilesChange) onPendingFilesChange(files);
-  };
+  }, [onPendingFilesChange]);
 
   const retryLastUpload = async () => {
     if (!lastUploadFile) return;
     setUploadError(null);
     const ok = await handleVideoFile(lastUploadFile);
     if (ok) setShowVideoDropzone(false);
+  };
+
+  // Generate a poster image from a File object using a canvas capture
+  const generatePosterFromFile = async (file, seekTime = 0.5) => {
+    if (!file) return null;
+    const blobUrl = URL.createObjectURL(file);
+    try {
+      return await generatePosterFromUrl(blobUrl, seekTime, true);
+    } finally {
+      URL.revokeObjectURL(blobUrl);
+    }
+  };
+
+  // Generate a poster image from a URL by drawing the first frame to canvas
+  const generatePosterFromUrl = async (videoUrl, seekTime = 0.5, isBlobUrl = false) => {
+    let shouldSetCrossOrigin = false;
+    if (!isBlobUrl) {
+      try {
+        const videoOrigin = new URL(videoUrl, window.location.href).origin;
+        const isSameOrigin = videoOrigin === window.location.origin;
+        if (!isSameOrigin) {
+          try {
+            const head = await fetch(videoUrl, { method: 'HEAD' });
+            if (head && head.ok) {
+              const acao = head.headers.get('access-control-allow-origin');
+              shouldSetCrossOrigin = !!acao;
+            }
+          } catch { /* ignore */ }
+        }
+      } catch { /* ignore */ }
+    }
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      if (shouldSetCrossOrigin) video.crossOrigin = 'anonymous';
+      video.preload = 'metadata';
+      video.muted = true;
+      video.src = videoUrl;
+      let done = false;
+      const cleanup = () => {
+        try { video.pause(); } catch { /* ignore */ }
+        video.src = '';
+        video.remove();
+      };
+
+      const attemptCapture = () => {
+        try {
+          const w = video.videoWidth || 640;
+          const h = video.videoHeight || 360;
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          done = true;
+          cleanup();
+          resolve(dataUrl);
+        } catch (err) {
+          console.warn('Failed to capture poster frame', err);
+          cleanup();
+          resolve(null);
+        }
+      };
+
+      video.addEventListener('loadedmetadata', () => {
+        try {
+          if (video.duration && video.duration > seekTime) {
+            video.currentTime = Math.min(seekTime, video.duration / 2);
+          }
+        } catch { /* ignore */ }
+      });
+      video.addEventListener('seeked', () => {
+        if (!done) attemptCapture();
+      });
+      // fallback: if seeked not fired within 3s, try capture
+      setTimeout(() => { if (!done) attemptCapture(); }, 3000);
+      video.addEventListener('error', () => {
+        cleanup();
+        resolve(null);
+      });
+    });
+  };
+
+  // Utility: insert a video by URL and try to detect its aspect ratio before inserting
+  const insertVideoByUrl = async (videoUrl, videoType = 'video/mp4', poster = null) => {
+    const insertVideoNode = (width, height) => {
+      const aspectRatio = (width && height) ? `${width}/${height}` : null;
+      editor.chain().focus().insertContent({
+        type: 'video',
+        attrs: {
+          src: videoUrl,
+          type: videoType,
+          controls: true,
+          preload: 'metadata',
+          playsinline: true,
+          videoWidth: width || null,
+          videoHeight: height || null,
+          aspectRatio: aspectRatio,
+          poster: poster || null,
+        }
+      }).run();
+    };
+
+    try {
+      const tempVideo = document.createElement('video');
+      // Only set crossOrigin if the resource appears to allow it; otherwise avoid CORS errors
+      try {
+        const videoOrigin = new URL(videoUrl, window.location.href).origin;
+        const isSameOrigin = videoOrigin === window.location.origin;
+        // If it's same-origin, quickly check availability with a HEAD request
+        if (isSameOrigin) {
+          try {
+            const headCheck = await fetch(videoUrl, { method: 'HEAD' });
+            if (headCheck && !headCheck.ok) {
+              console.warn('Video is not available (HEAD status):', headCheck.status);
+              insertVideoNode(16, 9);
+              return;
+            }
+          } catch { /* ignore — allow metadata flow to attempt */ }
+        }
+        let canUseCrossOrigin = false;
+        if (!isSameOrigin) {
+          try {
+            const head = await fetch(videoUrl, { method: 'HEAD' });
+            if (head && head.ok) {
+              const acao = head.headers.get('access-control-allow-origin');
+              canUseCrossOrigin = !!acao;
+            }
+          } catch {
+            // HEAD failed — treat as non-CORS-friendly
+            canUseCrossOrigin = false;
+          }
+        }
+        if (!isSameOrigin && canUseCrossOrigin) {
+          tempVideo.crossOrigin = 'anonymous';
+        }
+      } catch { /* noop - we can attempt without crossOrigin if we can't determine headers */ }
+      tempVideo.preload = 'metadata';
+      tempVideo.src = videoUrl;
+      let metadataLoaded = false;
+      const cleanupTemp = () => {
+        tempVideo.src = '';
+        tempVideo.remove();
+      };
+      const fallbackInsert = () => {
+        if (!metadataLoaded) {
+          insertVideoNode(16, 9);
+          cleanupTemp();
+        }
+      };
+      tempVideo.addEventListener('loadedmetadata', () => {
+        metadataLoaded = true;
+        const w = tempVideo.videoWidth || 16;
+        const h = tempVideo.videoHeight || 9;
+        insertVideoNode(w, h);
+        cleanupTemp();
+      });
+      tempVideo.addEventListener('error', (err) => {
+        console.warn('Failed to load metadata for video at:', videoUrl, err);
+        fallbackInsert();
+      });
+      // Safety timeout if metadata doesn't arrive
+      setTimeout(() => fallbackInsert(), 4000);
+    } catch (error) {
+      console.error('Error detecting video dimensions:', error);
+      insertVideoNode(16, 9);
+    }
   };
 
   // Expose pendingFiles and a clear function to parent via ref
@@ -197,7 +370,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     },
     isUploading,
     uploadProgress,
-  }), [localPendingFiles, editor, isUploading, uploadProgress]);
+  }), [localPendingFiles, editor, isUploading, uploadProgress, updatePendingFiles]);
 
   const handleImageFile = async (file) => {
     if (!file || !file.type.startsWith('image/')) {
@@ -211,6 +384,8 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     formData.append('file', file);
     let backendUrl = '';
     try {
+      // No poster upload for images
+
       const res = await api.post('/modules/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 600000, // 10 minutes for very large images
@@ -221,6 +396,8 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         },
       });
       backendUrl = res.data.url;
+      
+      // poster_url returned for images isn't used here
     } catch (e) {
       console.error('Image upload error:', e);
       const msg = e.response?.data?.message || e.message || 'Image upload failed';
@@ -255,7 +432,26 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     const formData = new FormData();
     formData.append('file', file);
     let backendUrl = '';
+    let posterUrl = null;
+    // Generate a poster from the local file before upload, if possible
+    let posterData = null;
     try {
+      posterData = await generatePosterFromFile(file);
+    } catch (err) {
+      console.warn('Failed to generate poster from file', err);
+      posterData = null;
+    }
+
+    try {
+      // Attach poster blob (if we generated one) to the upload form to persist on the backend
+      if (posterData) {
+        try {
+          const blob = await (await fetch(posterData)).blob();
+          formData.append('poster', blob, 'poster.jpg');
+        } catch (err) {
+          console.warn('Failed to convert poster data URL to blob. Poster will not be uploaded.', err);
+        }
+      }
       const res = await api.post('/modules/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 600000, // 10 minutes for large video uploads
@@ -266,6 +462,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         },
       });
       backendUrl = res.data.url;
+      posterUrl = res.data.poster_url || null;
       console.log('Video uploaded successfully. URL:', backendUrl);
       console.log('Video file type:', file.type);
       console.log('Video file size:', file.size);
@@ -285,19 +482,12 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
       setUploadProgress(0);
       return false;
     }
-    // Insert video using the Video extension node
+    // Insert video using the Video extension node, but compute natural aspect ratio first
     console.log('Inserting video node with src:', backendUrl);
-    editor.chain().focus().insertContent({
-      type: 'video',
-      attrs: {
-        src: backendUrl,
-        type: file.type || 'video/mp4',
-        controls: true,
-        preload: 'metadata',
-        playsinline: true,
-        style: 'width: 100%; max-width: 100%; height: auto; min-height: 200px; border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 4px 24px rgba(0,0,0,0.25); display: block; background: #000; border: 2px solid #4b5563;'
-      }
-    }).run();
+    // Helper insertion now handled by `insertVideoByUrl` to avoid duplicate logic
+
+    // Insert video using aspect ratio detection helper and include poster if available
+    await insertVideoByUrl(backendUrl, file.type, posterUrl || posterData);
     
     // Also log the current editor content
     setTimeout(() => {
@@ -357,7 +547,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         });
 
         // Try to load the video manually
-        video.load();
+        try { video.load(); } catch { /* ignore */ }
         
         video.addEventListener('error', (e) => {
           console.error('Video playback error:', e);
@@ -380,11 +570,11 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         });
         
         video.addEventListener('loadeddata', () => {
-          console.log('Video loaded successfully:', backendUrl);
+          console.log('Video loaded successfully:', video.src);
         });
         
         video.addEventListener('canplay', () => {
-          console.log('Video can play:', backendUrl);
+          console.log('Video can play:', video.src);
         });
         
         video.addEventListener('loadstart', () => {
@@ -396,12 +586,93 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         });
       });
     }, 100);
-    setIsUploading(false);
-    setUploadProgress(0);
-    setUploadError(null);
-    setLastUploadFile(null);
-    return true;
   };
+
+    // Watch for any video elements inside the editor and attach listeners and log their state
+    useEffect(() => {
+      const el = document.querySelector('.editor-content');
+      if (!el) return;
+
+      const attachToVideo = (video) => {
+        if (video.__debugAttached) return;
+        video.__debugAttached = true;
+
+        const logState = (label) => {
+          try {
+            const comp = window.getComputedStyle(video);
+            console.log(`[Video Debug] ${label}:`, {
+              src: video.src,
+              currentSrc: video.currentSrc,
+              readyState: video.readyState,
+              videoWidth: video.videoWidth,
+              videoHeight: video.videoHeight,
+              controls: video.controls,
+              muted: video.muted,
+              crossOrigin: video.crossOrigin,
+              display: comp.display,
+              width: comp.width,
+              height: comp.height,
+              transform: comp.transform,
+              visibility: comp.visibility,
+              opacity: comp.opacity,
+              zIndex: comp.zIndex
+            });
+          } catch (err) {
+            console.error('Failed to compute video state', err);
+          }
+        };
+
+        ['loadedmetadata', 'loadeddata', 'canplay', 'play', 'error'].forEach(evt => {
+          video.addEventListener(evt, (e) => {
+            console.log(`[Video Debug] event ${evt}`, e);
+            logState(`event ${evt}`);
+          });
+        });
+
+        // Also try to force a repaint and ensure size
+        setTimeout(() => {
+          logState('initial');
+          // Ensure wrapper has min-height to show visual area and not be zero
+          const wrapper = video.closest('.video-wrapper');
+          if (wrapper) {
+            wrapper.style.minHeight = wrapper.style.minHeight || '200px';
+            wrapper.style.zIndex = wrapper.style.zIndex || '1';
+          }
+          video.style.minHeight = video.style.minHeight || '200px';
+          video.style.zIndex = video.style.zIndex || '2';
+          // Force inline styles to avoid other CSS interfering
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = video.style.objectFit || 'cover';
+          // Try to paint the first frame if available
+          try { video.load(); } catch (err) { void err; }
+        }, 50);
+      };
+
+      // Attach to existing videos
+      const videos = el.querySelectorAll('video');
+      videos.forEach(attachToVideo);
+
+      // Observe for new video nodes being added
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (node.nodeType !== 1) continue;
+            if (node.matches && node.matches('video')) attachToVideo(node);
+            const vids = node.querySelectorAll && node.querySelectorAll('video');
+            if (vids && vids.length) vids.forEach(attachToVideo);
+          }
+        }
+      });
+      observer.observe(el, { childList: true, subtree: true });
+
+      return () => {
+        observer.disconnect();
+        // remove debug flag so we can reattach later if needed
+        const allVids = el.querySelectorAll('video');
+        allVids.forEach(v => { if (v.__debugAttached) delete v.__debugAttached; });
+      };
+    }, [editor]);
 
   const handleWordFile = async (file) => {
     if (!file || !file.name.endsWith('.docx')) {
@@ -418,8 +689,74 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
       }
     } catch (error) {
       console.error('Error converting Word document:', error);
-      alert('Failed to import Word document. Please try copying and pasting the content instead.');
+      toast.error('Failed to import Word document. Please try copying and pasting the content instead.');
     }
+  };
+
+  const handlePdfFile = async (file) => {
+    if (!file || file.type !== 'application/pdf') return;
+    setUploadError(null);
+    setLastUploadFile(file);
+    setIsUploading(true);
+    setUploadProgress(0);
+    const formData = new FormData();
+    formData.append('file', file);
+    let backendUrl = '';
+    try {
+      const res = await api.post('/modules/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000, // 10 minutes for very large uploads
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+          }
+        },
+      });
+      backendUrl = res.data.url;
+      console.log('PDF uploaded successfully. URL:', backendUrl);
+      // Insert a file card with thumbnail (poster) and link if available, otherwise insert a plain link
+      const displayText = `📄 ${file.name}`;
+      if (res.data?.poster_url) {
+        const html = `<div class="file-card"><a href="${backendUrl}" target="_blank" rel="noopener noreferrer"><img src="${res.data.poster_url}" class="file-card-thumb" alt="${file.name}" /><div class="file-card-meta"><div class="file-card-title">${file.name}</div></div></a></div>`;
+        editor.chain().focus().insertContent(html).run();
+      } else {
+        editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: displayText,
+              marks: [
+                {
+                  type: 'link',
+                  attrs: {
+                    href: backendUrl,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                  },
+                },
+              ],
+            },
+          ],
+        })
+        .run();
+      }
+    } catch (e) {
+      console.error('PDF upload error:', e);
+      const msg = e.response?.data?.message || e.message || 'PDF upload failed';
+      setUploadError(msg);
+      setIsUploading(false);
+      setUploadProgress(0);
+      return false;
+    }
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadError(null);
+    setLastUploadFile(null);
+    return true;
   };
 
   const handleFileSelect = (event) => {
@@ -429,6 +766,8 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         handleImageFile(file);
       } else if (file.type.startsWith('video/')) {
         handleVideoFile(file);
+      } else if (file.type === 'application/pdf') {
+        handlePdfFile(file);
       } else if (file.name.endsWith('.docx')) {
         handleWordFile(file);
       }
@@ -465,6 +804,8 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         handleImageFile(file);
       } else if (file.type.startsWith('video/')) {
         handleVideoFile(file);
+      } else if (file.type === 'application/pdf') {
+        handlePdfFile(file);
       } else if (file.name.endsWith('.docx')) {
         handleWordFile(file);
       }
@@ -550,25 +891,9 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         setVideoUrl('');
         setShowVideoModal(false);
       } else {
-        alert('Invalid YouTube URL');
+        toast.error('Invalid YouTube URL');
       }
     }
-  };
-
-  const addTestVideo = () => {
-    // Insert a test video from a public URL to check if video elements work
-    console.log('Adding test video using Video node');
-    editor.chain().focus().insertContent({
-      type: 'video',
-      attrs: {
-        src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        type: 'video/mp4',
-        controls: true,
-        preload: 'metadata',
-        playsinline: true,
-        style: 'width: 100%; max-width: 100%; height: auto; min-height: 200px; border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 4px 24px rgba(0,0,0,0.25); display: block; background: #000; border: 2px solid #4b5563;'
-      }
-    }).run();
   };
 
   const setColor = (color) => {
@@ -688,14 +1013,6 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             title="Upload Video (drag & drop)"
           >
             <Film size={18} />
-          </button>
-          <button
-            onClick={addTestVideo}
-            className="toolbar-btn"
-            title="Add Test Video"
-            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
-          >
-            🎥
           </button>
                 {/* Video Drag-and-Drop Modal */}
                 {showVideoDropzone && (

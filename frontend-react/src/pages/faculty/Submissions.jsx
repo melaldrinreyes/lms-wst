@@ -19,12 +19,47 @@ export default function FacultySubmissions() {
     }
   };
 
-  const handleGradeSubmission = async (submission, gradeData) => {
+  const handleRejectSubmission = async (submissionId) => {
     try {
-      await submissionAPI.grade(submission.id, gradeData);
+      await submissionAPI.reject(submissionId);
       fetchData();
     } catch {
-      // Optionally handle grade error
+      // Optionally handle reject error
+    }
+  };
+
+  const handleDeleteSubmission = async (submissionId) => {
+    if (window.confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
+      try {
+        await submissionAPI.delete(submissionId);
+        fetchData();
+      } catch {
+        // Optionally handle delete error
+      }
+    }
+  };
+
+  const handleGradeSubmission = async (submission) => {
+    const grade = prompt(`Enter grade for ${submission.student_name}'s submission (0-100):`, submission.grade || '');
+    if (grade === null) return; // User cancelled
+
+    const numericGrade = parseInt(grade);
+    if (isNaN(numericGrade) || numericGrade < 0 || numericGrade > 100) {
+      alert('Please enter a valid grade between 0 and 100.');
+      return;
+    }
+
+    const feedback = prompt('Enter feedback (optional):', submission.feedback || '');
+
+    try {
+      await submissionAPI.grade(submission.id, {
+        grade: numericGrade,
+        feedback: feedback || ''
+      });
+      fetchData(); // Refresh the submissions list
+    } catch (error) {
+      console.error('Error grading submission:', error);
+      alert('Failed to grade submission. Please try again.');
     }
   };
 
@@ -65,6 +100,8 @@ export default function FacultySubmissions() {
       courses={courses}
       onDownload={handleDownloadSubmission}
       onGrade={handleGradeSubmission}
+      onReject={handleRejectSubmission}
+      onDelete={handleDeleteSubmission}
       loading={loading}
       showFilters={true}
       showStats={true}
