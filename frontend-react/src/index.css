@@ -166,3 +166,106 @@ body.hide-ibeam :not(input):not(textarea):not(select):not(button):not(a):not([ro
 body.hide-ibeam :not(input):not(textarea):not([contenteditable]) {
   caret-color: transparent !important;
 }
+
+/* SweetAlert2 responsive popup adjustments */
+.swal2-popup {
+  /* allow full width on narrow screens */
+  max-width: 92% !important;
+  width: auto !important;
+  padding: 0.75rem !important;
+}
+
+@media (min-width: 640px) {
+  .swal2-popup {
+    max-width: 520px !important;
+    padding: 1rem !important;
+  }
+}
+
+/* Make SweetAlert2 popups more compact on small/mobile viewports */
+@media (max-width: 640px) {
+  .swal2-popup {
+    max-width: 84% !important;
+    width: auto !important;
+    padding: 0.5rem !important;
+    font-size: 0.95rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  .swal2-title {
+    font-size: 1.05rem !important;
+    margin-bottom: 0.25rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .swal2-content {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  .swal2-actions .swal2-confirm,
+  .swal2-actions .swal2-cancel {
+    padding: 0.45rem 0.9rem !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+/* Increase touch target for SweetAlert2 buttons on mobile */
+.swal2-actions .swal2-confirm, .swal2-actions .swal2-cancel {
+  padding: 0.6rem 1rem !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Global mobile modal size overrides
+   Any modal panel inside an overlay (.fixed.inset-0) that uses Tailwind max-w-* classes
+   will be capped on narrow screens to avoid full-bleed panels and improve readability. */
+@media (max-width: 640px) {
+  .fixed.inset-0 .max-w-md,
+  .fixed.inset-0 .max-w-2xl,
+  .fixed.inset-0 .max-w-3xl,
+  .fixed.inset-0 .max-w-4xl,
+  .fixed.inset-0 .max-w-6xl {
+    max-width: 92% !important;
+    width: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Slightly narrower for small panels */
+  .fixed.inset-0 .max-w-md {
+    max-width: 84% !important;
+  }
+
+  /* Ensure large panels don't overflow and are centered */
+  .fixed.inset-0 > div > div,
+  .fixed.inset-0 > div > .max-w-2xl,
+  .fixed.inset-0 .mx-4 {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* Modal panel helper utilities
+   Use `modal-panel` on the main panel element inside an overlay (fixed.inset-0)
+   and add a size modifier like `modal-panel--sm|--md|--lg|--xl`.
+   These provide consistent mobile-friendly sizing independent of Tailwind `max-w-*` classes.
+*/
+.modal-panel {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.modal-panel--sm { max-width: 20rem; } /* 320px */
+.modal-panel--md { max-width: 28rem; } /* 448px */
+.modal-panel--lg { max-width: 48rem; } /* 768px */
+.modal-panel--xl { max-width: 64rem; } /* 1024px */
+
+@media (max-width: 640px) {
+  .modal-panel { max-width: 92% !important; }
+  .modal-panel--sm { max-width: 84% !important; }
+  .modal-panel--md { max-width: 88% !important; }
+  .modal-panel--lg { max-width: 92% !important; }
+  .modal-panel--xl { max-width: 94% !important; }
+}

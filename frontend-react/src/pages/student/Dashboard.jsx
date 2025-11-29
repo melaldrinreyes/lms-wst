@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, ClipboardList, Bell, User, Megaphone, Clock, AlertCircle, Calendar, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { BookOpen, ClipboardList, Bell, User, Megaphone, Clock, AlertCircle, Calendar, CheckCircle2, ChevronLeft, ChevronRight, DownloadCloud } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { motion as Motion } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 /* eslint-disable react-hooks/exhaustive-deps */
 import { studentAPI, announcementAPI, assignmentAPI } from '../../services/api';
@@ -12,6 +14,7 @@ export default function StudentDashboard() {
   const [announcements, setAnnouncements] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [allAssignments, setAllAssignments] = useState([]); // Store all assignments
+  const [downloadingMap, setDownloadingMap] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [classesError, setClassesError] = useState(null);
@@ -152,6 +155,8 @@ export default function StudentDashboard() {
       });
 
       setAllAssignments(sorted);
+      // Debug: show a sample normalized assignment so we can inspect field names
+      if (sorted && sorted.length > 0) console.log('Sample normalized assignment (dashboard):', sorted[0]);
       const startIndex = (currentPage - 1) * assignmentsPerPage;
       const endIndex = startIndex + assignmentsPerPage;
       setAssignments(sorted.slice(startIndex, endIndex));
@@ -351,6 +356,72 @@ export default function StudentDashboard() {
     return date.toLocaleDateString('en-US', options);
   };
 
+  const handleViewFileById = async (fileId) => {
+    try {
+      const response = await studentAPI.downloadAssignmentFile(fileId);
+      const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      console.error('Error viewing file by id:', error);
+      toast.error('Failed to open file');
+    }
+  };
+
+  const handleDownloadFileById = async (fileId, fileName) => {
+    try {
+      setDownloadingMap(prev => ({ ...prev, ['file-' + fileId]: true }));
+      const response = await studentAPI.downloadAssignmentFile(fileId);
+      const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      let filename = fileName || 'downloaded_file';
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1]);
+        } else {
+          const filenameMatch2 = contentDisposition.match(/filename="?([^";\n]+)"?/);
+          if (filenameMatch2 && filenameMatch2[1]) filename = filenameMatch2[1];
+        }
+      }
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Download started');
+    } catch (error) {
+      console.error('Error downloading file by id:', error);
+      toast.error('Download failed');
+    } finally {
+      setDownloadingMap(prev => ({ ...prev, ['file-' + fileId]: false }));
+    }
+  };
+
+  // Find the latest student submission for an assignment (best-effort across response shapes)
+  const getLatestSubmission = (assignment) => {
+    if (!assignment) return null;
+    if (assignment.latest_submission) return assignment.latest_submission;
+    if (assignment.submission) return assignment.submission;
+    if (Array.isArray(assignment.submissions) && assignment.submissions.length > 0) {
+      const sorted = assignment.submissions.slice().sort((a, b) => {
+        const ta = new Date(a.submitted_at || a.created_at || a.createdAt || 0).getTime();
+        const tb = new Date(b.submitted_at || b.created_at || b.createdAt || 0).getTime();
+        return tb - ta;
+      });
+      return sorted[0];
+    }
+    if (assignment.student_submission) return assignment.student_submission;
+    if (assignment.submitted_files && Array.isArray(assignment.submitted_files) && assignment.submitted_files.length > 0) {
+      return assignment.submitted_files.slice().sort((a,b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0))[0];
+    }
+    return null;
+  };
+
   const activeClasses = classes.filter(c => {
     // Treat classes without an explicit status as active (backend may omit status)
     if (!('status' in c)) return true;
@@ -361,7 +432,7 @@ export default function StudentDashboard() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Welcome Banner */}
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-lg shadow-orange-500/30"
@@ -372,6 +443,9 @@ export default function StudentDashboard() {
           </h1>
           <p className="text-orange-100 mb-6">
             Ready to learn something new today? Check out your courses and assignments below.
+          </p>
+          <p className="text-sm text-orange-100/80 mb-4">
+            {user?.student_id ? `Student ID: ${user.student_id}` : ''}
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
@@ -388,7 +462,7 @@ export default function StudentDashboard() {
             </Link>
           </div>
         </div>
-      </motion.div>
+      </Motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -397,7 +471,7 @@ export default function StudentDashboard() {
           { label: 'Assignments', value: String(assignments.length), icon: ClipboardList, color: 'from-orange-500 to-orange-600', bg: 'bg-orange-500/10', border: 'border-orange-500/20', iconBg: 'bg-orange-500' },
           { label: 'Announcements', value: String(announcements.length), icon: Bell, color: 'from-purple-500 to-purple-600', bg: 'bg-purple-500/10', border: 'border-purple-500/20', iconBg: 'bg-purple-500' },
         ].map((stat, index) => (
-          <motion.div
+          <Motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -415,7 +489,7 @@ export default function StudentDashboard() {
                 <stat.icon className="w-7 h-7 text-white" />
               </div>
             </div>
-          </motion.div>
+          </Motion.div>
         ))}
       </div>
 
@@ -618,6 +692,39 @@ export default function StudentDashboard() {
                           {assignment.description}
                         </p>
                       )}
+                      {/* Latest student submission */}
+                      {(() => {
+                        const latest = getLatestSubmission(assignment);
+                        if (!latest) return null;
+                        const fileId = latest.id || latest.file_id || latest.file?.id;
+                        const fileName = latest.original_name || latest.name || latest.file?.original_name || latest.file?.name || latest.filename || latest.file_name;
+                        const submittedAt = latest.submitted_at || latest.created_at || latest.createdAt || latest.uploaded_at || latest.date;
+                        return (
+                          <div className="mt-2 border-t border-gray-700 pt-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <FileText className="w-4 h-4 text-green-400" />
+                                <div className="text-sm text-gray-300">
+                                  {fileName || 'Your submission'}
+                                  <div className="text-xs text-gray-400">
+                                    {submittedAt ? (
+                                      <span title={new Date(submittedAt).toLocaleString()}>{formatRelativeTime(submittedAt)}</span>
+                                    ) : ''}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {fileId && (
+                                  <>
+                                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleViewFileById(fileId); }} className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">View</button>
+                                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadFileById(fileId, fileName); }} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Download</button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       <div className="flex items-center gap-2">
                         {timeUntil && (
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${timeUntil.bgColor} ${timeUntil.color}`}>
@@ -638,7 +745,33 @@ export default function StudentDashboard() {
                         )}
                       </div>
                     </div>
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 flex items-center gap-2">
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const id = assignment.id;
+                          try {
+                            setDownloadingMap(prev => ({ ...prev, [id]: true }));
+                            await assignmentAPI.download(id);
+                            toast.success('Download started');
+                          } catch (err) {
+                            console.error('Download failed', err);
+                            toast.error('Download failed');
+                          } finally {
+                            setDownloadingMap(prev => ({ ...prev, [id]: false }));
+                          }
+                        }}
+                        className="p-2 rounded bg-gray-800 text-gray-300 hover:bg-orange-500 hover:text-white text-xs flex items-center justify-center"
+                        title="Download assignment"
+                        aria-label={`Download assignment ${assignment.title}`}
+                      >
+                        {downloadingMap[assignment.id] ? (
+                          <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <DownloadCloud className="w-4 h-4" />
+                        )}
+                      </button>
                       <ClipboardList className="w-5 h-5 text-gray-600 group-hover:text-orange-500 group-hover:scale-110 transition-all duration-300" />
                     </div>
                   </div>

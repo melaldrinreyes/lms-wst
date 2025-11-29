@@ -40,7 +40,7 @@ const ClassStudents = () => {
       }
     } catch (err) {
       console.error('Error fetching class:', err);
-      alert('Failed to load class details');
+      await Swal.fire({ icon: 'error', title: 'Load Failed', text: 'Failed to load class details', confirmButtonColor: '#f97316' });
       navigate('/faculty/classes');
     } finally {
       setLoading(false);
@@ -326,7 +326,7 @@ const ClassStudents = () => {
       {/* Add Student Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="modal-panel modal-panel--lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-gray-200 dark:border-gray-800">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Add Student to Class
@@ -402,7 +402,7 @@ const ClassStudents = () => {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="modal-panel modal-panel--md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               Remove Student
             </h3>

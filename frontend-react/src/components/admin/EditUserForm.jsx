@@ -62,7 +62,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
+          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
         />
       </div>
 
@@ -76,7 +76,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
+          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
         />
       </div>
 
@@ -115,7 +115,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Cancel
         </button>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { courseAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
+import Swal from 'sweetalert2';
 
 export default function FacultyCourses() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -127,16 +128,23 @@ export default function FacultyCourses() {
   };
 
   const handleDeleteCourse = async (courseId, courseName) => {
-    if (!confirm(`Are you sure you want to delete "${courseName}"? This action cannot be undone.`)) {
-      return;
-    }
-
+    const res = await Swal.fire({
+      title: 'Delete course',
+      text: `Are you sure you want to delete "${courseName}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       setDeleting(true);
       const response = await courseAPI.delete(courseId);
       if (response.success) {
         setToast({ message: 'Course deleted successfully!', type: 'success' });
         fetchCourses(); // Refresh the list
+        Swal.fire({ title: 'Deleted', text: 'Course deleted', icon: 'success', timer: 1200, showConfirmButton: false });
       }
     } catch (error) {
       console.error('Error deleting course:', error);
@@ -183,7 +191,7 @@ export default function FacultyCourses() {
               placeholder="Search courses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 dark:bg-gray-900 border border-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 dark:bg-gray-900 border border-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
             />
           </div>
 
@@ -333,7 +341,7 @@ export default function FacultyCourses() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-2xl border border-gray-800 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="modal-panel modal-panel--lg bg-gray-900 dark:bg-gray-950 rounded-xl shadow-2xl border border-gray-800 w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6 border-b border-gray-800">
               <h2 className="text-2xl font-bold text-white">Edit Course</h2>
@@ -350,7 +358,7 @@ export default function FacultyCourses() {
                     type="text"
                     value={editingCourse.code}
                     onChange={(e) => setEditingCourse({ ...editingCourse, code: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 bg-gray-800 text-white placeholder-gray-400"
+                    className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 bg-gray-800 text-white placeholder-white/70"
                     required
                   />
                 </div>
@@ -365,7 +373,7 @@ export default function FacultyCourses() {
                     max="10"
                     value={editingCourse.credits}
                     onChange={(e) => setEditingCourse({ ...editingCourse, credits: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     required
                   />
                 </div>
@@ -379,7 +387,7 @@ export default function FacultyCourses() {
                   type="text"
                   value={editingCourse.name}
                   onChange={(e) => setEditingCourse({ ...editingCourse, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   required
                 />
               </div>
@@ -392,7 +400,7 @@ export default function FacultyCourses() {
                   value={editingCourse.description}
                   onChange={(e) => setEditingCourse({ ...editingCourse, description: e.target.value })}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
 
@@ -422,7 +430,7 @@ export default function FacultyCourses() {
                     value={editingCourse.academic_year}
                     onChange={(e) => setEditingCourse({ ...editingCourse, academic_year: e.target.value })}
                     placeholder="e.g., 2024-2025"
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     required
                   />
                 </div>
@@ -438,7 +446,7 @@ export default function FacultyCourses() {
                     value={editingCourse.year_level}
                     onChange={(e) => setEditingCourse({ ...editingCourse, year_level: e.target.value })}
                     placeholder="e.g., 1st Year, 2nd Year"
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
 
@@ -451,7 +459,7 @@ export default function FacultyCourses() {
                     value={editingCourse.section}
                     onChange={(e) => setEditingCourse({ ...editingCourse, section: e.target.value })}
                     placeholder="e.g., A, B, C"
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
               </div>
@@ -481,7 +489,7 @@ export default function FacultyCourses() {
                   value={editingCourse.thumbnail}
                   onChange={(e) => setEditingCourse({ ...editingCourse, thumbnail: e.target.value })}
                   placeholder="https://..."
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
 

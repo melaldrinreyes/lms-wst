@@ -663,8 +663,8 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     return (
       <>
         {isUploading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-gray-900 border border-orange-500 rounded-xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl min-w-[300px]">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="modal-panel modal-panel--sm bg-gray-900 border border-orange-500 rounded-xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl min-w-[300px]">
               <svg className="animate-spin h-8 w-8 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
@@ -825,7 +825,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 value={newLectureTitle}
                 onChange={(e) => setNewLectureTitle(e.target.value)}
                 placeholder="e.g., Module 1: Introduction"
-                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 onKeyPress={(e) => e.key === 'Enter' && addLecture()}
               />
               <button
@@ -888,7 +888,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
+            className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700"
           >
             <h3 className="text-lg font-bold text-white mb-4">
               Delete this item?
@@ -921,7 +921,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
+            className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700"
           >
             <h3 className="text-lg font-bold text-white mb-4">
               Create Sub-Lecture

@@ -3,6 +3,7 @@ import { Plus, FileText, Upload, Download, Trash2 } from 'lucide-react';
 import { classMaterialAPI } from '../services/api';
 import Modal from './ui/Modal';
 import Toast from './ui/Toast';
+import Swal from 'sweetalert2';
 
 const ClassMaterialsTab = ({ courseId, courseName }) => {
   const [classMaterials, setClassMaterials] = useState([]);
@@ -175,12 +176,21 @@ const ClassMaterialsTab = ({ courseId, courseName }) => {
 
   // Handle delete
   const handleDeleteClassMaterial = async (materialId, materialTitle) => {
-    if (!window.confirm(`Are you sure you want to delete "${materialTitle}"? This action cannot be undone.`)) return;
-
+    const res = await Swal.fire({
+      title: 'Delete material',
+      text: `Are you sure you want to delete "${materialTitle}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       await classMaterialAPI.delete(materialId);
       setToast({ message: 'Material deleted successfully!', type: 'success' });
       await fetchClassMaterials();
+      Swal.fire({ title: 'Deleted', text: 'Material deleted', icon: 'success', timer: 1200, showConfirmButton: false });
     } catch (error) {
       console.error('Error deleting class material:', error);
       setToast({ message: 'Failed to delete material', type: 'error' });

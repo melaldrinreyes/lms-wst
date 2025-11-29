@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { classAPI } from '../../services/api';
 import { 
@@ -48,7 +49,12 @@ const ClassList = () => {
       }
     } catch (err) {
       console.error('Error deleting class:', err);
-      alert('Failed to delete class');
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: 'Failed to delete class',
+        confirmButtonColor: '#f97316'
+      });
     }
   };
 
@@ -181,7 +187,7 @@ const ClassList = () => {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-800">
+          <div className="modal-panel modal-panel--md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full p-6 border border-gray-200 dark:border-gray-800">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Delete Class
             </h3>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
+import Swal from 'sweetalert2';
 import ClassMaterialsTab from '../../components/ClassMaterialsTab';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
 import { courseAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI, studentAPI, classMaterialAPI } from '../../services/api';
@@ -163,12 +164,21 @@ export default function CourseManage() {
   };
 
   const handleDeleteAnnouncement = async (announcementId, announcementTitle) => {
-    if (!window.confirm(`Are you sure you want to delete the announcement "${announcementTitle}"?`)) return;
-
+    const res = await Swal.fire({
+      title: 'Delete announcement',
+      text: `Are you sure you want to delete the announcement "${announcementTitle}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       await announcementAPI.delete(announcementId);
       setToast({ message: 'Announcement deleted successfully!', type: 'success' });
       await fetchAnnouncements();
+      Swal.fire({ title: 'Deleted', text: 'Announcement deleted', icon: 'success', timer: 1200, showConfirmButton: false });
     } catch (error) {
       console.error('Error deleting announcement:', error);
       setToast({ message: 'Failed to delete announcement', type: 'error' });
@@ -225,12 +235,21 @@ export default function CourseManage() {
   };
 
   const handleDeleteAssignment = async (assignmentId, assignmentTitle) => {
-    if (!window.confirm(`Are you sure you want to delete the assignment "${assignmentTitle}"?`)) return;
-
+    const res = await Swal.fire({
+      title: 'Delete assignment',
+      text: `Are you sure you want to delete the assignment "${assignmentTitle}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       await assignmentAPI.delete(assignmentId);
       setToast({ message: 'Assignment deleted successfully!', type: 'success' });
       await fetchAssignments();
+      Swal.fire({ title: 'Deleted', text: 'Assignment deleted', icon: 'success', timer: 1200, showConfirmButton: false });
     } catch (error) {
       console.error('Error deleting assignment:', error);
       setToast({ message: 'Failed to delete assignment', type: 'error' });
@@ -262,12 +281,21 @@ export default function CourseManage() {
   };
 
   const handleRejectSubmission = async (submissionId, studentName) => {
-    if (!window.confirm(`Are you sure you want to reject the submission from ${studentName}?`)) return;
-
+    const res = await Swal.fire({
+      title: 'Reject submission',
+      text: `Are you sure you want to reject the submission from ${studentName}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, reject',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       await submissionAPI.reject(submissionId);
       setToast({ message: `Submission from ${studentName} rejected!`, type: 'success' });
       await fetchAllSubmissions();
+      Swal.fire({ title: 'Rejected', text: 'Submission rejected', icon: 'success', timer: 1200, showConfirmButton: false });
     } catch (error) {
       console.error('Error rejecting submission:', error);
       setToast({ message: 'Failed to reject submission', type: 'error' });
@@ -312,8 +340,16 @@ export default function CourseManage() {
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return;
-
+    const res = await Swal.fire({
+      title: 'Delete comment',
+      text: 'Are you sure you want to delete this comment?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       await announcementCommentAPI.delete(commentId);
       setToast({ message: 'Comment deleted successfully!', type: 'success' });
@@ -324,6 +360,7 @@ export default function CourseManage() {
           ? { ...a, comments_count: Math.max(0, (a.comments_count || 0) - 1) }
           : a
       ));
+      Swal.fire({ title: 'Deleted', text: 'Comment deleted', icon: 'success', timer: 1200, showConfirmButton: false });
     } catch (error) {
       console.error('Error deleting comment:', error);
       setToast({ message: 'Failed to delete comment', type: 'error' });
@@ -615,28 +652,27 @@ export default function CourseManage() {
   };
 
   const handleDeleteStudent = async (studentId, studentName) => {
-    if (!window.confirm(`Are you sure you want to remove ${studentName} from this course? They will be able to re-enroll if needed.`)) {
-      return;
-    }
-
+    const res = await Swal.fire({
+      title: 'Remove student',
+      text: `Are you sure you want to remove ${studentName} from this course? They will be able to re-enroll if needed.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, remove',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       const response = await courseAPI.removeStudent(id, studentId);
-      
       if (response.success) {
         // Remove student from local state
         setStudents(students.filter(s => s.id !== studentId));
-        
-        setToast({ 
-          message: 'Student removed successfully!', 
-          type: 'success' 
-        });
+        setToast({ message: 'Student removed successfully!', type: 'success' });
+        Swal.fire({ title: 'Removed', text: 'Student removed from course', icon: 'success', timer: 1200, showConfirmButton: false });
       }
     } catch (error) {
       console.error('Error removing student:', error);
-      setToast({ 
-        message: 'Failed to remove student. Please try again.', 
-        type: 'error' 
-      });
+      setToast({ message: 'Failed to remove student. Please try again.', type: 'error' });
     }
   };
 
@@ -726,7 +762,7 @@ export default function CourseManage() {
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Reply to ${comment.user?.name}...`}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
               />
               <div className="flex gap-2">
                 <button
@@ -2149,7 +2185,7 @@ export default function CourseManage() {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Add a comment..."
-                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                   />
                   <button
                     type="submit"

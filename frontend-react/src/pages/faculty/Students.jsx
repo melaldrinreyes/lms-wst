@@ -54,7 +54,27 @@ export default function FacultyStudents() {
       // Fetch students
       const params = filterCourse !== 'all' ? { course_id: filterCourse } : {};
       const studentsData = await studentAPI.getAll(params);
-      setStudents(studentsData.students || []);
+      const initial = studentsData.students || [];
+      setStudents(initial);
+
+      // If some students missing student_id, fetch full student records and merge
+      try {
+        const missing = initial.filter(s => !s.student_id).length;
+        if (missing > 0) {
+          const allResp = await studentAPI.getAll();
+          const fetched = allResp.students || allResp.data || [];
+          if (Array.isArray(fetched) && fetched.length > 0) {
+            const byId = fetched.reduce((acc, s) => { acc[s.id] = s; return acc; }, {});
+            const merged = initial.map(s => ({
+              ...s,
+              student_id: s.student_id || byId[s.id]?.student_id || byId[s.id]?.studentId || s.student_id
+            }));
+            setStudents(merged);
+          }
+        }
+      } catch (e) {
+        console.debug('Failed to merge student_id in FacultyStudents', e);
+      }
       
       // Fetch courses for filter
       const coursesData = await courseAPI.getAll();
@@ -302,9 +322,9 @@ export default function FacultyStudents() {
                         alt={student.name}
                         className="w-10 h-10 rounded-full"
                       />
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white">{student.name}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{student.student_id}</div>
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">{student.name}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{student.student_id || student.id || '-'}</div>
                       </div>
                     </div>
                   </td>
@@ -386,7 +406,7 @@ export default function FacultyStudents() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="modal-panel modal-panel--md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full p-6"
           >
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Enroll Student to Class
@@ -405,7 +425,7 @@ export default function FacultyStudents() {
                       {selectedStudentForEnroll.name}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedStudentForEnroll.student_id}
+                      {selectedStudentForEnroll.student_id || selectedStudentForEnroll.id || '-'}
                     </div>
                   </div>
                 </div>

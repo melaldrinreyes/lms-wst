@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import Swal from 'sweetalert2';
 import { submissionAPI, courseAPI } from '../../services/api';
 import StudentSubmissionsTable from '../../components/StudentSubmissionsTable';
 
@@ -29,37 +30,62 @@ export default function FacultySubmissions() {
   };
 
   const handleDeleteSubmission = async (submissionId) => {
-    if (window.confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
-      try {
-        await submissionAPI.delete(submissionId);
-        fetchData();
-      } catch {
-        // Optionally handle delete error
-      }
+    const res = await Swal.fire({
+      title: 'Delete submission',
+      text: 'Are you sure you want to delete this submission? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
+    try {
+      await submissionAPI.delete(submissionId);
+      fetchData();
+      Swal.fire({ title: 'Deleted', text: 'Submission deleted', icon: 'success', timer: 1400, showConfirmButton: false });
+    } catch (err) {
+      console.error('Delete error', err);
+      Swal.fire({ title: 'Error', text: 'Failed to delete submission', icon: 'error' });
     }
   };
 
   const handleGradeSubmission = async (submission) => {
-    const grade = prompt(`Enter grade for ${submission.student_name}'s submission (0-100):`, submission.grade || '');
-    if (grade === null) return; // User cancelled
-
-    const numericGrade = parseInt(grade);
-    if (isNaN(numericGrade) || numericGrade < 0 || numericGrade > 100) {
-      alert('Please enter a valid grade between 0 and 100.');
-      return;
-    }
-
-    const feedback = prompt('Enter feedback (optional):', submission.feedback || '');
-
     try {
+      const { value: grade } = await Swal.fire({
+        title: `Enter grade for ${submission.student_name}`,
+        input: 'number',
+        inputAttributes: { min: 0, max: 100, step: 1 },
+        inputValue: submission.grade || '',
+        showCancelButton: true,
+        confirmButtonText: 'Next',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (value === '' || value === null) return 'Please enter a grade';
+          const n = Number(value);
+          if (isNaN(n) || n < 0 || n > 100) return 'Please enter a valid grade between 0 and 100.';
+        }
+      });
+      if (grade === undefined || grade === null) return; // cancelled
+
+      const { value: feedback } = await Swal.fire({
+        title: 'Enter feedback (optional)',
+        input: 'textarea',
+        inputValue: submission.feedback || '',
+        showCancelButton: true,
+        confirmButtonText: 'Submit',
+        cancelButtonText: 'Cancel'
+      });
+
       await submissionAPI.grade(submission.id, {
-        grade: numericGrade,
+        grade: parseInt(grade),
         feedback: feedback || ''
       });
       fetchData(); // Refresh the submissions list
+      Swal.fire({ title: 'Graded', text: 'Submission graded successfully', icon: 'success', timer: 1400, showConfirmButton: false });
     } catch (error) {
       console.error('Error grading submission:', error);
-      alert('Failed to grade submission. Please try again.');
+      Swal.fire({ title: 'Error', text: 'Failed to grade submission. Please try again.', icon: 'error' });
     }
   };
 

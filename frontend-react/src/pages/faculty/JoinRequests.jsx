@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Check, X, Clock, Calendar, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { facultyAPI } from '../../services/api';
+import Swal from 'sweetalert2';
 
 export default function JoinRequests() {
   const [requests, setRequests] = useState([]);
@@ -62,16 +63,23 @@ export default function JoinRequests() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this enrollment request? This action cannot be undone.')) {
-      return;
-    }
-
+    const res = await Swal.fire({
+      title: 'Delete request',
+      text: 'Are you sure you want to delete this enrollment request? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
     try {
       setProcessingId(id);
       const response = await facultyAPI.deleteEnrollmentRequest(id);
       if (response.success) {
         setModal({ type: 'success', message: 'Enrollment request deleted successfully' });
         fetchRequests(); // Refresh the list
+        Swal.fire({ title: 'Deleted', text: 'Enrollment request removed', icon: 'success', timer: 1200, showConfirmButton: false });
       }
     } catch (error) {
       console.error('Error deleting request:', error);
@@ -111,12 +119,12 @@ export default function JoinRequests() {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setModal(null)}
           >
-            <motion.div
+              <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-gray-900 dark:bg-gray-950 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-800"
+                className="modal-panel modal-panel--md bg-gray-900 dark:bg-gray-950 rounded-2xl shadow-2xl w-full overflow-hidden border border-gray-800"
             >
               {/* Modal Header */}
               <div className={`p-6 ${

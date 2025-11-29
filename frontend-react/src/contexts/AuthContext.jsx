@@ -15,10 +15,22 @@ export function AuthProvider({ children }) {
     try {
       const response = await authAPI.login(credentials);
       if (response.success) {
-        localStorage.setItem('user', JSON.stringify(response.user));
+        // Store token first
         localStorage.setItem('token', response.token);
-        setUser(response.user);
-        return { success: true, user: response.user };
+        // Refresh full user from API to ensure fields (student_id etc.) are present
+        try {
+          const fresh = await authAPI.getUser();
+          if (fresh && fresh.success && fresh.user) {
+            localStorage.setItem('user', JSON.stringify(fresh.user));
+            setUser(fresh.user);
+            return { success: true, user: fresh.user };
+          }
+        } catch (err) {
+          // Fallback to response.user
+          localStorage.setItem('user', JSON.stringify(response.user));
+          setUser(response.user);
+          return { success: true, user: response.user };
+        }
       } else {
         console.error('Login failed:', response.message);
         return { success: false, error: response.message };
@@ -55,14 +67,28 @@ export function AuthProvider({ children }) {
         password: data.password,
         password_confirmation: data.confirmPassword || data.password, // Add password_confirmation field
         role: data.role || 'student',
+        // Include student_id when provided (frontend sends optional student ID on registration)
+        student_id: data.student_id || data.studentId || undefined,
       };
 
       const response = await authAPI.register(registrationData);
       
       if (response.success) {
-        localStorage.setItem('user', JSON.stringify(response.user));
+        // Save token then fetch fresh user to ensure we have latest fields
         localStorage.setItem('token', response.token);
-        setUser(response.user);
+        try {
+          const fresh = await authAPI.getUser();
+          if (fresh && fresh.success && fresh.user) {
+            localStorage.setItem('user', JSON.stringify(fresh.user));
+            setUser(fresh.user);
+          } else {
+            localStorage.setItem('user', JSON.stringify(response.user));
+            setUser(response.user);
+          }
+        } catch (err) {
+          localStorage.setItem('user', JSON.stringify(response.user));
+          setUser(response.user);
+        }
         return { success: true };
       } else {
         return { success: false, error: response.message };

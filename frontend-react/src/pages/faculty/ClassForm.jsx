@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { classAPI, courseAPI } from '../../services/api';
 import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
+import Swal from 'sweetalert2';
 import Toast from '../../components/ui/Toast';
 
 const ClassForm = () => {
@@ -58,7 +59,7 @@ const ClassForm = () => {
       }
     } catch (err) {
       console.error('Error fetching class:', err);
-      alert('Failed to load class details');
+      Swal.fire({ icon: 'error', title: 'Load Failed', text: 'Failed to load class details', confirmButtonColor: '#f97316' });
       navigate('/faculty/classes');
     } finally {
       setLoading(false);
@@ -101,7 +102,7 @@ const ClassForm = () => {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        alert(err.response?.data?.message || 'Failed to save class');
+        Swal.fire({ icon: 'error', title: 'Save Failed', text: err.response?.data?.message || 'Failed to save class', confirmButtonColor: '#f97316' });
       }
     } finally {
       setLoading(false);

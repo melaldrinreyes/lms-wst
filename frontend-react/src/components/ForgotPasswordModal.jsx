@@ -52,7 +52,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) 
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl"
+              className="relative modal-panel modal-panel--md w-full bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {toast && <Toast {...toast} onClose={() => setToast(null)} />}

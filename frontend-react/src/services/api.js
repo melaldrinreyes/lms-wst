@@ -39,11 +39,19 @@ api.interceptors.response.use(
       message: error.message,
     });
     
-    if (error.response?.status === 401) {
-      // Token expired or invalid
+    const status = error.response?.status;
+    if (status === 401) {
+      // Token expired or invalid: clear local state and notify app
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/';
+      try {
+        // Dispatch an event so React app can listen and show a message if desired
+        window.dispatchEvent(new CustomEvent('unauthenticated', { detail: { message: 'Session expired' } }));
+      } catch {
+        // ignore
+      }
+      // Redirect to login page (replace so back button doesn't return to protected page)
+      try { window.location.replace('/login'); } catch { window.location.href = '/login'; }
     }
     return Promise.reject(error);
   }
@@ -96,10 +104,10 @@ export const authAPI = {
 
 // Course API calls
 export const courseAPI = {
-  getAll: async () => {
+  getAll: async (params = {}) => {
     try {
-      console.log('Fetching courses from:', `${API_URL}/courses`);
-      const response = await api.get('/courses');
+      console.log('Fetching courses from:', `${API_URL}/courses`, params);
+      const response = await api.get('/courses', { params });
       console.log('Courses response:', response.data);
       return response.data;
     } catch (error) {
@@ -604,8 +612,8 @@ export const superAdminAPI = {
     return response.data;
   },
 
-  getInstructors: async () => {
-    const response = await api.get('/admin/instructors');
+  getInstructors: async (params = {}) => {
+    const response = await api.get('/admin/instructors', { params });
     return response.data;
   },
 

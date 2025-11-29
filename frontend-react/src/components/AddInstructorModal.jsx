@@ -46,7 +46,7 @@ export default function AddInstructorModal({ isOpen, onClose, onSubmit, loading 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-auto border border-gray-200"
+              className="modal-panel modal-panel--md bg-white rounded-2xl shadow-xl w-full max-h-[90vh] overflow-auto border border-gray-200"
             >
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-2xl font-bold text-gray-900">Add New Instructor</h2>

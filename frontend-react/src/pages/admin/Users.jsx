@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, UserPlus, Edit, Trash2, Eye } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
+import Swal from 'sweetalert2';
 import { superAdminAPI } from '../../services/api';
 import AddUserForm from '../../components/admin/AddUserForm';
 import EditUserForm from '../../components/admin/EditUserForm';
@@ -74,7 +75,17 @@ function AdminUsers() {
   };
 
   const handleDelete = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    const result = await Swal.fire({
+      title: 'Delete user?',
+      text: 'Are you sure you want to delete this user? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#e11d48',
+    });
+
+    if (result.isConfirmed) {
       try {
         await superAdminAPI.deleteUser(userId);
         fetchUsers();
@@ -119,7 +130,7 @@ function AdminUsers() {
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -150,8 +161,8 @@ function AdminUsers() {
                 {searchTerm || filterRole !== 'all' ? 'Try adjusting your filters' : 'Get started by adding your first user'}
               </p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
+          ) : (<>
+            <div className="overflow-x-auto hidden sm:block">
               <table className="w-full">
                 <thead className="bg-gray-800">
                   <tr>
@@ -226,7 +237,62 @@ function AdminUsers() {
                 </tbody>
               </table>
             </div>
-          )}
+
+            {/* Mobile: render users as stacked cards for better readability */}
+            <div className="sm:hidden">
+              <div className="space-y-3">
+                {filteredUsers.map((user) => (
+                  <div key={`card-${user.id}`} className="bg-gray-900 rounded-lg p-3 flex flex-col gap-2 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700">
+                          <img
+                            src={user.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <div className="text-base font-semibold text-white">{user.name}</div>
+                          <div className="text-sm text-gray-400">{user.email}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleViewDetails(user)}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition"
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`chip ${getRoleBadge(user.role)} text-xs font-semibold px-3 py-1 rounded-full`}>{user.role}</span>
+                        <span className="chip bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold px-3 py-1 rounded-full">{user.status}</span>
+                      </div>
+                      <div className="text-sm text-gray-400">{new Date(user.joined).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>) }
         </div>
       </div>
       {/* Modals at root */}

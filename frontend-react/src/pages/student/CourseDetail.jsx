@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Users, Clock, CheckCircle, PlayCircle, FileText, MessageSquare, Calendar, Download, Upload, X, Megaphone, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, Clock, CheckCircle, PlayCircle, FileText, MessageSquare, Calendar, Download, Upload, X, Megaphone, Send, Trash2, Eye, User } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
+import Swal from 'sweetalert2';
 import { useAuth } from '../../contexts/AuthContext';
-import { submissionAPI, announcementCommentAPI, studentAPI, classMaterialAPI } from '../../services/api';
+import { submissionAPI, announcementCommentAPI, studentAPI, classMaterialAPI, assignmentAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
@@ -40,6 +41,16 @@ function CourseDetail() {
   const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [downloadingMap, setDownloadingMap] = useState({});
+  const [gradedModalAssignment, setGradedModalAssignment] = useState(null);
+  const gradedModalRef = useRef(null);
+
+  useEffect(() => {
+    if (gradedModalAssignment && gradedModalRef.current) {
+      try { gradedModalRef.current.focus(); } catch { console.debug && console.debug('graded modal focus failed'); }
+    }
+  }, [gradedModalAssignment]);
 
   // --- Download file by id ---
   const handleDownloadFileById = async (fileId, fileName) => {
@@ -82,6 +93,34 @@ function CourseDetail() {
     } catch (error) {
       console.error('Error viewing file by id:', error);
       setToast({ message: 'Failed to open file', type: 'error' });
+    }
+  };
+
+  // Download multiple files sequentially (graceful fallback)
+  const handleDownloadMultiple = async (files = []) => {
+    if (!files || files.length === 0) return;
+    for (const f of files) {
+      try {
+        await handleDownloadFileById(f.id || f.file_id, f.original_name || f.name);
+        // small delay to avoid overwhelming the browser for large blobs
+        await new Promise(r => setTimeout(r, 250));
+      } catch (err) {
+        console.warn('Failed to download file in batch', f, err);
+      }
+    }
+  };
+
+  // Download entire assignment package (if backend supports it)
+  const handleDownloadAssignment = async (assignmentId) => {
+    try {
+      setDownloadingMap(prev => ({ ...prev, [assignmentId]: true }));
+      await assignmentAPI.download(assignmentId);
+      setToast({ message: 'Download started', type: 'success' });
+    } catch (error) {
+      console.error('Download failed for assignment', assignmentId, error);
+      setToast({ message: 'Download failed', type: 'error' });
+    } finally {
+      setDownloadingMap(prev => ({ ...prev, [assignmentId]: false }));
     }
   };
 
@@ -156,12 +195,107 @@ function CourseDetail() {
     return { text: `${diffInDays}d left`, urgent: false, color: 'text-green-400' };
   };
 
+  // Find the latest student submission for an assignment, trying common shapes
+  const getLatestSubmission = (assignment) => {
+    if (!assignment) return null;
+    // Common shapes: assignment.latest_submission, assignment.submission, assignment.submissions (array)
+    if (assignment.latest_submission) return assignment.latest_submission;
+    if (assignment.submission) return assignment.submission;
+    if (Array.isArray(assignment.submissions) && assignment.submissions.length > 0) {
+      // pick the most recent by created_at / submitted_date
+      const sorted = assignment.submissions.slice().sort((a, b) => {
+        const ta = new Date(a.submitted_at || a.created_at || a.createdAt || 0).getTime();
+        const tb = new Date(b.submitted_at || b.created_at || b.createdAt || 0).getTime();
+        return tb - ta;
+      });
+      return sorted[0];
+    }
+    // Some backends put student_submission or submissions_data
+    if (assignment.student_submission) return assignment.student_submission;
+    if (assignment.submitted_files && Array.isArray(assignment.submitted_files) && assignment.submitted_files.length > 0) {
+      // return the most recent submitted file object
+      return assignment.submitted_files.slice().sort((a,b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0))[0];
+    }
+    return null;
+  };
+
   // Close submission modal
   const closeSubmissionModal = () => {
     setShowSubmissionModal(false);
     setCurrentAssignment(null);
     setSubmissionText('');
     setSubmissionFile(null);
+  };
+
+  // Open graded modal: fetch submission details (feedback/files) if available
+  const openGradedModal = async (assignment) => {
+    if (!assignment) return;
+    try {
+      console.log('Opening graded modal for assignment (raw):', assignment);
+      // Try to find a submission id in common places
+      const submissionId = assignment.latest_submission?.id || assignment.latest_submission?.submission_id || assignment.submission?.id || assignment.submission?.submission_id || assignment.student_submission?.id || (Array.isArray(assignment.submissions) && (assignment.submissions[0]?.id || assignment.submissions[0]?.submission_id)) || assignment.submission_id || assignment.submissionId || null;
+      console.log('Computed submissionId for graded modal:', submissionId);
+      let modalData = { ...assignment };
+
+      if (submissionId) {
+        try {
+          const resp = await submissionAPI.getOne(submissionId);
+          console.log('submissionAPI.getOne response (raw):', resp);
+          // response may be wrapped
+          const submission = (resp && resp.submission) || resp.data || resp || null;
+          console.log('Normalized submission object:', submission);
+          if (submission) {
+            const feedback = submission.feedback || submission.instructor_feedback || submission.remarks || submission.comments || modalData.feedback || modalData.instructor_feedback || null;
+            const gradedFiles = submission.files || submission.submission_files || submission.uploaded_files || modalData.graded_files || modalData.feedback_files || null;
+            modalData = { ...modalData, feedback, graded_files: gradedFiles };
+          }
+        } catch (err) {
+          console.warn('Failed to fetch submission details for graded modal:', err);
+          // fall back to assignment-level feedback if any
+        }
+      } else {
+        console.log('No submissionId found on assignment; querying submissions endpoint for this assignment/student');
+        try {
+          // Try to fetch submissions for this assignment (filter by assignment_id, optionally student)
+          const params = { assignment_id: assignment.id };
+          if (user && user.id) params.student_id = user.id;
+          const listResp = await submissionAPI.getAll(params);
+          console.log('submissionAPI.getAll response (raw):', listResp);
+          // Normalize to array
+          let subs = [];
+          if (!listResp) subs = [];
+          else if (Array.isArray(listResp)) subs = listResp;
+          else if (Array.isArray(listResp.submissions)) subs = listResp.submissions;
+          else if (Array.isArray(listResp.data)) subs = listResp.data;
+          else if (Array.isArray(listResp.result)) subs = listResp.result;
+          else {
+            const arr = Object.values(listResp).find(v => Array.isArray(v));
+            subs = arr || [];
+          }
+          if (subs && subs.length > 0) {
+            // Pick most recent submission
+            const sortedSubs = subs.slice().sort((a,b) => new Date(b.submitted_at || b.created_at || b.createdAt || 0) - new Date(a.submitted_at || a.created_at || a.createdAt || 0));
+            const submission = sortedSubs[0];
+            console.log('Selected submission from list:', submission);
+            if (submission) {
+              const feedback = submission.feedback || submission.instructor_feedback || submission.remarks || submission.comments || modalData.feedback || modalData.instructor_feedback || null;
+              const gradedFiles = submission.files || submission.submission_files || submission.uploaded_files || modalData.graded_files || modalData.feedback_files || null;
+              modalData = { ...modalData, feedback, graded_files: gradedFiles };
+            }
+          } else {
+            console.log('No submissions found via submissions endpoint for assignment', assignment.id);
+          }
+        } catch (err) {
+          console.warn('Error while fetching submissions list for graded modal fallback:', err);
+        }
+      }
+
+      console.log('Final modal data to show:', modalData);
+      setGradedModalAssignment(modalData);
+    } catch (err) {
+      console.error('openGradedModal error:', err);
+      setGradedModalAssignment(assignment);
+    }
   };
 
   // Handle file selection
@@ -206,6 +340,7 @@ function CourseDetail() {
     }
 
     setSubmitting(true);
+    setUploadProgress(0);
     
     try {
       const formData = new FormData();
@@ -224,7 +359,17 @@ function CourseDetail() {
         file_size: submissionFile ? `${(submissionFile.size / 1024 / 1024).toFixed(2)}MB` : 'N/A'
       });
 
-      await submissionAPI.create(formData);
+      // Pass an onUploadProgress callback to track upload progress
+      await submissionAPI.create(formData, (progressEvent) => {
+        try {
+          if (progressEvent && progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percent);
+          }
+        } catch {
+          // ignore progress errors
+        }
+      });
 
       setToast({
         message: 'Assignment submitted successfully!',
@@ -264,6 +409,7 @@ function CourseDetail() {
       });
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -320,7 +466,16 @@ function CourseDetail() {
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    const res = await Swal.fire({
+      title: 'Delete comment',
+      text: 'Are you sure you want to delete this comment?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
 
     try {
       await announcementCommentAPI.delete(commentId);
@@ -441,7 +596,7 @@ function CourseDetail() {
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Reply to ${comment.user?.name}...`}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
               />
               <div className="flex gap-2">
                 <button
@@ -766,7 +921,7 @@ function CourseDetail() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-gray-900 rounded-xl p-8 max-w-3xl w-full border border-gray-800 max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="modal-panel modal-panel--lg bg-gray-900 rounded-xl p-8 w-full border border-gray-800 max-h-[90vh] overflow-y-auto shadow-2xl"
           >
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
@@ -858,7 +1013,7 @@ function CourseDetail() {
                 <textarea
                   value={submissionText}
                   onChange={(e) => setSubmissionText(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition resize-none"
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition resize-none"
                   rows="8"
                   placeholder="Type your answer or explanation here... You can also upload a file below if needed."
                 />
@@ -939,6 +1094,16 @@ function CourseDetail() {
                       </p>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Upload progress bar */}
+              {(uploadProgress > 0) && (
+                <div className="mb-4">
+                  <div className="w-full bg-gray-800 rounded h-3 overflow-hidden">
+                    <div className="h-3 bg-blue-600" style={{ width: `${uploadProgress}%` }} />
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">{uploadProgress}% uploaded</div>
                 </div>
               )}
 
@@ -1043,6 +1208,53 @@ function CourseDetail() {
                         </div>
                       </div>
                     )}
+
+                    {/* Latest student submission (if any) */}
+                    {(() => {
+                      const latest = getLatestSubmission(assignment);
+                      if (!latest) return null;
+                      // Latest submission might be an object representing a submission or a file
+                      const fileId = latest.id || latest.file_id || latest.file?.id || latest.file_id;
+                      const fileName = latest.original_name || latest.name || latest.file?.original_name || latest.file?.name || latest.filename || latest.file_name || latest.file_name;
+                      const submittedAt = latest.submitted_at || latest.created_at || latest.createdAt || latest.uploaded_at || latest.uploadedAt || latest.date;
+
+                      return (
+                        <div className="border-t border-gray-700 pt-4 mb-3">
+                          <h4 className="text-sm font-semibold text-gray-200 mb-2">Your Latest Submission</h4>
+                          <div className="flex items-center justify-between bg-gray-800/40 p-3 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <FileText size={16} className="text-green-400" />
+                              <div className="text-sm text-gray-200">
+                                {fileName || 'Submission'}
+                                <div className="text-xs text-gray-400">
+                                  {submittedAt ? (
+                                    <span title={new Date(submittedAt).toLocaleString()}>{formatRelativeTime(submittedAt)}</span>
+                                  ) : ''}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {fileId && (
+                                <>
+                                  <button
+                                    onClick={() => handleViewFileById(fileId)}
+                                    className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    onClick={() => handleDownloadFileById(fileId, fileName)}
+                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                  >
+                                    Download
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     
                     {/* Action Buttons */}
                     <div className="border-t border-gray-700 pt-4">
@@ -1070,6 +1282,28 @@ function CourseDetail() {
                             Download Assignment ({assignment.files.length})
                           </button>
                         )}
+                          {/* Visible assignment package download button (backend: /assignments/{id}/download) */}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDownloadAssignment(assignment.id);
+                            }}
+                            className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition ${downloadingMap[assignment.id] ? 'bg-gray-700 text-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                            title="Download assignment package"
+                          >
+                            {downloadingMap[assignment.id] ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" />
+                                <span>Downloading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Download size={16} />
+                                <span>Download Assignment</span>
+                              </>
+                            )}
+                          </button>
                         
                         {/* Submit Assignment Button */}
                         <button
@@ -1113,6 +1347,14 @@ function CourseDetail() {
                             <div className="text-gray-400 text-xs">
                               Submitted: {new Date(assignment.submitted_date).toLocaleDateString()}
                             </div>
+                          )}
+                          {(assignment.status === 'graded' || (assignment.grade !== null && assignment.grade !== undefined)) && (
+                            <button
+                              onClick={() => openGradedModal(assignment)}
+                              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
+                            >
+                              View Result
+                            </button>
                           )}
                         </div>
                       )}
@@ -1299,7 +1541,7 @@ function CourseDetail() {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Add a comment..."
-                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
                   />
                   <button
                     type="submit"
@@ -1330,7 +1572,7 @@ function CourseDetail() {
       {/* File choice modal for assignments with multiple files */}
       {fileChoice && (
         <div className={`fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4`}>
-          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-800">
+          <div className="modal-panel modal-panel--md bg-gray-900 rounded-xl p-6 w-full border border-gray-800">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-white">Select a file to download</h3>
               <button onClick={() => setFileChoice(null)} className="text-gray-400 hover:text-white"><X size={20} /></button>
@@ -1354,7 +1596,7 @@ function CourseDetail() {
       )}
       {inlinePreviewUrl && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl border border-gray-800 max-h-[90vh] overflow-y-auto">
+          <div className="modal-panel modal-panel--xl bg-gray-900 rounded-xl p-6 w-full border border-gray-800 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-white">Preview: {inlinePreviewName}</h3>
               <button onClick={() => { try { window.URL.revokeObjectURL(inlinePreviewUrl); } catch (err) { console.warn('revoke error', err); } setInlinePreviewUrl(null); setInlinePreviewName(null); setInlinePreviewType(null); }} className="text-gray-400 hover:text-white"><X size={20} /></button>
@@ -1370,6 +1612,141 @@ function CourseDetail() {
             </div>
           </div>
         </div>
+      )}
+      {/* Graded result modal */}
+      {gradedModalAssignment && (
+        <Modal
+          isOpen={true}
+          onClose={() => setGradedModalAssignment(null)}
+          title={`Result: ${gradedModalAssignment.title}`}
+          size="lg"
+        >
+          <Motion.div
+            ref={gradedModalRef}
+            tabIndex={-1}
+            onKeyDown={(e) => { if (e.key === 'Escape') setGradedModalAssignment(null); }}
+            initial={{ opacity: 0, y: 8, scale: 0.995 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.995 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left: Big Grade Badge */}
+              <div className="lg:col-span-1 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl ring-4 ring-black/20">
+                    <div className="text-center">
+                      <div className="text-3xl font-extrabold text-white">{gradedModalAssignment.grade ?? '-'}</div>
+                      <div className="text-sm text-indigo-100/90">of {gradedModalAssignment.max_points || 100}</div>
+                    </div>
+                  </div>
+                  {gradedModalAssignment.grade !== null && gradedModalAssignment.max_points ? (
+                    <div className="text-center">
+                      <div className="text-sm text-gray-300">Score</div>
+                      <div className="text-lg font-semibold text-white">{Math.round((parseFloat(gradedModalAssignment.grade) / (gradedModalAssignment.max_points || 100)) * 100)}%</div>
+                    </div>
+                  ) : null}
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${gradedModalAssignment.status === 'graded' ? 'bg-green-900/30 text-green-400 border border-green-700' : 'bg-gray-800 text-gray-300'}`}>
+                    {gradedModalAssignment.status ? (String(gradedModalAssignment.status).charAt(0).toUpperCase() + String(gradedModalAssignment.status).slice(1)) : 'Status'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle: Feedback */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="bg-gradient-to-b from-gray-900/80 to-gray-900/60 border border-gray-800 rounded-lg p-6 shadow-inner">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-semibold">
+                        {String((gradedModalAssignment.graded_by?.name || course?.faculty?.name || 'I').charAt(0)).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-white">{gradedModalAssignment.graded_by?.name || course?.faculty?.name || 'Instructor'}</div>
+                        <div className="text-xs text-gray-400">{gradedModalAssignment.graded_by?.title || course?.faculty?.title || ''}</div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-400 flex items-center gap-3">
+                      {gradedModalAssignment.graded_at || gradedModalAssignment.graded_date ? (
+                        <div className="text-xs text-gray-400">Graded on: {new Date(gradedModalAssignment.graded_at || gradedModalAssignment.graded_date).toLocaleString()}</div>
+                      ) : null}
+                      <button aria-label="Close result" onClick={() => setGradedModalAssignment(null)} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">
+                        <X size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-white mb-2">Instructor Feedback</h3>
+                  <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap min-h-[80px]">
+                    {gradedModalAssignment.feedback || gradedModalAssignment.instructor_feedback || gradedModalAssignment.remarks || gradedModalAssignment.comments || 'No feedback provided.'}
+                  </div>
+                </div>
+
+                {/* Files */}
+                {(() => {
+                  const files = gradedModalAssignment.graded_files || gradedModalAssignment.feedback_files || gradedModalAssignment.graded || (gradedModalAssignment.files && gradedModalAssignment.files.filter(f => f.is_feedback)) || null;
+                  if (!files || (Array.isArray(files) && files.length === 0)) return null;
+                  const fileArray = Array.isArray(files) ? files : [files];
+                  return (
+                    <div className="bg-gradient-to-b from-gray-900/80 to-gray-900/60 border border-gray-800 rounded-lg p-4">
+                      <h4 className="text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2"><FileText size={16} /> Files</h4>
+                      <div className="space-y-3">
+                        {fileArray.map((f) => (
+                          <Motion.div
+                            key={f.id || f.file_id || f.name}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ scale: 1.02 }}
+                            className="flex items-center justify-between bg-gray-800/30 p-3 rounded-lg transition-shadow hover:shadow-lg"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-700 to-cyan-600 flex items-center justify-center text-white font-semibold text-sm">
+                                {String((f.original_name || f.name || f.filename || '').charAt(0)).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-sm text-white truncate">{f.original_name || f.name || f.filename || `File ${f.id || f.file_id}`}</div>
+                                {f.size && <div className="text-xs text-gray-400">{(f.size/1024/1024).toFixed(2)} MB</div>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button aria-label="View file" onClick={() => handleViewFileById(f.id || f.file_id)} className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 text-white rounded-lg">
+                                <Eye size={14} />
+                                <span className="text-xs">View</span>
+                              </button>
+                              <button aria-label="Download file" onClick={() => handleDownloadFileById(f.id || f.file_id, f.original_name || f.name)} className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg">
+                                <Download size={14} />
+                                <span className="text-xs">Download</span>
+                              </button>
+                            </div>
+                          </Motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                  })()}
+
+                  {/* Footer actions for modal */}
+                  {(() => {
+                    const files = gradedModalAssignment.graded_files || gradedModalAssignment.feedback_files || gradedModalAssignment.graded || (gradedModalAssignment.files && gradedModalAssignment.files.filter(f => f.is_feedback)) || null;
+                    if (!files || (Array.isArray(files) && files.length === 0)) return (
+                      <div className="mt-4 flex justify-end">
+                        <button onClick={() => setGradedModalAssignment(null)} className="px-4 py-2 bg-gray-700 text-white rounded-lg">Close</button>
+                      </div>
+                    );
+                    const fileArray = Array.isArray(files) ? files : [files];
+                    return (
+                      <div className="mt-4 flex justify-end gap-3">
+                        <button onClick={() => handleDownloadMultiple(fileArray)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2">
+                          <Download size={14} />
+                          Download All
+                        </button>
+                        <button onClick={() => setGradedModalAssignment(null)} className="px-4 py-2 bg-gray-700 text-white rounded-lg">Close</button>
+                      </div>
+                    );
+                  })()}
+              </div>
+            </div>
+          </Motion.div>
+        </Modal>
       )}
     </div>
   );

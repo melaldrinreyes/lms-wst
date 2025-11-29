@@ -55,12 +55,12 @@ export default function RegisterModal({ isOpen, onClose }) {
 
           {/* Modal */}
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <motion.div
+              <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl my-8"
+              className="relative modal-panel modal-panel--md w-full bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl my-8"
               onClick={(e) => e.stopPropagation()}
             >
               {toast && <Toast {...toast} onClose={() => setToast(null)} />}
@@ -101,7 +101,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-gray-500 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-white/70 transition"
                         placeholder="John Doe"
                       />
                     </div>
@@ -119,7 +119,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-gray-500 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-white/70 transition"
                         placeholder="you@example.com"
                       />
                     </div>
@@ -136,7 +136,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                         type="text"
                         value={formData.student_id}
                         onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-gray-500 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-white/70 transition"
                         placeholder="2024-00001"
                       />
                     </div>
@@ -154,7 +154,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-gray-500 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-white/70 transition"
                         placeholder="••••••••"
                       />
                     </div>
@@ -172,7 +172,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                         required
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-gray-500 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white text-sm placeholder-white/70 transition"
                         placeholder="••••••••"
                       />
                     </div>

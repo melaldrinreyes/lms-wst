@@ -17,6 +17,7 @@ import {
 import { studentAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
+import Swal from 'sweetalert2';
 
 export default function Students() {
   const [students, setStudents] = useState([]);
@@ -88,14 +89,23 @@ export default function Students() {
   };
 
   const handleDeleteStudent = async (student) => {
-    if (window.confirm(`Are you sure you want to delete ${student.name}?`)) {
-      try {
-        // In a real app, this would call an API to delete the student
-        setStudents(students.filter((s) => s.id !== student.id));
-        setToast({ message: `Student ${student.name} deleted successfully`, type: 'success' });
-      } catch (error) {
-        setToast({ message: 'Failed to delete student', type: 'error' });
-      }
+    const res = await Swal.fire({
+      title: 'Delete student',
+      text: `Are you sure you want to delete ${student.name}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
+    try {
+      // In a real app, this would call an API to delete the student
+      setStudents(students.filter((s) => s.id !== student.id));
+      setToast({ message: `Student ${student.name} deleted successfully`, type: 'success' });
+      Swal.fire({ title: 'Deleted', text: 'Student deleted', icon: 'success', timer: 1200, showConfirmButton: false });
+    } catch (error) {
+      setToast({ message: 'Failed to delete student', type: 'error' });
     }
   };
 
@@ -187,7 +197,7 @@ export default function Students() {
               placeholder="Search by name, email, or student ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           <div className="relative">

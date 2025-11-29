@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Lock, Activity, Save } from 'lucide-react';
+import { User, Lock, Save } from 'lucide-react';
 import Toast from '../components/ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/api';
@@ -167,6 +167,8 @@ export default function Profile() {
         address: formData.address,
         date_of_birth: formData.dateOfBirth,
         gender: formData.gender,
+        // allow updating student_id if present in the form data
+        student_id: formData.studentId || undefined,
       });
 
       if (response.success) {
@@ -214,11 +216,7 @@ export default function Profile() {
     }
   };
 
-  const activityLog = [
-    { id: 1, action: 'Submitted assignment: React Project', time: '2 hours ago' },
-    { id: 2, action: 'Logged in to the system', time: '5 hours ago' },
-    { id: 4, action: 'Viewed course: Database Systems', time: '2 days ago' },
-  ];
+  
 
   return (
     <div className="space-y-6">
@@ -243,7 +241,6 @@ export default function Profile() {
           {[
             { id: 'account', label: 'Account Info', icon: User },
             { id: 'security', label: 'Security', icon: Lock },
-            { id: 'activity', label: 'Activity Log', icon: Activity },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -436,7 +433,7 @@ export default function Profile() {
                 type="password"
                 value={passwordData.current_password}
                 onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                 placeholder="••••••••"
                 required
               />
@@ -450,7 +447,7 @@ export default function Profile() {
                 type="password"
                 value={passwordData.new_password}
                 onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -465,7 +462,7 @@ export default function Profile() {
                 type="password"
                 value={passwordData.new_password_confirmation}
                 onChange={(e) => setPasswordData({ ...passwordData, new_password_confirmation: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -484,32 +481,7 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Activity Log Tab */}
-      {activeTab === 'activity' && (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Recent Activity
-          </h3>
-          <div className="space-y-4">
-            {activityLog.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start gap-3 pb-4 border-b border-gray-800 last:border-0 last:pb-0"
-              >
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2" />
-                <div className="flex-1">
-                  <p className="text-sm text-white">
-                    {activity.action}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {activity.time}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      
       </>
       )}
     </div>

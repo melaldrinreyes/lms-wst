@@ -1,101 +1,46 @@
 import { BookOpen, Clock, Users, Star, Search, Filter } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import LoginModal from '../components/LoginModal';
+import { courseAPI } from '../services/api';
 
 export default function Courses() {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await courseAPI.getAll();
+      if (response.success) {
+        setCourses(response.courses || []);
+      } else {
+        setError('Failed to load courses');
+      }
+    } catch (err) {
+      console.error('Error fetching courses:', err);
+      setError('Failed to load courses');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = ['All', 'Web Development', 'Data Science', 'Design', 'Business', 'Marketing'];
 
-  const courses = [
-    {
-      id: 1,
-      title: 'Complete Web Development Bootcamp',
-      category: 'Web Development',
-      instructor: 'John Doe',
-      rating: 4.8,
-      students: 1234,
-      duration: '12 weeks',
-      level: 'Beginner',
-      price: 'Free',
-      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500',
-      description: 'Learn HTML, CSS, JavaScript, React, Node.js and more from scratch.',
-    },
-    {
-      id: 2,
-      title: 'Data Science & Machine Learning',
-      category: 'Data Science',
-      instructor: 'Jane Smith',
-      rating: 4.9,
-      students: 987,
-      duration: '16 weeks',
-      level: 'Intermediate',
-      price: 'Free',
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500',
-      description: 'Master Python, pandas, scikit-learn, and deep learning fundamentals.',
-    },
-    {
-      id: 3,
-      title: 'UI/UX Design Masterclass',
-      category: 'Design',
-      instructor: 'Mike Johnson',
-      rating: 4.7,
-      students: 856,
-      duration: '8 weeks',
-      level: 'Beginner',
-      price: 'Free',
-      image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500',
-      description: 'Create stunning user interfaces with Figma, Adobe XD, and design principles.',
-    },
-    {
-      id: 4,
-      title: 'Digital Marketing Strategy',
-      category: 'Marketing',
-      instructor: 'Sarah Williams',
-      rating: 4.6,
-      students: 743,
-      duration: '10 weeks',
-      level: 'Beginner',
-      price: 'Free',
-      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500',
-      description: 'Learn SEO, social media marketing, content strategy, and analytics.',
-    },
-    {
-      id: 5,
-      title: 'Business Management Fundamentals',
-      category: 'Business',
-      instructor: 'Robert Brown',
-      rating: 4.5,
-      students: 612,
-      duration: '12 weeks',
-      level: 'Beginner',
-      price: 'Free',
-      image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500',
-      description: 'Essential business skills including finance, leadership, and strategy.',
-    },
-    {
-      id: 6,
-      title: 'Advanced JavaScript & TypeScript',
-      category: 'Web Development',
-      instructor: 'Emily Davis',
-      rating: 4.9,
-      students: 1089,
-      duration: '14 weeks',
-      level: 'Advanced',
-      price: 'Free',
-      image: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=500',
-      description: 'Deep dive into modern JavaScript, TypeScript, and advanced patterns.',
-    },
-  ];
-
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         course.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         course.code.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -133,7 +78,7 @@ export default function Courses() {
                   placeholder="Search courses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                 />
               </div>
             </div>
@@ -163,7 +108,7 @@ export default function Courses() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-white">
-              {filteredCourses.length} {filteredCourses.length === 1 ? 'Course' : 'Courses'} Available
+              {loading ? 'Loading...' : `${filteredCourses.length} ${filteredCourses.length === 1 ? 'Course' : 'Courses'} Available`}
             </h2>
             <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition border border-gray-700">
               <Filter size={18} />
@@ -171,63 +116,86 @@ export default function Courses() {
             </button>
           </div>
 
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-400 mb-4">{error}</p>
+              <button onClick={fetchCourses} className="px-4 py-2 bg-orange-500 text-white rounded-lg">
+                Try Again
+              </button>
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCourses.map((course, index) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
-              >
-                {/* Course Image */}
-                <div className="relative h-48 overflow-hidden bg-gray-800">
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-purple-500/20"></div>
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-orange-500 text-white text-sm font-semibold rounded-full">
-                    {course.price}
-                  </div>
-                  <div className="absolute bottom-4 left-4 px-3 py-1 bg-gray-900/80 backdrop-blur-sm text-white text-sm font-medium rounded-lg">
-                    {course.level}
+            {loading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-800"></div>
+                  <div className="p-6">
+                    <div className="h-4 bg-gray-800 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-800 rounded w-3/4 mb-4"></div>
+                    <div className="h-3 bg-gray-800 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-800 rounded w-1/2"></div>
                   </div>
                 </div>
-
-                {/* Course Info */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
-                  <div className="text-xs text-orange-400 font-semibold mb-2">{course.category}</div>
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition">
-                    {course.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                    {course.description}
-                  </p>
-
-                  <div className="flex items-center gap-2 mb-4 text-sm text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <Star size={16} className="text-yellow-500 fill-yellow-500" />
-                      <span className="text-white font-semibold">{course.rating}</span>
+              ))
+            ) : (
+              filteredCourses.map((course, index) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-orange-500/50 transition group flex flex-col h-full"
+                >
+                  {/* Course Image */}
+                  <div className="relative h-48 overflow-hidden bg-gray-800">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-purple-500/20"></div>
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-orange-500 text-white text-sm font-semibold rounded-full">
+                      Free
                     </div>
-                    <span>•</span>
-                    <div className="flex items-center gap-1">
-                      <Users size={16} />
-                      <span>{course.students.toLocaleString()} students</span>
+                    <div className="absolute bottom-4 left-4 px-3 py-1 bg-gray-900/80 backdrop-blur-sm text-white text-sm font-medium rounded-lg">
+                      {course.semester || 'Ongoing'}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-800 mt-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Clock size={16} />
-                      <span>{course.duration}</span>
+                  {/* Course Info */}
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div className="text-xs text-orange-400 font-semibold mb-2">{course.code}</div>
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition">
+                      {course.name}
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                      {course.description || 'This course will provide you with comprehensive knowledge and practical skills.'}
+                    </p>
+
+                    <div className="flex items-center gap-2 mb-4 text-sm text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <Users size={16} />
+                        <span>{course.students} student{course.students !== 1 ? 's' : ''}</span>
+                      </div>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <BookOpen size={16} />
+                        <span>{course.credits} Credit{course.credits !== 1 ? 's' : ''}</span>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setLoginModalOpen(true)}
-                      className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
-                    >
-                      Enroll Now
-                    </button>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-800 mt-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Clock size={16} />
+                        <span>{course.academic_year}</span>
+                      </div>
+                      <Link
+                        to={`/invite/${course.id}`}
+                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
+                      >
+                        View Details
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
 
           {filteredCourses.length === 0 && (

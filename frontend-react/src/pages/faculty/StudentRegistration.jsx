@@ -33,9 +33,15 @@ export default function StudentRegistration() {
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.student_id.trim()) {
+    const studentId = formData.student_id ? formData.student_id.trim() : '';
+    if (!studentId) {
       newErrors.student_id = 'Student ID is required';
+    } else {
+      // Validate format: allow alphanumeric, dash, underscore. Adjust to your format if needed.
+      const valid = /^[A-Za-z0-9\-_]+$/.test(studentId);
+      if (!valid || studentId.length < 3 || studentId.length > 20) {
+        newErrors.student_id = 'Student ID is invalid. Use 3-20 chars: letters, numbers, -, _';
+      }
     }
 
     if (!formData.name.trim()) {
@@ -65,14 +71,36 @@ export default function StudentRegistration() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    // Use trimmed student id for validation and submission
+    const trimmedStudentId = formData.student_id ? formData.student_id.trim() : '';
+    const validated = (() => {
+      const copy = { ...formData, student_id: trimmedStudentId };
+      // run validateForm logic against trimmed copy
+      const newErrors = {};
+      if (!trimmedStudentId) newErrors.student_id = 'Student ID is required';
+      else {
+        const valid = /^[A-Za-z0-9\-_]+$/.test(trimmedStudentId);
+        if (!valid || trimmedStudentId.length < 3 || trimmedStudentId.length > 20) {
+          newErrors.student_id = 'Student ID is invalid. Use 3-20 chars: letters, numbers, -, _';
+        }
+      }
+      if (!copy.name.trim()) newErrors.name = 'Name is required';
+      if (!copy.email.trim()) newErrors.email = 'Email is required';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(copy.email)) newErrors.email = 'Invalid email format';
+      if (!copy.password) newErrors.password = 'Password is required';
+      else if (copy.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+      if (copy.password !== copy.password_confirmation) newErrors.password_confirmation = 'Passwords do not match';
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    })();
+
+    if (!validated) return;
 
     try {
       setLoading(true);
 
-      const response = await facultyAPI.registerStudent(formData);
+      const payload = { ...formData, student_id: trimmedStudentId };
+      const response = await facultyAPI.registerStudent(payload);
 
       if (response.success) {
         setToast({

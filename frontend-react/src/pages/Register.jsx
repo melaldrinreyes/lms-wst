@@ -26,7 +26,18 @@ export default function Register() {
       return;
     }
 
-    const result = await register(formData);
+    // Trim and validate optional student ID before sending
+    const studentId = formData.student_id ? formData.student_id.trim() : '';
+    if (studentId) {
+      // Allow alphanumeric, dash and underscore. Adjust regex if your format differs.
+      const valid = /^[A-Za-z0-9\-_]+$/.test(studentId);
+      if (!valid || studentId.length < 3 || studentId.length > 20) {
+        setToast({ message: 'Student ID is invalid. Use 3-20 chars: letters, numbers, -, _', type: 'error' });
+        return;
+      }
+    }
+
+    const result = await register({ ...formData, student_id: studentId || undefined });
     if (result.success) {
       setToast({ message: 'Registration successful!', type: 'success' });
       setTimeout(() => {
@@ -75,7 +86,7 @@ export default function Register() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                   placeholder="John Doe"
                 />
               </div>
@@ -93,7 +104,7 @@ export default function Register() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                   placeholder="you@example.com"
                 />
               </div>
@@ -110,7 +121,8 @@ export default function Register() {
                   type="text"
                   value={formData.student_id}
                   onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                  onBlur={(e) => setFormData({ ...formData, student_id: (e.target.value || '').trim() })}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                   placeholder="2024-00001"
                 />
               </div>
@@ -128,7 +140,7 @@ export default function Register() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                   placeholder="••••••••"
                 />
               </div>
@@ -146,7 +158,7 @@ export default function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
                   placeholder="••••••••"
                 />
               </div>

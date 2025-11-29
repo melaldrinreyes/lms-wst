@@ -59,7 +59,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwit
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="relative w-full max-w-lg bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl my-8"
+              className="relative modal-panel modal-panel--md w-full bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl my-8"
               onClick={(e) => e.stopPropagation()}
             >
               {toast && <Toast {...toast} onClose={() => setToast(null)} />}
@@ -100,7 +100,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwit
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500 transition"
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70 transition"
                         placeholder="you@example.com"
                       />
                     </div>
@@ -118,7 +118,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onSwit
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500 transition"
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70 transition"
                         placeholder="••••••••"
                       />
                     </div>

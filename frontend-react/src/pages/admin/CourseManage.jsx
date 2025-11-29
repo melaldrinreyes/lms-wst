@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
+import Swal from 'sweetalert2';
 import { courseAPI } from '../../services/api';
 import { studentAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -43,7 +44,27 @@ export default function CourseManage() {
         }));
         setAssignments(formattedAssignments);
         
-        setStudents(courseData.enrolled_students || []);
+        const enrolled = courseData.enrolled_students || [];
+        setStudents(enrolled);
+
+        // If some enrolled students are missing `student_id`, try to fetch full student records
+        try {
+          const missingCount = enrolled.filter(s => !s.student_id).length;
+          if (missingCount > 0 && courseData.id) {
+            const studentsResp = await studentAPI.getByCourse(courseData.id);
+            const fetched = studentsResp.students || studentsResp.data || [];
+            if (Array.isArray(fetched) && fetched.length > 0) {
+              const byId = fetched.reduce((acc, s) => { acc[s.id] = s; return acc; }, {});
+              const merged = enrolled.map(s => ({
+                ...s,
+                student_id: s.student_id || byId[s.id]?.student_id || byId[s.id]?.studentId || byId[s.id]?.id || s.student_id
+              }));
+              setStudents(merged);
+            }
+          }
+        } catch (e) {
+          console.debug('Could not fetch student_id for enrolled students', e);
+        }
         
         // Submissions will be managed separately when needed
         // For now, we create mock submissions data from assignments
@@ -131,20 +152,23 @@ export default function CourseManage() {
   };
 
   const handleDeleteModule = async (module) => {
-    if (window.confirm(`Are you sure you want to delete the module "${module.title}"?`)) {
-      try {
-        setToast({ 
-          message: `Module "${module.title}" deleted successfully!`, 
-          type: 'success' 
-        });
-        // Refresh course data
-        await fetchCourseData();
-      } catch (error) {
-        setToast({ 
-          message: `Failed to delete module: ${error.message}`, 
-          type: 'error' 
-        });
-      }
+    const res = await Swal.fire({
+      title: 'Delete module',
+      text: `Are you sure you want to delete the module "${module.title}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
+    try {
+      setToast({ message: `Module "${module.title}" deleted successfully!`, type: 'success' });
+      // Refresh course data
+      await fetchCourseData();
+      Swal.fire({ title: 'Deleted', text: 'Module deleted', icon: 'success', timer: 1200, showConfirmButton: false });
+    } catch (error) {
+      setToast({ message: `Failed to delete module: ${error.message}`, type: 'error' });
     }
   };
 
@@ -168,20 +192,23 @@ export default function CourseManage() {
   };
 
   const handleDeleteAssignment = async (assignment) => {
-    if (window.confirm(`Are you sure you want to delete the assignment "${assignment.title}"?`)) {
-      try {
-        setToast({ 
-          message: `Assignment "${assignment.title}" deleted successfully!`, 
-          type: 'success' 
-        });
-        // Refresh course data
-        await fetchCourseData();
-      } catch (error) {
-        setToast({ 
-          message: `Failed to delete assignment: ${error.message}`, 
-          type: 'error' 
-        });
-      }
+    const res = await Swal.fire({
+      title: 'Delete assignment',
+      text: `Are you sure you want to delete the assignment "${assignment.title}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
+    try {
+      setToast({ message: `Assignment "${assignment.title}" deleted successfully!`, type: 'success' });
+      // Refresh course data
+      await fetchCourseData();
+      Swal.fire({ title: 'Deleted', text: 'Assignment deleted', icon: 'success', timer: 1200, showConfirmButton: false });
+    } catch (error) {
+      setToast({ message: `Failed to delete assignment: ${error.message}`, type: 'error' });
     }
   };
 
@@ -208,20 +235,23 @@ export default function CourseManage() {
   };
 
   const handleRejectSubmission = async (submission) => {
-    if (window.confirm(`Are you sure you want to reject the submission from ${submission.student}?`)) {
-      try {
-        setToast({ 
-          message: `Submission from ${submission.student} rejected!`, 
-          type: 'success' 
-        });
-        // In a real app, this would call an API to update the submission status
-        await fetchCourseData();
-      } catch (error) {
-        setToast({ 
-          message: `Failed to reject submission: ${error.message}`, 
-          type: 'error' 
-        });
-      }
+    const res = await Swal.fire({
+      title: 'Reject submission',
+      text: `Are you sure you want to reject the submission from ${submission.student}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, reject',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#f97316'
+    });
+    if (!res.isConfirmed) return;
+    try {
+      setToast({ message: `Submission from ${submission.student} rejected!`, type: 'success' });
+      // In a real app, this would call an API to update the submission status
+      await fetchCourseData();
+      Swal.fire({ title: 'Rejected', text: 'Submission rejected', icon: 'success', timer: 1200, showConfirmButton: false });
+    } catch (error) {
+      setToast({ message: `Failed to reject submission: ${error.message}`, type: 'error' });
     }
   };
 
@@ -656,7 +686,7 @@ export default function CourseManage() {
                             {submission.student}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {submission.student_id}
+                            {submission.student_id || submission.student?.student_id || submission.student?.id || '-'}
                           </p>
                         </div>
                       </td>
@@ -762,7 +792,7 @@ export default function CourseManage() {
                           {student.email}
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">
-                          {student.student_id || '-'}
+                          {student.student_id || student.id || '-'}
                         </td>
                         <td className="py-4 px-6">
                           <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${

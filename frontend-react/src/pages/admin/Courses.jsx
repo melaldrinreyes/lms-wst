@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, BookOpen, Users, FileText, Calendar, Upload, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Modal from '../../components/ui/Modal';
+import Swal from 'sweetalert2';
 import Toast from '../../components/ui/Toast';
 import { courseAPI, superAdminAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -176,7 +177,17 @@ export default function AdminCourses() {
   };
 
   const handleDelete = async (courseId) => {
-    if (confirm('Are you sure you want to delete this course?')) {
+    const res = await Swal.fire({
+      title: 'Delete course?',
+      text: 'Are you sure you want to delete this course? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#e11d48',
+    });
+
+    if (res.isConfirmed) {
       try {
         const response = await courseAPI.delete(courseId);
         if (response.success) {

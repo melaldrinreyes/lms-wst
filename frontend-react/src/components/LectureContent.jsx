@@ -286,7 +286,7 @@ export default function LectureContent({ courseId, isTeacher = false, onSave }) 
                 value={newLectureTitle}
                 onChange={(e) => setNewLectureTitle(e.target.value)}
                 placeholder="e.g., Lecture 1: Introduction, Lecture 2: Security Devices"
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 onKeyPress={(e) => e.key === 'Enter' && addLecture()}
               />
             </div>
@@ -408,7 +408,7 @@ export default function LectureContent({ courseId, isTeacher = false, onSave }) 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
+            className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700"
           >
             <h3 className="text-lg font-bold text-white mb-4">
               Delete "{lectures[showDeleteConfirm].title}"?

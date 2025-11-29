@@ -11,6 +11,7 @@ import Youtube from '@tiptap/extension-youtube';
 import { Video } from './VideoExtension';
 import mammoth from 'mammoth';
 import { useState, useRef, useImperativeHandle, forwardRef, useEffect, useCallback } from 'react';
+import Swal from 'sweetalert2';
 import {
   Bold,
   Italic,
@@ -813,44 +814,53 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
   };
 
   const addLink = () => {
-    const url = prompt('Enter URL (e.g., https://example.com)');
-    if (url && url.trim()) {
-      // Ensure URL has protocol
-      let finalUrl = url.trim();
-      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-        finalUrl = 'https://' + finalUrl;
-      }
-      
-      // If text is selected, apply link to selection
-      if (!editor.state.selection.empty) {
-        editor
-          .chain()
-          .focus()
-          .extendMarkRange('link')
-          .setLink({ href: finalUrl })
-          .run();
-      } else {
-        // If no text selected, insert URL as text
-        editor
-          .chain()
-          .focus()
-          .insertContent({
-            type: 'text',
-            text: url,
-            marks: [
-              {
-                type: 'link',
-                attrs: {
-                  href: finalUrl,
-                  target: '_blank',
-                  rel: 'noopener noreferrer',
+    (async () => {
+      const { value: url } = await Swal.fire({
+        title: 'Enter URL',
+        input: 'url',
+        inputPlaceholder: 'https://example.com',
+        showCancelButton: true,
+        confirmButtonColor: '#f97316',
+        inputValidator: (value) => {
+          if (!value) return 'Please enter a URL';
+          return null;
+        }
+      });
+      if (url && url.trim()) {
+        let finalUrl = url.trim();
+        if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+          finalUrl = 'https://' + finalUrl;
+        }
+
+        if (!editor.state.selection.empty) {
+          editor
+            .chain()
+            .focus()
+            .extendMarkRange('link')
+            .setLink({ href: finalUrl })
+            .run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: 'text',
+              text: url,
+              marks: [
+                {
+                  type: 'link',
+                  attrs: {
+                    href: finalUrl,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                  },
                 },
-              },
-            ],
-          })
-          .run();
+              ],
+            })
+            .run();
+        }
       }
-    }
+    })();
   };
 
   const addImage = () => {
@@ -858,10 +868,22 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
   };
 
   const addImageFromUrl = () => {
-    const url = prompt('Enter image URL');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+    (async () => {
+      const { value: url } = await Swal.fire({
+        title: 'Enter image URL',
+        input: 'url',
+        inputPlaceholder: 'https://example.com/image.jpg',
+        showCancelButton: true,
+        confirmButtonColor: '#f97316',
+        inputValidator: (value) => {
+          if (!value) return 'Please enter an image URL';
+          return null;
+        }
+      });
+      if (url) {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
+    })();
   };
 
   const addTable = () => {
@@ -1017,7 +1039,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
                 {/* Video Drag-and-Drop Modal */}
                 {showVideoDropzone && (
                   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
-                    <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+                    <div className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700">
                       <h3 className="text-lg font-bold text-white mb-4">Upload Video</h3>
                       <VideoDropzone onVideoDrop={async (file) => {
                         setUploadError(null);
@@ -1109,14 +1131,14 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
       {/* YouTube Video Modal */}
       {showVideoModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
-          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+          <div className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700">
             <h3 className="text-lg font-bold text-white mb-4">Add YouTube Video</h3>
             <input
               type="text"
               placeholder="Paste YouTube URL (e.g., https://youtu.be/dQw4w9WgXcQ)"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
               onKeyPress={(e) => e.key === 'Enter' && addYoutubeVideo()}
             />
             <div className="flex gap-2">

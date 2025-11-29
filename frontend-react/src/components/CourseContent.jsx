@@ -314,7 +314,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
+            className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700"
           >
             <h3 className="text-lg font-bold text-white mb-4">Delete Course Content?</h3>
             <p className="text-gray-300 mb-6">
