@@ -9,6 +9,9 @@ export default defineConfig({
       '/api': 'http://localhost:8000',
     },
   },
+  optimizeDeps: {
+    exclude: ['pdfjs-dist']
+  },
   plugins: [
     react(),
     VitePWA({

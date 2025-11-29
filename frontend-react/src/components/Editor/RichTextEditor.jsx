@@ -10,6 +10,7 @@ import { Color } from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
 import { Video } from './VideoExtension';
 import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
 import { useState, useRef, useImperativeHandle, forwardRef, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import {
@@ -29,6 +30,7 @@ import {
   Film,
   Palette,
   Upload,
+  FileText,
 } from 'lucide-react';
 import './RichTextEditor.css';
 import { toast } from 'react-toastify';
@@ -696,13 +698,162 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
 
   const handlePdfFile = async (file) => {
     if (!file || file.type !== 'application/pdf') return;
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(10);
+
+      // Read the PDF file as ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      setUploadProgress(30);
+
+      // Set up PDF.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).toString();
+
+      // Load PDF document
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      setUploadProgress(50);
+
+      let fullText = '';
+      const numPages = pdf.numPages;
+
+      // Extract text from each page
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n\n';
+        setUploadProgress(50 + Math.round((pageNum / numPages) * 40)); // Progress from 50% to 90%
+      }
+
+      setUploadProgress(90);
+      const htmlContent = convertTextToHtml(fullText);
+
+      setUploadProgress(90);
+
+      // Insert the HTML content into the editor
+      if (htmlContent && htmlContent.trim()) {
+        console.log('Inserting HTML content:', htmlContent);
+        editor.chain().focus().insertContent(htmlContent).run();
+        console.log('Editor content after insertion:', editor.getHTML());
+        toast.success(`PDF content imported successfully! (${numPages} pages)`);
+      } else {
+        toast.warning('PDF appears to be empty or contains no extractable text.');
+      }
+
+      setUploadProgress(100);
+      setIsUploading(false);
+
+    } catch (error) {
+      console.error('Error converting PDF:', error);
+      toast.error('Failed to convert PDF. The file may be corrupted or password-protected.');
+
+      // Fallback: offer to upload as file link instead
+      const result = await Swal.fire({
+        title: 'PDF Conversion Failed',
+        text: 'Would you like to upload the PDF as a downloadable file instead?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f97316',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Upload as File',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        // Upload as regular file
+        await uploadPdfAsFile(file);
+      }
+
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Helper function to convert plain text to basic HTML
+  const convertTextToHtml = (text) => {
+    if (!text || !text.trim()) return '';
+
+    // Split into lines and process each line
+    const lines = text.split('\n').filter(line => line.trim());
+
+    let html = '';
+    let inList = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      const nextLine = lines[i + 1]?.trim() || '';
+
+      // Check if this looks like a heading (short line followed by longer content)
+      if (line.length < 50 && nextLine.length > line.length * 2 && !line.match(/^\d+\./) && !line.match(/^[•\-*]/)) {
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+        html += `<h2>${escapeHtml(line)}</h2>`;
+        continue;
+      }
+
+      // Check for numbered lists
+      if (line.match(/^\d+\./)) {
+        if (!inList || html.endsWith('</ul>')) {
+          if (inList) html += '</ul>';
+          html += '<ol>';
+          inList = true;
+        }
+        const content = line.replace(/^\d+\.\s*/, '');
+        html += `<li>${escapeHtml(content)}</li>`;
+        continue;
+      }
+
+      // Check for bullet lists
+      if (line.match(/^[•\-*]/)) {
+        if (!inList || html.endsWith('</ol>')) {
+          if (inList) html += '</ol>';
+          html += '<ul>';
+          inList = true;
+        }
+        const content = line.replace(/^[•\-*]\s*/, '');
+        html += `<li>${escapeHtml(content)}</li>`;
+        continue;
+      }
+
+      // Regular paragraph
+      if (line.length > 0) {
+        if (inList) {
+          html += '</ul></ol>';
+          inList = false;
+        }
+        html += `<p>${escapeHtml(line)}</p>`;
+      }
+    }
+
+    // Close any open lists
+    if (inList) {
+      html += '</ul></ol>';
+    }
+
+    return html;
+  };
+
+  // Helper function to escape HTML characters
+  const escapeHtml = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
+  // Fallback function to upload PDF as a file link
+  const uploadPdfAsFile = async (file) => {
     setUploadError(null);
     setLastUploadFile(file);
     setIsUploading(true);
     setUploadProgress(0);
+
     const formData = new FormData();
     formData.append('file', file);
     let backendUrl = '';
+
     try {
       const res = await api.post('/media/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -715,6 +866,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
       });
       backendUrl = res.data.url;
       console.log('PDF uploaded successfully. URL:', backendUrl);
+
       // Insert a file card with thumbnail (poster) and link if available, otherwise insert a plain link
       const displayText = `📄 ${file.name}`;
       if (res.data?.poster_url) {
@@ -722,42 +874,42 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         editor.chain().focus().insertContent(html).run();
       } else {
         editor
-        .chain()
-        .focus()
-        .insertContent({
-          type: 'paragraph',
-          content: [
-            {
-              type: 'text',
-              text: displayText,
-              marks: [
-                {
-                  type: 'link',
-                  attrs: {
-                    href: backendUrl,
-                    target: '_blank',
-                    rel: 'noopener noreferrer',
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: displayText,
+                marks: [
+                  {
+                    type: 'link',
+                    attrs: {
+                      href: backendUrl,
+                      target: '_blank',
+                      rel: 'noopener noreferrer',
+                    },
                   },
-                },
-              ],
-            },
-          ],
-        })
-        .run();
+                ],
+              },
+            ],
+          })
+          .run();
       }
+
+      toast.success('PDF uploaded as downloadable file');
     } catch (e) {
       console.error('PDF upload error:', e);
       const msg = e.response?.data?.message || e.message || 'PDF upload failed';
       setUploadError(msg);
+      toast.error(`Upload failed: ${msg}`);
+    } finally {
       setIsUploading(false);
       setUploadProgress(0);
-      return false;
+      setUploadError(null);
+      setLastUploadFile(null);
     }
-    setIsUploading(false);
-    setUploadProgress(0);
-    setUploadError(null);
-    setLastUploadFile(null);
-    return true;
   };
 
   const handleFileSelect = (event) => {
@@ -1030,6 +1182,22 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             <ImageIcon size={18} />
           </button>
           <button
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.pdf';
+              input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) handlePdfFile(file);
+              };
+              input.click();
+            }}
+            className="toolbar-btn"
+            title="Upload PDF (convert to editable text)"
+          >
+            <FileText size={18} />
+          </button>
+          <button
             onClick={() => setShowVideoDropzone(true)}
             className="toolbar-btn"
             title="Upload Video (drag & drop)"
@@ -1181,7 +1349,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             <div className="drag-overlay-content">
               <Upload size={48} className="mb-2" />
               <p className="text-lg font-semibold">Drop files here</p>
-              <p className="text-sm text-gray-400">Images, Videos (MP4/WebM), Word (.docx)</p>
+              <p className="text-sm text-gray-400">Images, Videos (MP4/WebM), PDFs, Word (.docx)</p>
             </div>
           </div>
         )}
