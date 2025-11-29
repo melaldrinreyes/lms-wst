@@ -21,21 +21,34 @@ class CourseController extends Controller
             $user = $request->user();
             
             // If faculty, get only their courses
-            if ($user->role_id == 2) { // Faculty
+            if ($user && $user->role_id == 2) { // Faculty
                 $courses = Course::where('faculty_id', $user->id)
                     ->withCount(['enrollments', 'assignments', 'announcements'])
                     ->orderBy('created_at', 'desc')
                     ->get();
             } else {
-                // Admin can see all courses
-                $courses = Course::withCount(['enrollments', 'assignments', 'announcements'])
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+                // Admin can see all courses. Students can see the full catalog
+                // but we will include `is_enrolled` on each course so frontend
+                // can show enroll buttons without exposing details.
+                if ($user && $user->role_id == 3) { // Student
+                    // Students see all courses with enrollment status
+                    $courses = Course::with(['enrollments' => function ($q) use ($user) {
+                            $q->where('student_id', $user->id)->where('status', 'enrolled');
+                        }])
+                        ->withCount(['enrollments', 'assignments', 'announcements'])
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+                } else {
+                    // Admin or public can see all courses
+                    $courses = Course::withCount(['enrollments', 'assignments', 'announcements'])
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+                }
             }
 
             return response()->json([
                 'success' => true,
-                'courses' => $courses->map(function ($course) {
+                'courses' => $courses->map(function ($course) use ($user) {
                     return [
                         'id' => $course->id,
                         'code' => $course->course_code,
@@ -49,6 +62,7 @@ class CourseController extends Controller
                         'thumbnail' => $course->thumbnail,
                         'status' => $course->status,
                         'students' => $course->enrollments_count,
+                        'is_enrolled' => ($user && $user->role_id == 3) ? ($course->relationLoaded('enrollments') ? $course->enrollments->isNotEmpty() : false) : false,
                         'assignments' => $course->assignments_count,
                         'announcements' => $course->announcements_count,
                     ];
@@ -62,23 +76,26 @@ class CourseController extends Controller
         }
     }
 
-    /**
-     * Get a single course with details
-     */
     public function show($id)
     {
         $user = request()->user();
-        
+
         $course = Course::with(['enrollments.user', 'assignments.assignmentFiles', 'faculty'])
             ->findOrFail($id);
+
+        // If requester is a student, ensure they are enrolled before showing full details
+        $isEnrolled = false;
+        if ($user && $user->role_id == 3) {
+            $isEnrolled = $course->enrollments()->where('student_id', $user->id)->where('status', 'enrolled')->exists();
+        }
 
         // Get announcements for this course
         $announcementsQuery = Announcement::with('creator')
             ->where('course_id', $id)
             ->withCount('comments');
         
-        // Students only see published announcements
-        if ($user && $user->role_id == 3) {
+        // Students only see published announcements if not enrolled
+        if ($user && $user->role_id == 3 && !$isEnrolled) {
             $announcementsQuery->where('status', 'published');
         }
         
@@ -102,11 +119,10 @@ class CourseController extends Controller
                 'thumbnail' => $course->thumbnail,
                 'status' => $course->status,
                 'students' => $course->enrollments->count(),
-                'assignments' => $course->assignments->map(function ($assignment) use ($course) {
+                'assignments' => $course->assignments->map(function ($assignment) use ($course, $user, $isEnrolled) {
                     // Get current user's submission for this assignment
-                    $user = request()->user();
                     $studentSubmission = null;
-                    if ($user && $user->role_id == 3) { // Student
+                    if ($user && $user->role_id == 3 && $isEnrolled) { // Student and enrolled
                         $studentSubmission = $assignment->submissions()
                             ->where('student_id', $user->id)
                             ->latest()

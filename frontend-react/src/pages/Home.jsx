@@ -161,7 +161,7 @@ export default function Home() {
               Why Choose MINSU E-LEARN?
             </h2>
             <p className="text-gray-400 text-base sm:text-lg">
-              Everything you need to succeed in your learning journey
+              Discover the features that make learning management seamless and effective
             </p>
           </div>
 
@@ -169,38 +169,38 @@ export default function Home() {
             {[
               {
                 icon: BookOpen,
-                title: 'Expert-Led Courses',
-                description: 'Learn from industry professionals with real-world experience across 200+ courses.',
+                title: 'Comprehensive Course Management',
+                description: 'Access all your enrolled courses, lecture materials, and course content in one centralized platform.',
                 color: 'orange',
               },
               {
                 icon: MessageCircle,
-                title: '24/7 AI Assistant',
-                description: 'Get instant help anytime with our intelligent chatbot that understands your needs.',
+                title: 'Interactive Learning',
+                description: 'Engage with course content through hierarchical lectures, assignments, and real-time announcements.',
                 color: 'blue',
               },
               {
                 icon: Users,
-                title: 'Thriving Community',
-                description: 'Connect with 5,000+ active learners, share knowledge, and grow together.',
+                title: 'Student-Teacher Collaboration',
+                description: 'Connect directly with instructors, submit assignments, and receive personalized feedback on your work.',
                 color: 'green',
               },
               {
                 icon: GraduationCap,
-                title: 'Industry Certifications',
-                description: 'Earn recognized certificates that boost your career and validate your skills.',
+                title: 'Progress Tracking',
+                description: 'Monitor your academic progress, view grades, and track assignment submissions across all courses.',
                 color: 'purple',
               },
               {
                 icon: CheckCircle,
-                title: 'Proven Success',
-                description: '95% of our students achieve their learning goals and advance their careers.',
+                title: 'Secure & Reliable',
+                description: 'Experience a secure learning environment with reliable access to course materials and resources.',
                 color: 'pink',
               },
               {
                 icon: CheckCircle,
-                title: 'Flexible Learning',
-                description: 'Study at your own pace, anytime, anywhere. Access course materials 24/7.',
+                title: 'Flexible Access',
+                description: 'Study anytime, anywhere with 24/7 access to course materials, assignments, and learning resources.',
                 color: 'yellow',
               },
             ].map((feature, index) => (
