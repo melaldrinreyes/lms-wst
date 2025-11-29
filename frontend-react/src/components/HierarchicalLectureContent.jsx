@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, Edit, X, Eye, Loader, Trash2, Plus, ChevronDown, ChevronRight, Indent } from 'lucide-react';
+import { Save, Edit, X, Eye, Loader, Trash2, Plus, ChevronDown, ChevronRight, Indent, ChevronUp } from 'lucide-react';
 import RichTextEditor from './Editor/RichTextEditor';
 import Toast from './ui/Toast';
 import axios from 'axios';
@@ -45,10 +45,36 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
   const [showAddSubModal, setShowAddSubModal] = useState(null); // For adding sub-lectures
   const [subLectureTitle, setSubLectureTitle] = useState('');
   const [unsavedLectures, setUnsavedLectures] = useState([]); // Track newly created sub-lectures
+  const [searchQuery, setSearchQuery] = useState(''); // For searching lectures
+  const [filteredLectures, setFilteredLectures] = useState([]); // Filtered lectures based on search
+  const [showScrollUp, setShowScrollUp] = useState(false); // For scroll up button
 
   useEffect(() => {
     fetchLectures();
   }, [courseId]);
+
+  // Update filtered lectures when lectures or search query changes
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const filtered = lectures.filter(lecture =>
+        lecture.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lecture.content && lecture.content.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      setFilteredLectures(filtered);
+    } else {
+      setFilteredLectures(lectures);
+    }
+  }, [lectures, searchQuery]);
+
+  // Handle scroll for scroll up button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollUp(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const fetchLectures = async () => {
     try {
@@ -81,9 +107,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     }
   };
 
-  // Get root lectures (modules)
+  // Get root lectures (modules) - use filtered lectures when searching
   const getRootLectures = () => {
-    return lectures.filter(l => !l.parent_lecture_id);
+    const lecturesToUse = getLecturesToDisplay();
+    return lecturesToUse.filter(l => !l.parent_lecture_id);
   };
 
   // Get children of a lecture
@@ -454,25 +481,96 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     });
   };
 
+  // Expand all lectures
+  const expandAllLectures = () => {
+    const allExpanded = {};
+    const expandRecursively = (lectureList) => {
+      lectureList.forEach(lecture => {
+        allExpanded[lecture.id] = true;
+        const children = getChildren(lecture.id);
+        if (children.length > 0) {
+          expandRecursively(children);
+        }
+      });
+    };
+    expandRecursively(filteredLectures);
+    setExpandedLectures(allExpanded);
+  };
+
+  // Collapse all lectures
+  const collapseAllLectures = () => {
+    setExpandedLectures({});
+  };
+
+  // Get all lectures to display (filtered or all)
+  const getLecturesToDisplay = () => {
+    if (searchQuery.trim()) {
+      // When searching, show all matching lectures and their parents for context
+      const matchingIds = new Set(filteredLectures.map(l => l.id));
+      const result = [];
+      
+      const addWithParents = (lecture) => {
+        // Add parents first
+        if (lecture.parent_lecture_id) {
+          const parent = lectures.find(l => l.id === lecture.parent_lecture_id);
+          if (parent && !result.find(l => l.id === parent.id)) {
+            addWithParents(parent);
+          }
+        }
+        // Add the lecture itself
+        if (!result.find(l => l.id === lecture.id)) {
+          result.push(lecture);
+        }
+      };
+      
+      filteredLectures.forEach(lecture => addWithParents(lecture));
+      return result;
+    }
+    return lectures;
+  };
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   // Render hierarchical lecture item
   const LectureItem = ({ lecture }) => {
     const children = getChildren(lecture.id);
     const hasChildren = children.length > 0;
     const isExpanded = expandedLectures[lecture.id];
+    const isSearchMatch = searchQuery.trim() && filteredLectures.some(l => l.id === lecture.id);
+
+    // Function to highlight search terms
+    const highlightText = (text, query) => {
+      if (!query.trim()) return text;
+      
+      const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      const parts = text.split(regex);
+      
+      return parts.map((part, index) => 
+        regex.test(part) ? 
+          <mark key={index} className="bg-yellow-200 text-gray-900 px-1 rounded">{part}</mark> : 
+          part
+      );
+    };
 
     return (
       <div key={lecture.id} className={`${
         lecture.level === 1 ? 'ml-8' :
         lecture.level === 2 ? 'ml-16' :
         lecture.level > 2 ? 'ml-24' : ''
-      }`}>
+      } ${isSearchMatch ? 'ring-2 ring-orange-300 rounded-lg' : ''}`}>
         <div className={`rounded-lg border mb-2 overflow-hidden hover:border-orange-500/50 transition ${
           lecture.level === 0
             ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm'
             : lecture.level === 1
             ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
             : 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200'
-        }`}>
+        } ${isSearchMatch ? 'border-orange-400 shadow-md' : ''}`}>
           <div
             onClick={() => toggleLecture(lecture.id)}
             className={`flex items-center gap-3 transition ${
@@ -521,7 +619,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   lecture.level === 0 ? 'text-xl text-gray-900' :
                   lecture.level === 1 ? 'text-lg text-gray-800' : 'text-base text-gray-700'
                 }`}>
-                  {lecture.title}
+                  {highlightText(lecture.title, searchQuery)}
                 </h4>
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -946,6 +1044,116 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
         </div>
       )}
 
+      {/* Navigation and Search Controls */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex-1 max-w-md">
+            <label className="text-sm font-semibold text-gray-700 mb-2 block">
+              🔍 Search Lectures
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by title or content..."
+                className="w-full px-4 py-2 pr-10 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  title="Clear search"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={expandAllLectures}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2"
+            >
+              <ChevronDown size={16} />
+              Expand All
+            </button>
+            <button
+              onClick={collapseAllLectures}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium flex items-center gap-2"
+            >
+              <ChevronRight size={16} />
+              Collapse All
+            </button>
+          </div>
+        </div>
+        {searchQuery.trim() && (
+          <div className="mt-3 text-sm text-gray-600">
+            Found {filteredLectures.length} matching lecture{filteredLectures.length !== 1 ? 's' : ''}
+            {filteredLectures.length === 0 && ' - try a different search term'}
+          </div>
+        )}
+      </div>
+
+      {/* Quick Overview when collapsed */}
+      {Object.keys(expandedLectures).length === 0 && !searchQuery.trim() && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            📋 Course Overview
+            <span className="text-sm font-normal text-gray-500">
+              ({lectures.length} total items)
+            </span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {lectures.map(lecture => (
+              <div
+                key={lecture.id}
+                onClick={() => toggleLecture(lecture.id)}
+                className={`p-3 rounded-lg border cursor-pointer transition hover:shadow-md ${
+                  lecture.level === 0
+                    ? 'bg-blue-50 border-blue-200 hover:border-blue-300'
+                    : lecture.level === 1
+                    ? 'bg-green-50 border-green-200 hover:border-green-300'
+                    : 'bg-purple-50 border-purple-200 hover:border-purple-300'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                    lecture.level === 0
+                      ? 'bg-blue-100 text-blue-700'
+                      : lecture.level === 1
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-purple-100 text-purple-700'
+                  }`}>
+                    {lecture.level === 0 ? 'M' : lecture.level === 1 ? 'C' : 'T'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-medium truncate ${
+                      lecture.level === 0 ? 'text-gray-900' :
+                      lecture.level === 1 ? 'text-gray-800' : 'text-gray-700'
+                    }`}>
+                      {lecture.title}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {lecture.content ? '✓ Has content' : 'No content'}
+                      {getChildren(lecture.id).length > 0 && ` • ${getChildren(lecture.id).length} sub-items`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 text-center">
+            <button
+              onClick={expandAllLectures}
+              className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium"
+            >
+              Expand All to Browse Content
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Root lectures (modules) */}
       <div className="space-y-2">
         {getRootLectures().length === 0 ? (
@@ -1041,6 +1249,22 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           </motion.div>
         </div>
       )}
+
+      {/* Scroll Up Button */}
+      <AnimatePresence>
+        {showScrollUp && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-40 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
+            title="Scroll to top"
+          >
+            <ChevronUp size={24} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

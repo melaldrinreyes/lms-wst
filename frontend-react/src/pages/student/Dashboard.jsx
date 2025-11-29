@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, ClipboardList, Bell, User, Megaphone, Clock, AlertCircle, Calendar, CheckCircle2, ChevronLeft, ChevronRight, DownloadCloud } from 'lucide-react';
+import { BookOpen, ClipboardList, Bell, User, Megaphone, Clock, AlertCircle, Calendar, CheckCircle2, ChevronLeft, ChevronRight, DownloadCloud, ChevronUp } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { motion as Motion } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 /* eslint-disable react-hooks/exhaustive-deps */
 import { studentAPI, announcementAPI, assignmentAPI } from '../../services/api';
@@ -19,6 +19,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [classesError, setClassesError] = useState(null);
   const assignmentsPerPage = 5;
+  const [showScrollUp, setShowScrollUp] = useState(false);
   // Dev debug panel state removed
 
   
@@ -256,6 +257,24 @@ export default function StudentDashboard() {
     init();
     // run only once on mount
   }, []);
+
+  // Handle scroll for scroll up button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollUp(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -834,6 +853,22 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
+
+      {/* Scroll Up Button */}
+      <AnimatePresence>
+        {showScrollUp && (
+          <Motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-40 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
+            title="Scroll to top"
+          >
+            <ChevronUp size={24} />
+          </Motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

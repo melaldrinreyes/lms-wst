@@ -1,6 +1,7 @@
-import { BookOpen, Clock, Users, Star, Search, Filter, FileText, Eye } from 'lucide-react';
+import { BookOpen, Clock, Users, Star, Search, Filter, FileText, Eye, ChevronUp } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import LoginModal from '../components/LoginModal';
@@ -13,6 +14,7 @@ export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showScrollUp, setShowScrollUp] = useState(false);
 
   const categories = ['All', 'Web Development', 'Data Science', 'Design', 'Business', 'Marketing'];
 
@@ -62,6 +64,24 @@ export default function Courses() {
   useEffect(() => {
     fetchCourses();
   }, [fetchCourses]);
+
+  // Handle scroll for scroll up button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollUp(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // Helper function to determine category from course data
   const getCategoryFromCourse = (course) => {
@@ -297,6 +317,22 @@ export default function Courses() {
       </section>
 
       <Footer />
+
+      {/* Scroll Up Button */}
+      <AnimatePresence>
+        {showScrollUp && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-40 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
+            title="Scroll to top"
+          >
+            <ChevronUp size={24} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
