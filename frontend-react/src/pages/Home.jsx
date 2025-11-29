@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, MessageCircle, ArrowRight, GraduationCap, CheckCircle, Sparkles, Target, Zap, Heart, TrendingUp, Users } from 'lucide-react';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import LoginModal from '../components/LoginModal';

@@ -11,6 +11,7 @@ import Youtube from '@tiptap/extension-youtube';
 import { Video } from './VideoExtension';
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
+import * as XLSX from 'xlsx';
 import { useState, useRef, useImperativeHandle, forwardRef, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import {
@@ -31,6 +32,7 @@ import {
   Palette,
   Upload,
   FileText,
+  FileSpreadsheet,
 } from 'lucide-react';
 import './RichTextEditor.css';
 import { toast } from 'react-toastify';
@@ -912,17 +914,412 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     }
   };
 
+  // Handle CSV file conversion to text table
+  const handleCsvFile = async (file) => {
+    console.log('Starting CSV file processing:', file.name, file.type, file.size);
+    if (!file || (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv')) {
+      console.log('File does not have CSV extension or MIME type');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(10);
+
+      // Read the CSV file as text
+      const text = await file.text();
+      console.log('File read as text, length:', text.length);
+      setUploadProgress(50);
+
+      // Parse CSV data
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length === 0) {
+        throw new Error('CSV file appears to be empty');
+      }
+
+      // Parse CSV lines (simple parsing, assumes comma-separated)
+      const csvData = lines.map(line => {
+        // Simple CSV parsing - split by comma but handle quoted values
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      });
+
+      console.log('CSV data parsed, rows:', csvData.length);
+      setUploadProgress(70);
+
+      // Convert CSV data to HTML table format
+      const htmlTable = convertCsvToHtmlTable(csvData);
+      console.log('HTML table generated:', htmlTable);
+      setUploadProgress(90);
+
+      // Insert the HTML table into the editor
+      if (htmlTable && htmlTable.trim()) {
+        console.log('Inserting CSV HTML table:', htmlTable);
+        editor.chain().focus().insertContent(htmlTable).run();
+        console.log('Editor content after CSV insertion:', editor.getHTML());
+        toast.success('CSV content imported successfully!');
+      } else {
+        console.log('No HTML table generated');
+        toast.warning('CSV file appears to be empty or contains no readable data.');
+      }
+
+      setUploadProgress(100);
+      setIsUploading(false);
+
+    } catch (error) {
+      console.error('Error converting CSV:', error);
+      toast.error('Failed to convert CSV file. The file may be corrupted or in an unsupported format.');
+
+      // Fallback: offer to upload as file link instead
+      const result = await Swal.fire({
+        title: 'CSV Conversion Failed',
+        text: 'Would you like to upload the CSV file as a downloadable file instead?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f97316',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Upload as File',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        // Upload as regular file
+        await uploadCsvAsFile(file);
+      }
+
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Handle Excel file conversion to HTML table
+  const handleExcelFile = async (file) => {
+    console.log('Starting Excel file processing:', file.name, file.type, file.size);
+    if (!file || (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls'))) {
+      console.log('File does not have Excel extension');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(10);
+
+      // Read the Excel file as ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      console.log('File read as ArrayBuffer, size:', arrayBuffer.byteLength);
+      setUploadProgress(30);
+
+      // Parse Excel file
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      console.log('Workbook parsed:', workbook.SheetNames);
+      setUploadProgress(60);
+
+      // Convert workbook to HTML table format
+      const htmlTable = convertWorkbookToHtmlTable(workbook);
+      console.log('HTML table generated:', htmlTable);
+      setUploadProgress(90);
+
+      // Insert the HTML table into the editor
+      if (htmlTable && htmlTable.trim()) {
+        console.log('Inserting Excel HTML table:', htmlTable);
+        editor.chain().focus().insertContent(htmlTable).run();
+        console.log('Editor content after Excel insertion:', editor.getHTML());
+        toast.success(`Excel content imported successfully! (${workbook.SheetNames.length} sheets)`);
+      } else {
+        console.log('No HTML table generated');
+        toast.warning('Excel file appears to be empty or contains no readable data.');
+      }
+
+      setUploadProgress(100);
+      setIsUploading(false);
+
+    } catch (error) {
+      console.error('Error converting Excel:', error);
+      toast.error('Failed to convert Excel file. The file may be corrupted or password-protected.');
+
+      // Fallback: offer to upload as file link instead
+      const result = await Swal.fire({
+        title: 'Excel Conversion Failed',
+        text: 'Would you like to upload the Excel file as a downloadable file instead?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f97316',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Upload as File',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        // Upload as regular file
+        await uploadExcelAsFile(file);
+      }
+
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Helper function to convert Excel workbook to HTML table format
+  const convertWorkbookToHtmlTable = (workbook) => {
+    let html = '';
+
+    workbook.SheetNames.forEach((sheetName, index) => {
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+      if (jsonData.length === 0) return;
+
+      // Add sheet title if multiple sheets
+      if (workbook.SheetNames.length > 1) {
+        html += `<h3>${sheetName}</h3>`;
+      }
+
+      // Create HTML table
+      html += '<table border="1" style="border-collapse: collapse; width: 100%;">\n';
+
+      jsonData.forEach((row, rowIndex) => {
+        // Skip empty rows
+        if (row.every(cell => !cell || String(cell).trim() === '')) return;
+
+        // Add table header for first row
+        if (rowIndex === 0) {
+          html += '  <thead>\n    <tr>\n';
+          row.forEach(cell => {
+            html += `      <th style="padding: 8px; background-color: #f5f5f5; font-weight: bold;">${escapeHtml(String(cell))}</th>\n`;
+          });
+          html += '    </tr>\n  </thead>\n  <tbody>\n';
+        } else {
+          // Add table body rows
+          html += '    <tr>\n';
+          row.forEach(cell => {
+            html += `      <td style="padding: 8px;">${escapeHtml(String(cell))}</td>\n`;
+          });
+          html += '    </tr>\n';
+        }
+      });
+
+      html += '  </tbody>\n</table>\n';
+
+      // Add spacing between sheets
+      if (index < workbook.SheetNames.length - 1) {
+        html += '<br>\n';
+      }
+    });
+
+    return html;
+  };
+
+  // Helper function to convert CSV data to HTML table format
+  const convertCsvToHtmlTable = (csvData) => {
+    if (!csvData || csvData.length === 0) return '';
+
+    let html = '<table border="1" style="border-collapse: collapse; width: 100%;">\n';
+
+    csvData.forEach((row, rowIndex) => {
+      // Skip empty rows
+      if (row.every(cell => !cell || String(cell).trim() === '')) return;
+
+      // Add table header for first row
+      if (rowIndex === 0) {
+        html += '  <thead>\n    <tr>\n';
+        row.forEach(cell => {
+          html += `      <th style="padding: 8px; background-color: #f5f5f5; font-weight: bold;">${escapeHtml(String(cell || ''))}</th>\n`;
+        });
+        html += '    </tr>\n  </thead>\n  <tbody>\n';
+      } else {
+        // Add table body rows
+        html += '    <tr>\n';
+        row.forEach(cell => {
+          html += `      <td style="padding: 8px;">${escapeHtml(String(cell || ''))}</td>\n`;
+        });
+        html += '    </tr>\n';
+      }
+    });
+
+    html += '  </tbody>\n</table>\n';
+    return html;
+  };  // Fallback function to upload CSV as a file link
+  const uploadCsvAsFile = async (file) => {
+    setUploadError(null);
+    setLastUploadFile(file);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    let backendUrl = '';
+
+    try {
+      const res = await api.post('/media/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000, // 10 minutes for very large uploads
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+          }
+        },
+      });
+      backendUrl = res.data.url;
+      console.log('CSV uploaded successfully. URL:', backendUrl);
+
+      // Insert a file card with thumbnail (poster) and link if available, otherwise insert a plain link
+      const displayText = `📊 ${file.name}`;
+      if (res.data?.poster_url) {
+        const html = `<div class="file-card"><a href="${backendUrl}" target="_blank" rel="noopener noreferrer"><img src="${res.data.poster_url}" class="file-card-thumb" alt="${file.name}" /><div class="file-card-meta"><div class="file-card-title">${file.name}</div></div></a></div>`;
+        editor.chain().focus().insertContent(html).run();
+      } else {
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: displayText,
+                marks: [
+                  {
+                    type: 'link',
+                    attrs: {
+                      href: backendUrl,
+                      target: '_blank',
+                      rel: 'noopener noreferrer',
+                    },
+                  },
+                ],
+              },
+            ],
+          })
+          .run();
+      }
+
+      toast.success('CSV uploaded as downloadable file');
+    } catch (e) {
+      console.error('CSV upload error:', e);
+      const msg = e.response?.data?.message || e.message || 'CSV upload failed';
+      setUploadError(msg);
+      toast.error(`Upload failed: ${msg}`);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadError(null);
+      setLastUploadFile(null);
+    }
+  };
+
+  // Fallback function to upload Excel as a file link
+  const uploadExcelAsFile = async (file) => {
+    setUploadError(null);
+    setLastUploadFile(file);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    let backendUrl = '';
+
+    try {
+      const res = await api.post('/media/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000, // 10 minutes for very large uploads
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+          }
+        },
+      });
+      backendUrl = res.data.url;
+      console.log('Excel uploaded successfully. URL:', backendUrl);
+
+      // Insert a file card with thumbnail (poster) and link if available, otherwise insert a plain link
+      const displayText = `📊 ${file.name}`;
+      if (res.data?.poster_url) {
+        const html = `<div class="file-card"><a href="${backendUrl}" target="_blank" rel="noopener noreferrer"><img src="${res.data.poster_url}" class="file-card-thumb" alt="${file.name}" /><div class="file-card-meta"><div class="file-card-title">${file.name}</div></div></a></div>`;
+        editor.chain().focus().insertContent(html).run();
+      } else {
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: displayText,
+                marks: [
+                  {
+                    type: 'link',
+                    attrs: {
+                      href: backendUrl,
+                      target: '_blank',
+                      rel: 'noopener noreferrer',
+                    },
+                  },
+                ],
+              },
+            ],
+          })
+          .run();
+      }
+
+      toast.success('Excel uploaded as downloadable file');
+    } catch (e) {
+      console.error('Excel upload error:', e);
+      const msg = e.response?.data?.message || e.message || 'Excel upload failed';
+      setUploadError(msg);
+      toast.error(`Upload failed: ${msg}`);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadError(null);
+      setLastUploadFile(null);
+    }
+  };
+
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
+    console.log('Files selected:', files.map(f => ({ name: f.name, type: f.type, size: f.size })));
     files.forEach(file => {
+      console.log('Processing selected file:', file.name, file.type);
       if (file.type.startsWith('image/')) {
+        console.log('Handling as image');
         handleImageFile(file);
       } else if (file.type.startsWith('video/')) {
+        console.log('Handling as video');
         handleVideoFile(file);
       } else if (file.type === 'application/pdf') {
+        console.log('Handling as PDF');
         handlePdfFile(file);
-      } else if (file.name.endsWith('.docx')) {
+      } else if (file.type === 'text/csv' ||
+                 file.name.toLowerCase().endsWith('.csv')) {
+        console.log('Handling as CSV file');
+        handleCsvFile(file);
+      } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                 file.type === 'application/vnd.ms-excel' ||
+                 file.name.toLowerCase().endsWith('.xlsx') ||
+                 file.name.toLowerCase().endsWith('.xls')) {
+        console.log('Handling as Excel file');
+        handleExcelFile(file);
+      } else if (file.name.toLowerCase().endsWith('.docx')) {
+        console.log('Handling as Word file');
         handleWordFile(file);
+      } else {
+        console.log('File type not recognized:', file.type, file.name);
       }
     });
     // Reset input
@@ -952,15 +1349,33 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
+    console.log('Files dropped:', files.map(f => ({ name: f.name, type: f.type, size: f.size })));
     files.forEach(file => {
+      console.log('Processing dropped file:', file.name, file.type);
       if (file.type.startsWith('image/')) {
+        console.log('Handling as image');
         handleImageFile(file);
       } else if (file.type.startsWith('video/')) {
+        console.log('Handling as video');
         handleVideoFile(file);
       } else if (file.type === 'application/pdf') {
+        console.log('Handling as PDF');
         handlePdfFile(file);
-      } else if (file.name.endsWith('.docx')) {
+      } else if (file.type === 'text/csv' ||
+                 file.name.toLowerCase().endsWith('.csv')) {
+        console.log('Handling as CSV file');
+        handleCsvFile(file);
+      } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                 file.type === 'application/vnd.ms-excel' ||
+                 file.name.toLowerCase().endsWith('.xlsx') ||
+                 file.name.toLowerCase().endsWith('.xls')) {
+        console.log('Handling as Excel file');
+        handleExcelFile(file);
+      } else if (file.name.toLowerCase().endsWith('.docx')) {
+        console.log('Handling as Word file');
         handleWordFile(file);
+      } else {
+        console.log('File type not recognized:', file.type, file.name);
       }
     });
   };
@@ -1198,55 +1613,28 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             <FileText size={18} />
           </button>
           <button
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.xlsx,.xls';
+              input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) handleExcelFile(file);
+              };
+              input.click();
+            }}
+            className="toolbar-btn"
+            title="Upload Excel (convert to HTML table)"
+          >
+            <FileSpreadsheet size={18} />
+          </button>
+          <button
             onClick={() => setShowVideoDropzone(true)}
             className="toolbar-btn"
             title="Upload Video (drag & drop)"
           >
             <Film size={18} />
           </button>
-                {/* Video Drag-and-Drop Modal */}
-                {showVideoDropzone && (
-                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
-                    <div className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700">
-                      <h3 className="text-lg font-bold text-white mb-4">Upload Video</h3>
-                      <VideoDropzone onVideoDrop={async (file) => {
-                        setUploadError(null);
-                        setLastUploadFile(file);
-                        const ok = await handleVideoFile(file);
-                        if (ok) setShowVideoDropzone(false);
-                      }} />
-                      {uploadError && (
-                        <div className="mt-4 text-sm text-red-400">
-                          <div>Upload failed: {String(uploadError)}</div>
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              onClick={retryLastUpload}
-                              className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
-                            >
-                              Retry
-                            </button>
-                            <button
-                              onClick={() => { setShowVideoDropzone(false); setUploadError(null); setLastUploadFile(null); }}
-                              className="px-3 py-2 border border-gray-600 rounded text-gray-300 hover:bg-gray-800"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                      {!uploadError && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setShowVideoDropzone(false)}
-                            className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
           <button
             onClick={addTable}
             className="toolbar-btn"
@@ -1327,6 +1715,50 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
         </div>
       )}
 
+      {/* Video Drag-and-Drop Modal */}
+      {showVideoDropzone && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+          <div className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700">
+            <h3 className="text-lg font-bold text-white mb-4">Upload Video</h3>
+            <VideoDropzone onVideoDrop={async (file) => {
+              setUploadError(null);
+              setLastUploadFile(file);
+              const ok = await handleVideoFile(file);
+              if (ok) setShowVideoDropzone(false);
+            }} />
+            {uploadError && (
+              <div className="mt-4 text-sm text-red-400">
+                <div>Upload failed: {String(uploadError)}</div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={retryLastUpload}
+                    className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    onClick={() => { setShowVideoDropzone(false); setUploadError(null); setLastUploadFile(null); }}
+                    className="px-3 py-2 border border-gray-600 rounded text-gray-300 hover:bg-gray-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+            {!uploadError && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowVideoDropzone(false)}
+                  className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -1349,7 +1781,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             <div className="drag-overlay-content">
               <Upload size={48} className="mb-2" />
               <p className="text-lg font-semibold">Drop files here</p>
-              <p className="text-sm text-gray-400">Images, Videos (MP4/WebM), PDFs, Word (.docx)</p>
+              <p className="text-sm text-gray-400">Images, Videos (MP4/WebM), PDFs, Excel (.xlsx/.xls), CSV (.csv), Word (.docx)</p>
             </div>
           </div>
         )}
