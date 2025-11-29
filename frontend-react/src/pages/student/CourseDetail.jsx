@@ -45,6 +45,7 @@ function CourseDetail() {
   const [downloadingMap, setDownloadingMap] = useState({});
   const [gradedModalAssignment, setGradedModalAssignment] = useState(null);
   const gradedModalRef = useRef(null);
+  const [showInactiveModal, setShowInactiveModal] = useState(false);
 
   useEffect(() => {
     if (gradedModalAssignment && gradedModalRef.current) {
@@ -155,6 +156,11 @@ function CourseDetail() {
             } catch (materialsError) {
               console.error('Error fetching class materials:', materialsError);
               // Don't fail the whole page load if materials fail
+            }
+
+            // Check if course is inactive and show modal
+            if (resp.course?.status === 'inactive') {
+              setShowInactiveModal(true);
             }
           } catch (error) {
             console.error('Error fetching course details:', error);
@@ -651,6 +657,55 @@ function CourseDetail() {
             Back to Courses
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // Show inactive course modal instead of course content
+  if (showInactiveModal) {
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <Motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="modal-panel modal-panel--md bg-gray-900 rounded-xl p-8 w-full border border-gray-800 max-w-md mx-auto shadow-2xl"
+        >
+          <div className="text-center">
+            {/* Warning Icon */}
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-orange-400 mb-4">Course Unavailable</h2>
+
+            {/* Message */}
+            <p className="text-orange-300 mb-6 leading-relaxed">
+              This course is currently inactive. You cannot access course materials, assignments, or announcements at this time.
+            </p>
+
+            {/* Contact Info */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-6">
+              <p className="text-sm text-orange-200">
+                Please contact your instructor or course administrator for more information.
+              </p>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={() => navigate('/student/courses')}
+              className="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Courses
+            </button>
+          </div>
+        </Motion.div>
       </div>
     );
   }
