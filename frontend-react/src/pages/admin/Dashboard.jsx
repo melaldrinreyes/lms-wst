@@ -182,30 +182,43 @@ export default function SuperAdminDashboard() {
   const handleExportReport = async () => {
     setActionLoading('export');
     try {
-      // Create a simple CSV report
-      const report = `System Report - ${new Date().toLocaleString()}
-      
-Dashboard Statistics:
-- Total Students: ${stats.students.total}
-- Total Courses: ${stats.courses.total}
-- Total Instructors: ${stats.instructors.total}
-- Active Instructors: ${stats.instructors.active}
-- Inactive Instructors: ${stats.instructors.inactive}
-- Total Enrollments: ${stats.enrollments.total}
-- Total Submissions: ${stats.submissions.total}
-- Graded Submissions: ${stats.submissions.graded}
-- Pending Submissions: ${stats.submissions.pending}
-`;
-      
+      // Create CSV data for Excel
+      const csvHeaders = [
+        'Metric',
+        'Value',
+        'Description'
+      ];
+
+      const csvData = [
+        ['Report Generated', new Date().toLocaleString(), 'System Dashboard Export'],
+        ['', '', ''], // Empty row for spacing
+        ['Total Students', stats.students.total, 'Total number of registered students'],
+        ['Total Courses', stats.courses.total, 'Total number of courses in the system'],
+        ['Total Instructors', stats.instructors.total, 'Total number of instructors'],
+        ['Active Instructors', stats.instructors.active, 'Number of active instructors'],
+        ['Inactive Instructors', stats.instructors.inactive, 'Number of inactive instructors'],
+        ['Total Enrollments', stats.enrollments.total, 'Total course enrollments'],
+        ['Total Submissions', stats.submissions.total, 'Total assignment submissions'],
+        ['Graded Submissions', stats.submissions.graded, 'Number of graded submissions'],
+        ['Pending Submissions', stats.submissions.pending, 'Number of pending submissions']
+      ];
+
+      // Convert to CSV string
+      const csvContent = [
+        csvHeaders.join(','),
+        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Create and download the file
       const element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(report));
-      element.setAttribute('download', `dashboard-report-${new Date().getTime()}.txt`);
+      element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent));
+      element.setAttribute('download', `dashboard-report-${new Date().getTime()}.csv`);
       element.style.display = 'none';
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
-      
-      setToast({ message: 'Report exported successfully', type: 'success' });
+
+      setToast({ message: 'Excel report exported successfully', type: 'success' });
     } catch (error) {
       console.error('Export error:', error);
       setToast({ message: 'Failed to export report', type: 'error' });
@@ -339,15 +352,6 @@ Dashboard Statistics:
             <p className="text-xs text-gray-400 mt-1">{stats.students.total} students</p>
           </Link>
 
-          <Link
-            to="/admin/instructors"
-            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-blue-500/10 transition-all text-center group"
-          >
-            <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-            <p className="font-medium text-white">View All Instructors</p>
-            <p className="text-xs text-gray-400 mt-1">{stats.instructors.total} instructors</p>
-          </Link>
-
           <button
             onClick={handleRefreshStats}
             disabled={actionLoading === 'refresh'}
@@ -364,7 +368,7 @@ Dashboard Statistics:
             className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-cyan-500 hover:bg-cyan-500/10 transition-all text-center group disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-8 h-8 text-cyan-500 mx-auto mb-2" />
-            <p className="font-medium text-white">Export Report</p>
+            <p className="font-medium text-white">Export to Excel</p>
             <p className="text-xs text-gray-400 mt-1">Download data</p>
           </button>
         </div>
@@ -423,46 +427,78 @@ Dashboard Statistics:
                     </div>
                     <div className="text-xs text-gray-400">{studentsTotal > 8 ? `${studentsTotal} total` : ''}</div>
                   </div>
-                  <div className="max-h-56 overflow-y-auto space-y-2">
+                  <div className="max-h-96 overflow-y-auto">
                     {studentsList.length === 0 ? (
-                      <div className="text-sm text-gray-400">No students available.</div>
+                      <div className="text-sm text-gray-400 text-center py-8">No students available.</div>
                     ) : (
-                      <>
-                        {studentsList.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700">
-                                <img src={s.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}`} alt={s.name} className="w-full h-full object-cover" />
-                              </div>
-                              <div>
-                                <div className="text-sm text-white font-medium">{s.name}</div>
-                                <div className="text-xs text-gray-400">{s.student_id || s.email}</div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[600px]">
+                          <thead className="bg-gray-700/50">
+                            <tr>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Student</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">ID</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Email</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-700">
+                            {studentsList.map((s) => (
+                              <tr key={s.id} className="hover:bg-gray-700/30">
+                                <td className="py-2 px-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-600 flex-shrink-0">
+                                      <img src={s.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}`} alt={s.name} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-sm text-white font-medium truncate">{s.name}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className="text-sm text-gray-300 font-mono">{s.student_id || s.id}</span>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className="text-sm text-gray-400 truncate">{s.email}</span>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                    s.status === 'active' || !s.status
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : 'bg-gray-500/20 text-gray-400'
+                                  }`}>
+                                    {s.status || 'active'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="text-xs text-gray-400">Showing {studentsTotal === 0 ? 0 : ((studentsPage - 1) * STUDENTS_PER_PAGE + 1)} - {Math.min(studentsPage * STUDENTS_PER_PAGE, studentsTotal)} of {studentsTotal}</div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              className="p-1 rounded-md hover:bg-gray-700/50"
-                              onClick={() => fetchStudentsPage(Math.max(1, studentsPage - 1))}
-                              disabled={studentsPage <= 1}
-                            >
-                              <ChevronLeft className="w-4 h-4 text-gray-300" />
-                            </button>
-                            <div className="text-xs text-gray-400">{studentsPage} / {studentsTotalPages}</div>
-                            <button
-                              className="p-1 rounded-md hover:bg-gray-700/50"
-                              onClick={() => fetchStudentsPage(Math.min(studentsTotalPages, studentsPage + 1))}
-                              disabled={studentsPage >= studentsTotalPages}
-                            >
-                              <ChevronRight className="w-4 h-4 text-gray-300" />
-                            </button>
-                          </div>
+                    {studentsList.length > 0 && (
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
+                        <div className="text-xs text-gray-400">
+                          Showing {studentsTotal === 0 ? 0 : ((studentsPage - 1) * STUDENTS_PER_PAGE + 1)} - {Math.min(studentsPage * STUDENTS_PER_PAGE, studentsTotal)} of {studentsTotal}
                         </div>
-                      </>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            onClick={() => fetchStudentsPage(Math.max(1, studentsPage - 1))}
+                            disabled={studentsPage <= 1}
+                          >
+                            <ChevronLeft className="w-4 h-4 text-gray-300" />
+                          </button>
+                          <div className="text-xs text-gray-400">{studentsPage} / {studentsTotalPages}</div>
+                          <button
+                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            onClick={() => fetchStudentsPage(Math.min(studentsTotalPages, studentsPage + 1))}
+                            disabled={studentsPage >= studentsTotalPages}
+                          >
+                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -476,42 +512,97 @@ Dashboard Statistics:
                     </div>
                     <div className="text-xs text-gray-400">{coursesTotal > 8 ? `${coursesTotal} total` : ''}</div>
                   </div>
-                  <div className="max-h-56 overflow-y-auto space-y-2">
+                  <div className="max-h-96 overflow-y-auto">
                     {coursesList.length === 0 ? (
-                      <div className="text-sm text-gray-400">No active courses.</div>
+                      <div className="text-sm text-gray-400 text-center py-8">No active courses.</div>
                     ) : (
-                      <>
-                        {coursesList.map((c) => (
-                          <div key={c.id} className="flex items-center justify-between">
-                            <div>
-                              <div className="text-sm text-white font-medium">{c.name || c.title || c.course_name}</div>
-                              <div className="text-xs text-gray-400">{c.instructor || c.faculty_name || ''}</div>
-                            </div>
-                            <div className="text-xs text-gray-400">{c.students ?? ''}</div>
-                          </div>
-                        ))}
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[800px]">
+                          <thead className="bg-gray-700/50">
+                            <tr>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Course</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Code</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Credits</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Students</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-700">
+                            {coursesList.map((c) => (
+                              <tr key={c.id} className="hover:bg-gray-700/30">
+                                <td className="py-2 px-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-gray-600 rounded overflow-hidden flex-shrink-0">
+                                      {c.thumbnail ? (
+                                        <img 
+                                          src={c.thumbnail} 
+                                          alt={c.name || c.title}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <BookOpen size={12} className="text-gray-400" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-sm text-white font-medium truncate">
+                                        {c.name || c.title || c.course_name}
+                                      </div>
+                                      <div className="text-xs text-gray-400 truncate">
+                                        {c.instructor || c.faculty_name || ''}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className="text-sm text-gray-300 font-mono">{c.code}</span>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className="text-sm text-white">{c.credits}</span>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className="text-sm text-blue-400">{c.students ?? 0}</span>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                    c.status === 'active'
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : 'bg-gray-500/20 text-gray-400'
+                                  }`}>
+                                    {c.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="text-xs text-gray-400">Showing {coursesTotal === 0 ? 0 : ((coursesPage - 1) * COURSES_PER_PAGE + 1)} - {Math.min(coursesPage * COURSES_PER_PAGE, coursesTotal)} of {coursesTotal}</div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              className="p-1 rounded-md hover:bg-gray-700/50"
-                              onClick={() => fetchCoursesPage(Math.max(1, coursesPage - 1))}
-                              disabled={coursesPage <= 1}
-                            >
-                              <ChevronLeft className="w-4 h-4 text-gray-300" />
-                            </button>
-                            <div className="text-xs text-gray-400">{coursesPage} / {coursesTotalPages}</div>
-                            <button
-                              className="p-1 rounded-md hover:bg-gray-700/50"
-                              onClick={() => fetchCoursesPage(Math.min(coursesTotalPages, coursesPage + 1))}
-                              disabled={coursesPage >= coursesTotalPages}
-                            >
-                              <ChevronRight className="w-4 h-4 text-gray-300" />
-                            </button>
-                          </div>
+                    {coursesList.length > 0 && (
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
+                        <div className="text-xs text-gray-400">
+                          Showing {coursesTotal === 0 ? 0 : ((coursesPage - 1) * COURSES_PER_PAGE + 1)} - {Math.min(coursesPage * COURSES_PER_PAGE, coursesTotal)} of {coursesTotal}
                         </div>
-                      </>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            onClick={() => fetchCoursesPage(Math.max(1, coursesPage - 1))}
+                            disabled={coursesPage <= 1}
+                          >
+                            <ChevronLeft className="w-4 h-4 text-gray-300" />
+                          </button>
+                          <div className="text-xs text-gray-400">{coursesPage} / {coursesTotalPages}</div>
+                          <button
+                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            onClick={() => fetchCoursesPage(Math.min(coursesTotalPages, coursesPage + 1))}
+                            disabled={coursesPage >= coursesTotalPages}
+                          >
+                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -525,41 +616,74 @@ Dashboard Statistics:
                     </div>
                     <div className="text-xs text-gray-400">{instructorsTotal > 8 ? `${instructorsTotal} total` : ''}</div>
                   </div>
-                  <div className="max-h-56 overflow-y-auto space-y-2">
+                  <div className="max-h-96 overflow-y-auto">
                     {instructorsList.length === 0 ? (
-                      <div className="text-sm text-gray-400">No instructors.</div>
+                      <div className="text-sm text-gray-400 text-center py-8">No instructors.</div>
                     ) : (
-                      <>
-                        {instructorsList.map((ins) => (
-                          <div key={ins.id} className="flex items-center justify-between">
-                            <div>
-                              <div className="text-sm text-white font-medium">{ins.name}</div>
-                              <div className="text-xs text-gray-400">{ins.email}</div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[500px]">
+                          <thead className="bg-gray-700/50">
+                            <tr>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Instructor</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Email</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-700">
+                            {instructorsList.map((ins) => (
+                              <tr key={ins.id} className="hover:bg-gray-700/30">
+                                <td className="py-2 px-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-600 flex-shrink-0">
+                                      <img src={ins.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(ins.name)}`} alt={ins.name} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-sm text-white font-medium truncate">{ins.name}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className="text-sm text-gray-400 truncate">{ins.email}</span>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                    ins.status === 'active' || !ins.status
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : 'bg-gray-500/20 text-gray-400'
+                                  }`}>
+                                    {ins.status || 'active'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="text-xs text-gray-400">Showing {instructorsTotal === 0 ? 0 : ((instructorsPage - 1) * INSTRUCTORS_PER_PAGE + 1)} - {Math.min(instructorsPage * INSTRUCTORS_PER_PAGE, instructorsTotal)} of {instructorsTotal}</div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              className="p-1 rounded-md hover:bg-gray-700/50"
-                              onClick={() => fetchInstructorsPage(Math.max(1, instructorsPage - 1))}
-                              disabled={instructorsPage <= 1}
-                            >
-                              <ChevronLeft className="w-4 h-4 text-gray-300" />
-                            </button>
-                            <div className="text-xs text-gray-400">{instructorsPage} / {instructorsTotalPages}</div>
-                            <button
-                              className="p-1 rounded-md hover:bg-gray-700/50"
-                              onClick={() => fetchInstructorsPage(Math.min(instructorsTotalPages, instructorsPage + 1))}
-                              disabled={instructorsPage >= instructorsTotalPages}
-                            >
-                              <ChevronRight className="w-4 h-4 text-gray-300" />
-                            </button>
-                          </div>
+                    {instructorsList.length > 0 && (
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
+                        <div className="text-xs text-gray-400">
+                          Showing {instructorsTotal === 0 ? 0 : ((instructorsPage - 1) * INSTRUCTORS_PER_PAGE + 1)} - {Math.min(instructorsPage * INSTRUCTORS_PER_PAGE, instructorsTotal)} of {instructorsTotal}
                         </div>
-                      </>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            onClick={() => fetchInstructorsPage(Math.max(1, instructorsPage - 1))}
+                            disabled={instructorsPage <= 1}
+                          >
+                            <ChevronLeft className="w-4 h-4 text-gray-300" />
+                          </button>
+                          <div className="text-xs text-gray-400">{instructorsPage} / {instructorsTotalPages}</div>
+                          <button
+                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            onClick={() => fetchInstructorsPage(Math.min(instructorsTotalPages, instructorsPage + 1))}
+                            disabled={instructorsPage >= instructorsTotalPages}
+                          >
+                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
