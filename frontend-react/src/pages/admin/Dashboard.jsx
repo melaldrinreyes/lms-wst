@@ -197,7 +197,6 @@ export default function SuperAdminDashboard() {
         ['Total Instructors', stats.instructors.total, 'Total number of instructors'],
         ['Active Instructors', stats.instructors.active, 'Number of active instructors'],
         ['Inactive Instructors', stats.instructors.inactive, 'Number of inactive instructors'],
-        ['Total Enrollments', stats.enrollments.total, 'Total course enrollments'],
         ['Total Submissions', stats.submissions.total, 'Total assignment submissions'],
         ['Graded Submissions', stats.submissions.graded, 'Number of graded submissions'],
         ['Pending Submissions', stats.submissions.pending, 'Number of pending submissions']
@@ -248,13 +247,6 @@ export default function SuperAdminDashboard() {
       icon: Users,
       color: 'from-blue-500 to-blue-600',
       link: '/admin/instructors',
-    },
-    {
-      title: 'Total Enrollments',
-      value: stats.enrollments.total,
-      icon: ClipboardCheck,
-      color: 'from-orange-500 to-orange-600',
-      link: '/admin/enrollments',
     },
   ];
 

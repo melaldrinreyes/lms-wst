@@ -355,7 +355,14 @@ class SuperAdminController extends Controller
     {
         try {
             $instructor = User::where('role_id', 2)
-                ->with(['coursesTaught', 'coursesTaught.enrollments', 'coursesTaught.assignments'])
+                ->with([
+                    'coursesTaught', 
+                    'coursesTaught.enrollments' => function ($query) {
+                        $query->where('status', 'active');
+                    },
+                    'coursesTaught.enrollments.student',
+                    'coursesTaught.assignments'
+                ])
                 ->findOrFail($id);
 
             // Get recent activities
@@ -396,15 +403,20 @@ class SuperAdminController extends Controller
                     'status' => $instructor->status,
                     'last_login' => $instructor->last_login,
                     'created_at' => $instructor->created_at,
+                    'statistics' => [
+                        'courses' => $instructor->coursesTaught->count(),
+                        'students' => $instructor->coursesTaught->sum(function ($course) {
+                            return $course->enrollments->count();
+                        }),
+                    ],
                     'courses' => $instructor->coursesTaught->map(function ($course) {
-                        $activeEnrollments = $course->enrollments->where('status', 'active');
                         return [
                             'id' => $course->id,
                             'code' => $course->course_code,
                             'name' => $course->course_name,
-                            // Only count active enrollments
-                            'students' => $activeEnrollments->count(),
-                            'student_list' => $activeEnrollments->map(function ($enrollment) {
+                            'description' => $course->description,
+                            'students' => $course->enrollments->count(),
+                            'student_list' => $course->enrollments->map(function ($enrollment) {
                                 return [
                                     'id' => $enrollment->student_id,
                                     'name' => $enrollment->student ? $enrollment->student->name : null,
