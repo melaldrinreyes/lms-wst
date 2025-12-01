@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BookOpen, Users, Clock, ChevronRight, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { studentAPI } from '../../services/api';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 
 export default function Courses() {
   const [activeTab, setActiveTab] = useState('all');
@@ -70,10 +71,9 @@ export default function Courses() {
       {/* Courses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-          <div className="col-span-full text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="text-gray-400 mt-4">Loading your courses...</p>
-          </div>
+          [...Array(6)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))
         ) : filteredCourses.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />

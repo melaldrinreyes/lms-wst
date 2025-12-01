@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Edit, X, Eye, Loader, Trash2, Plus, ChevronDown, ChevronRight, Indent, ChevronUp } from 'lucide-react';
 import RichTextEditor from './Editor/RichTextEditor';
 import Toast from './ui/Toast';
+import Skeleton from './ui/Skeleton';
 import axios from 'axios';
 
 const api = axios.create({
@@ -305,7 +306,6 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
         }
         setIsEditing(false);
         setEditingLectureId(null);
-        setToast({ message: 'Lecture saved successfully!', type: 'success' });
         if (onSave) {
           onSave(newLectures);
         }
@@ -400,7 +400,6 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       if (response.data.success) {
         setLectures(response.data.lectures || updatedLectures);
         setUnsavedLectures([]);
-        setToast({ message: 'All lectures saved successfully!', type: 'success' });
         if (onSave) {
           onSave(response.data.lectures || updatedLectures);
         }
@@ -729,13 +728,31 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
-          <Loader className="w-8 h-8 text-orange-500" />
-        </motion.div>
+      <div className="space-y-4">
+        {isTeacher && (
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <Skeleton className="h-4 w-48 mb-3" />
+            <div className="flex gap-2">
+              <Skeleton className="flex-1 h-10 rounded-lg" />
+              <Skeleton className="h-10 w-32 rounded-lg" />
+            </div>
+          </div>
+        )}
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-6 w-64" />
+                <div className="ml-auto flex gap-2">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

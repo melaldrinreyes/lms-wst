@@ -7,6 +7,7 @@ import {
 import Modal from '../../components/ui/Modal';
 import Toast from '../../components/ui/Toast';
 import Swal from 'sweetalert2';
+import Skeleton from '../../components/ui/Skeleton';
 import ClassMaterialsTab from '../../components/ClassMaterialsTab';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
 import { courseAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI, studentAPI, classMaterialAPI } from '../../services/api';
@@ -808,10 +809,47 @@ export default function CourseManage() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading course data...</p>
+      <div className="space-y-6">
+        {/* Header Skeleton */}
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Skeleton className="h-10 w-10 rounded-lg" />
+            <div className="flex-1">
+              <Skeleton className="h-6 w-32 mb-2" />
+              <Skeleton className="h-8 w-96" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32 rounded-lg" />
+            <Skeleton className="h-10 w-32 rounded-lg" />
+          </div>
+        </div>
+
+        {/* Stats Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+              <Skeleton className="h-4 w-24 mb-3" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          ))}
+        </div>
+
+        {/* Tabs Skeleton */}
+        <div className="flex gap-2 border-b border-gray-800">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-24 rounded-t-lg" />
+          ))}
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+          <Skeleton className="h-6 w-48 mb-4" />
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
         </div>
       </div>
     );

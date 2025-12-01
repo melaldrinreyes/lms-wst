@@ -29,7 +29,7 @@ export default function Login() {
     const result = await login(formData);
     
     if (result.success) {
-      setToast({ message: 'Login successful!', type: 'success' });
+      setToast({ message: `Welcome back, ${result.user?.name || 'User'}!`, type: 'success' });
       
       // Navigate based on the user role from backend
       const userRole = result.user?.role;

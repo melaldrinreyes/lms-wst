@@ -20,7 +20,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
     e.preventDefault();
     const result = await login(formData);
     if (result.success) {
-      setToast({ message: 'Login successful!', type: 'success' });
+      setToast({ message: `Welcome back, ${result.user?.name || 'User'}!`, type: 'success' });
       
       setTimeout(() => {
         onClose();

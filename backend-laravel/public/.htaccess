@@ -5,19 +5,18 @@
 
     RewriteEngine On
 
+    # CORS headers for all requests including storage
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, HEAD"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Range, Accept-Encoding"
+    Header always set Access-Control-Expose-Headers "Content-Length, Content-Range, Accept-Ranges"
+
     # Increase PHP upload limits
     php_value upload_max_filesize 10240M
     php_value post_max_size 10240M
     php_value max_execution_time 3600
     php_value max_input_time 3600
     php_value memory_limit 10240M
-
-    # CORS headers for storage files
-    <Directory "storage/">
-        Header set Access-Control-Allow-Origin "*"
-        Header set Access-Control-Allow-Methods "GET, OPTIONS"
-        Header set Access-Control-Allow-Headers "Range, Accept-Encoding"
-    </Directory>
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

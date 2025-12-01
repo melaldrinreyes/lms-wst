@@ -11,6 +11,7 @@ import HierarchicalLectureContent from '../../components/HierarchicalLectureCont
 import { File as FileEdit } from 'lucide-react';
 import { CornerDownLeft as Reply } from 'lucide-react';
 import StudentClassMaterialsTab from '../../components/StudentClassMaterialsTab';
+import Skeleton from '../../components/ui/Skeleton';
 
 
 function CourseDetail() {
@@ -632,10 +633,20 @@ function CourseDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Loading course details...</p>
+      <div className="space-y-6">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-4">
+          <Skeleton variant="title" className="w-1/2" />
+          <Skeleton className="w-3/4" />
+          <Skeleton className="w-2/3" />
+        </div>
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+          <Skeleton variant="title" className="w-1/3 mb-4" />
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="py-3 border-b border-gray-800 last:border-0">
+              <Skeleton className="w-full mb-2" />
+              <Skeleton className="w-1/2" />
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -897,11 +908,31 @@ function CourseDetail() {
 
         {activeTab === 'announcements' && (
           <div className="space-y-4">
-            <div className="text-center py-12">
-              <MessageSquare size={48} className="mx-auto text-gray-600 mb-4" />
-              <p className="text-gray-400">No announcements yet</p>
-              <p className="text-gray-500 text-sm mt-2">Check back later for course updates</p>
-            </div>
+            {announcements.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageSquare size={48} className="mx-auto text-gray-600 mb-4" />
+                <p className="text-gray-400">No announcements yet</p>
+                <p className="text-gray-500 text-sm mt-2">Check back later for course updates</p>
+              </div>
+            ) : (
+              announcements.map((announcement) => (
+                <div key={announcement.id} className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+                  <div className="flex items-start gap-4">
+                    <Megaphone className="w-6 h-6 text-orange-500 flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-2">{announcement.title}</h3>
+                      <p className="text-gray-400 mb-4">{announcement.content}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>{new Date(announcement.created_at).toLocaleDateString()}</span>
+                        {announcement.instructor && (
+                          <span>By {announcement.instructor.name}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>

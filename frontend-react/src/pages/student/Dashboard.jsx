@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 /* eslint-disable react-hooks/exhaustive-deps */
 import { studentAPI, announcementAPI, assignmentAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { SkeletonList } from '../../components/ui/Skeleton';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -530,10 +531,7 @@ export default function StudentDashboard() {
             {/* Dev debug panel removed */}
             <div className="space-y-4">
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-                  <p className="text-gray-400 mt-2">Loading classes...</p>
-                </div>
+                <SkeletonList items={3} />
               ) : classesError ? (
                 <div className="text-center py-8">
                   <div className="text-red-400 mb-3">Failed to load classes</div>

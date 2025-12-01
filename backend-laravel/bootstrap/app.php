@@ -17,13 +17,18 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Enable CORS globally for all routes
+        $middleware->use([
+            \App\Http\Middleware\Cors::class,
+        ]);
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Enable CORS for API routes
+        // Enable CORS for API routes (redundant but kept for clarity)
         $middleware->api(prepend: [
             \App\Http\Middleware\Cors::class,
         ]);

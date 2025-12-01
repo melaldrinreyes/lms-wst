@@ -14,9 +14,10 @@ class Cors
         if ($request->getMethod() === "OPTIONS") {
             return response('', 200)
                 ->header('Access-Control-Allow-Origin', $request->header('Origin') ?? '*')
-                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Range, Accept-Encoding')
                 ->header('Access-Control-Allow-Credentials', 'true')
+                ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
                 ->header('Access-Control-Max-Age', '86400');
         }
 
@@ -25,16 +26,18 @@ class Cors
         // Handle BinaryFileResponse (file downloads) differently
         if ($response instanceof BinaryFileResponse) {
             $response->headers->set('Access-Control-Allow-Origin', $request->header('Origin') ?? '*');
-            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Range, Accept-Encoding');
             $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            $response->headers->set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
             return $response;
         }
 
         return $response
             ->header('Access-Control-Allow-Origin', $request->header('Origin') ?? '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
-            ->header('Access-Control-Allow-Credentials', 'true');
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Range, Accept-Encoding')
+            ->header('Access-Control-Allow-Credentials', 'true')
+            ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
     }
 }

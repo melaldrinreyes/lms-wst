@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { courseAPI, submissionAPI, studentAPI, facultyAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
+import Skeleton from '../../components/ui/Skeleton';
 
 export default function FacultyDashboard() {
   const [stats, setStats] = useState({
@@ -147,7 +148,21 @@ export default function FacultyDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {statCards.map((stat, index) => (
+        {loading ? (
+          // Skeleton loading for stats cards
+          Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-24 mb-3" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="h-14 w-14 rounded-xl" />
+              </div>
+            </div>
+          ))
+        ) : (
+          statCards.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -176,7 +191,8 @@ export default function FacultyDashboard() {
               </div>
             </Link>
           </motion.div>
-        ))}
+        ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

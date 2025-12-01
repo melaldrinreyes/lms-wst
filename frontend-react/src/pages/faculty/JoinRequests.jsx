@@ -3,6 +3,7 @@ import { Users, Check, X, Clock, Calendar, Trash2, CheckCircle, XCircle, AlertCi
 import { motion, AnimatePresence } from 'framer-motion';
 import { facultyAPI } from '../../services/api';
 import Swal from 'sweetalert2';
+import Skeleton from '../../components/ui/Skeleton';
 
 export default function JoinRequests() {
   const [requests, setRequests] = useState([]);
@@ -224,9 +225,27 @@ export default function JoinRequests() {
 
       {/* Requests List */}
       {loading ? (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-gray-800 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
-          <p className="text-gray-400">Loading requests...</p>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-16 w-16 rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-6 w-20 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-4 w-56" />
+                  <Skeleton className="h-20 w-full rounded-lg" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-10 w-32 rounded-lg" />
+                  <Skeleton className="h-10 w-32 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-gray-800 text-center">

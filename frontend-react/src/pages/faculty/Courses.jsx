@@ -22,6 +22,7 @@ import {
 import { courseAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
 import Swal from 'sweetalert2';
+import Skeleton from '../../components/ui/Skeleton';
 
 export default function FacultyCourses() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -233,29 +234,49 @@ export default function FacultyCourses() {
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
       {/* Header */}
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-orange-500">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <BookOpen className="text-orange-500" size={28} />
-              My Courses
-            </h1>
-            <p className="text-sm text-gray-400 mt-1">
-              Manage your courses, modules, and student activities
-            </p>
+      {loading ? (
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex-1">
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+            <Skeleton className="h-10 w-40 rounded-xl" />
           </div>
-          <button
-            onClick={handleCreateCourse}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 font-semibold"
-          >
-            <Plus className="w-4 h-4" />
-            Create Course
-          </button>
         </div>
-      </div>
+      ) : (
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-orange-500">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                <BookOpen className="text-orange-500" size={28} />
+                My Courses
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Manage your courses, modules, and student activities
+              </p>
+            </div>
+            <button
+              onClick={handleCreateCourse}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 font-semibold"
+            >
+              <Plus className="w-4 h-4" />
+              Create Course
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-4">
+      {loading ? (
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <Skeleton className="flex-1 h-10 rounded-lg" />
+            <Skeleton className="h-10 w-48 rounded-lg" />
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -282,17 +303,40 @@ export default function FacultyCourses() {
           </select>
         </div>
       </div>
+      )}
 
       {/* Courses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course, index) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
-          >
+        {loading ? (
+          // Skeleton loading for courses
+          Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+              <Skeleton className="h-48 w-full rounded-none" />
+              <div className="p-6 space-y-3">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <div className="flex gap-4 pt-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Skeleton className="h-10 flex-1 rounded-lg" />
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          filteredCourses.map((course, index) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
+            >
             {/* Thumbnail */}
             <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-500/10 to-purple-500/10">
               {course.thumbnail ? (
@@ -386,11 +430,12 @@ export default function FacultyCourses() {
               </div>
             </div>
           </motion.div>
-        ))}
+        ))
+        )}
       </div>
 
       {/* Empty State */}
-      {filteredCourses.length === 0 && (
+      {!loading && filteredCourses.length === 0 && (
         <div className="text-center py-12 bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500">
           <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
@@ -582,7 +627,6 @@ export default function FacultyCourses() {
                 >
                   {creating ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       Creating Course...
                     </>
                   ) : (

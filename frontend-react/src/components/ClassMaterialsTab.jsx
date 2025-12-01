@@ -4,6 +4,7 @@ import { classMaterialAPI } from '../services/api';
 import Modal from './ui/Modal';
 import Toast from './ui/Toast';
 import Swal from 'sweetalert2';
+import Skeleton from './ui/Skeleton';
 
 const ClassMaterialsTab = ({ courseId, courseName }) => {
   const [classMaterials, setClassMaterials] = useState([]);
@@ -199,10 +200,34 @@ const ClassMaterialsTab = ({ courseId, courseName }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-2 text-gray-400 text-sm">Loading class materials...</p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="flex-1">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-11 w-40 rounded-lg" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-6 w-64" />
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );

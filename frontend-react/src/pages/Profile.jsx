@@ -3,6 +3,7 @@ import { User, Lock, Save } from 'lucide-react';
 import Toast from '../components/ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/api';
+import Skeleton from '../components/ui/Skeleton';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -229,9 +230,12 @@ export default function Profile() {
       </div>
 
       {loading ? (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-orange-500 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
-          <p className="text-gray-400">Loading profile...</p>
+        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-orange-500">
+          <div className="space-y-4">
+            <Skeleton variant="avatar" className="mx-auto" />
+            <Skeleton variant="title" className="w-1/3 mx-auto" />
+            <Skeleton className="w-1/2 mx-auto" />
+          </div>
         </div>
       ) : (
         <>
