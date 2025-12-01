@@ -151,7 +151,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
                     <div className="w-full border-t border-white/20"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-transparent text-white/70">New to MINSU?</span>
+                    <span className="px-2 bg-transparent text-white/70">New to MINSU E-Learn?</span>
                   </div>
                 </div>
 

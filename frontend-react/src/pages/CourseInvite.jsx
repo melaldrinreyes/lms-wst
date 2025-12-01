@@ -346,33 +346,6 @@ export default function CourseInvite() {
               </p>
             </motion.div>
 
-            {/* What You'll Learn */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg border border-gray-800 p-6"
-            >
-              <h2 className="text-2xl font-bold text-white mb-4">
-                What You'll Learn
-              </h2>
-              <div className="grid md:grid-cols-2 gap-3">
-                {[
-                  'Comprehensive course content',
-                  'Hands-on practical exercises',
-                  'Real-world applications',
-                  'Expert instructor guidance',
-                  'Interactive learning materials',
-                  'Assessment and feedback'
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-300">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
             {/* Instructor Info */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -487,34 +460,6 @@ export default function CourseInvite() {
                   </span>
                 </div>
               </div>
-            </motion.div>            {/* Additional Info */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-gradient-to-br from-blue-950/30 to-indigo-950/30 rounded-xl p-6 border border-blue-800"
-            >
-              <h4 className="font-semibold text-white mb-3">
-                Course Benefits
-              </h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span>Lifetime access to course materials</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span>Regular updates and new content</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span>Certificate upon completion</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span>Direct instructor support</span>
-                </li>
-              </ul>
             </motion.div>
           </div>
         </div>

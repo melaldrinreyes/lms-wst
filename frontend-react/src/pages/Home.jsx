@@ -35,12 +35,12 @@ export default function Home() {
   ];
 
   const milestones = [
-    { year: '2020', event: 'Initial concept and planning for the LMS system.' },
-    { year: '2021', event: 'Development of core features and internal testing.' },
-    { year: '2022', event: 'Launch of the platform for local students with foundational modules.' },
-    { year: '2023', event: 'Enhanced user interface and added new course categories tailored to local needs.' },
-    { year: '2024', event: 'Introduced faculty and student dashboards for better management.' },
-    { year: '2025', event: 'Implemented mobile responsiveness and advanced reporting tools for local institutions.' },
+    { year: '01', event: 'Project conceptualization and requirements gathering with MINSU faculty and administration.' },
+    { year: '02', event: 'System architecture design and development of core authentication and authorization modules.' },
+    { year: '03', event: 'Implementation of course management system with WYSIWYG editor and hierarchical lecture structure.' },
+    { year: '04', event: 'Development of assignment submission system with multi-file upload and grading capabilities.' },
+    { year: '05', event: 'Integration of announcements system with real-time commenting and notification features.' },
+    { year: '06', event: 'Comprehensive security audit, testing, and deployment for MINSU university community.' },
   ];
 
   return (
@@ -309,12 +309,7 @@ export default function Home() {
             >
               {milestones.map((milestone, index) => (
                 <div key={index} className="flex gap-4 items-start">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                      {milestone.year.slice(2)}
-                    </div>
-                  </div>
-                  <div className="flex-1 pt-2">
+                  <div className="flex-1">
                     <div className="font-semibold text-orange-500 text-sm mb-1">{milestone.year}</div>
                     <p className="text-gray-300 leading-relaxed">{milestone.event}</p>
                   </div>
