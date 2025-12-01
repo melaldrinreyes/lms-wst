@@ -127,7 +127,6 @@ export default function Home() {
                 className="px-8 py-4 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 flex items-center justify-center gap-2"
               >
                 Get Started
-                <ArrowRight size={20} />
               </button>
               <button
                 onClick={() => setRegisterModalOpen(true)}
@@ -231,7 +230,6 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-10 py-5 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 text-lg"
             >
               Get Started Now
-              <ArrowRight size={24} />
             </button>
           </motion.div>
         </div>
