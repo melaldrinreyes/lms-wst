@@ -176,8 +176,16 @@ export default function DashboardLayout({ role }) {
           {/* User Info */}
           <div className="p-6 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center">
-                <User className="text-orange-500" size={24} />
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+                {user?.profile_image ? (
+                  <img 
+                    src={user.profile_image} 
+                    alt={user?.name || 'User'} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="text-white" size={24} />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate">
