@@ -1,16 +1,15 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
+import logo from '../logo/logo.jpg';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
-import ForgotPasswordModal from './ForgotPasswordModal';
 import MobileBottomNav from './MobileBottomNav';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
-  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
 
   const handleScrollTo = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -47,37 +46,27 @@ export default function Navbar() {
           setLoginModalOpen(false);
           setRegisterModalOpen(true);
         }}
-        onSwitchToForgotPassword={() => {
-          setLoginModalOpen(false);
-          setForgotPasswordModalOpen(true);
-        }}
       />
       <RegisterModal 
         isOpen={registerModalOpen} 
         onClose={() => setRegisterModalOpen(false)}
-      />
-      <ForgotPasswordModal
-        isOpen={forgotPasswordModalOpen}
-        onClose={() => setForgotPasswordModalOpen(false)}
-        onBackToLogin={() => {
-          setForgotPasswordModalOpen(false);
-          setLoginModalOpen(true);
-        }}
       />
       
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav onLoginClick={() => setLoginModalOpen(true)} />
       
       {/* Material App Bar */}
-      <nav className="surface shadow-md fixed top-0 left-0 right-0 z-30 border-b border-gray-200 dark:border-gray-800">
+      <nav className="bg-white/10 backdrop-blur-xl shadow-lg fixed top-0 left-0 right-0 z-30 border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                <span className="text-white font-bold text-xl">M</span>
-              </div>
-              <span className="text-xl font-medium text-gray-900 dark:text-white tracking-tight">
+              <img 
+                src={logo} 
+                alt="MINSU Logo" 
+                className="w-10 h-10 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform"
+              />
+              <span className="text-xl font-medium text-white tracking-tight">
                 MINSU E-LEARN
               </span>
             </Link>
@@ -89,7 +78,7 @@ export default function Navbar() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-all"
+                  className="px-4 py-2 text-white/90 hover:bg-white/10 rounded-lg font-medium transition-all"
                 >
                   {link.label}
                 </Link>
@@ -97,7 +86,7 @@ export default function Navbar() {
                 <button
                   key={link.to}
                   onClick={() => handleScrollTo(link.to)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-all"
+                  className="px-4 py-2 text-white/90 hover:bg-white/10 rounded-lg font-medium transition-all"
                 >
                   {link.label}
                 </button>
@@ -116,7 +105,7 @@ export default function Navbar() {
             {user && (
               <button
                 onClick={logout}
-                className="px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-all ml-2"
+                className="px-4 py-2 bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 rounded-lg font-medium transition-all ml-2"
               >
                 Logout
               </button>

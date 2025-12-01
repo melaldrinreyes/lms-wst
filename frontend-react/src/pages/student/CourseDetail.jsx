@@ -577,7 +577,8 @@ function CourseDetail() {
                 </button>
               </div>
             </div>
-            {comment.user?.id === user?.id && (
+            {/* Students can only delete their own comments, not instructor comments */}
+            {comment.user?.id === user?.id && comment.user?.role_id !== 2 && (
               <button
                 onClick={() => handleDeleteComment(comment.id)}
                 className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition"

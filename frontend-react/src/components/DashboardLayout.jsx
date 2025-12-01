@@ -12,6 +12,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../logo/logo.jpg';
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { facultyAPI } from '../services/api';
@@ -161,9 +162,11 @@ export default function DashboardLayout({ role }) {
           {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/50">
-                <span className="text-white font-bold text-lg">M</span>
-              </div>
+              <img 
+                src={logo} 
+                alt="MINSU Logo" 
+                className="w-10 h-10 rounded-lg object-cover shadow-lg shadow-orange-500/50"
+              />
               <span className="text-lg font-bold text-white">
                 MINSU
               </span>

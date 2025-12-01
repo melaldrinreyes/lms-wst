@@ -43,7 +43,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
       <motion.div
@@ -52,16 +52,16 @@ export default function Login() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8 shadow-2xl">
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-2xl">
           {/* Logo & Title */}
           <div className="text-center mb-8">
             <div className="inline-block w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-orange-500/50">
               <span className="text-white font-bold text-3xl">M</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome Back
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-600">
               Sign in to MINSU E-LEARN
             </p>
           </div>
@@ -70,7 +70,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
               <div className="relative">
@@ -80,7 +80,7 @@ export default function Login() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70 transition"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition"
                   placeholder="you@example.com"
                 />
               </div>

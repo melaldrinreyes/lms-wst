@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../logo/logo.jpg';
 import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function AdminLogin() {
@@ -79,9 +80,13 @@ export default function AdminLogin() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-2xl"
+            className="inline-flex items-center justify-center mb-4"
           >
-            <Shield className="w-10 h-10 text-white" />
+            <img 
+              src={logo} 
+              alt="MINSU Logo" 
+              className="w-20 h-20 rounded-2xl object-cover shadow-2xl"
+            />
           </motion.div>
           <h1 className="text-3xl font-bold text-white mb-2">Teacher Portal</h1>
           <p className="text-blue-200">MINSU E-LEARN Faculty Management System</p>

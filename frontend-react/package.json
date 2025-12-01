@@ -20,6 +20,7 @@
     "@tiptap/react": "^3.10.7",
     "@tiptap/starter-kit": "^3.10.7",
     "axios": "^1.12.2",
+    "dompurify": "^3.3.0",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.548.0",
     "mammoth": "^1.11.0",

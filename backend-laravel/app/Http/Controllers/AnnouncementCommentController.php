@@ -109,18 +109,42 @@ class AnnouncementCommentController extends Controller
     }
 
     /**
-     * Delete a comment (Only comment owner can delete)
+     * Delete a comment
+     * - Comment owner can delete their own comment
+     * - Instructor (faculty) can delete any student comment in their course
+     * - Students cannot delete instructor comments
      */
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
         $comment = AnnouncementComment::findOrFail($id);
+        $announcement = $comment->announcement;
+        $course = $announcement->course;
 
-        // Verify the user owns the comment
-        if ($comment->user_id != $user->id) {
+        // Load comment owner's role
+        $commentOwner = $comment->user;
+
+        // Check if user is the comment owner
+        $isOwner = $comment->user_id == $user->id;
+
+        // Check if user is the course instructor/faculty (role_id = 2)
+        $isInstructor = $user->role_id == 2 && $course->faculty_id == $user->id;
+
+        // Students (role_id = 3) cannot delete instructor comments
+        if ($user->role_id == 3 && $commentOwner->role_id == 2) {
             return response()->json([
                 'success' => false,
-                'message' => 'You can only delete your own comments',
+                'message' => 'You cannot delete instructor comments',
+            ], 403);
+        }
+
+        // Allow deletion if:
+        // 1. User owns the comment, OR
+        // 2. User is the course instructor
+        if (!$isOwner && !$isInstructor) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to delete this comment',
             ], 403);
         }
 

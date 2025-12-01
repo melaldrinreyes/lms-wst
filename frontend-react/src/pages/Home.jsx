@@ -1,17 +1,16 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, MessageCircle, ArrowRight, GraduationCap, CheckCircle, Sparkles, Target, Zap, Heart, TrendingUp, Users } from 'lucide-react';
+import { BookOpen, MessageCircle, ArrowRight, GraduationCap, CheckCircle, Sparkles, Target, Zap, Heart, TrendingUp, Users, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import LoginModal from '../components/LoginModal';
 import RegisterModal from '../components/RegisterModal';
-import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 export default function Home() {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
-  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
 
   // About page data
   const values = [
@@ -54,22 +53,10 @@ export default function Home() {
           setLoginModalOpen(false);
           setRegisterModalOpen(true);
         }}
-        onSwitchToForgotPassword={() => {
-          setLoginModalOpen(false);
-          setForgotPasswordModalOpen(true);
-        }}
       />
       <RegisterModal 
         isOpen={registerModalOpen} 
         onClose={() => setRegisterModalOpen(false)}
-      />
-      <ForgotPasswordModal
-        isOpen={forgotPasswordModalOpen}
-        onClose={() => setForgotPasswordModalOpen(false)}
-        onBackToLogin={() => {
-          setForgotPasswordModalOpen(false);
-          setLoginModalOpen(true);
-        }}
       />
       
       {/* Hero Section */}
@@ -77,18 +64,18 @@ export default function Home() {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
           <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-sm"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
               backgroundImage: 'url(https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=1920&q=80)',
             }}
           ></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/40 via-gray-950/50 to-gray-950/60"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/70 via-gray-950/80 to-gray-950/90"></div>
         </div>
 
         {/* Animated Blobs */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 md:w-96 md:h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 md:w-96 md:h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,10 +109,10 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-lg sm:text-xl text-gray-400 mb-12 leading-relaxed"
+              className="text-lg sm:text-xl text-gray-300 mb-12 leading-relaxed"
             >
-              Join thousands of students mastering new skills with our comprehensive online learning platform. 
-              Expert-led courses, 24/7 AI support, and a thriving community await you.
+              A comprehensive Learning Management System designed for educational excellence. 
+              Streamlined course management, assignment tracking, and seamless collaboration between faculty and students.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -137,14 +124,14 @@ export default function Home() {
             >
               <button
                 onClick={() => setLoginModalOpen(true)}
-                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/50 hover:shadow-orange-500/70 flex items-center justify-center gap-2"
+                className="px-8 py-4 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 flex items-center justify-center gap-2"
               >
                 Get Started
                 <ArrowRight size={20} />
               </button>
               <button
                 onClick={() => setRegisterModalOpen(true)}
-                className="px-8 py-4 bg-gray-800/50 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all border border-orange-500 hover:border-orange-600 flex items-center justify-center gap-2"
+                className="px-8 py-4 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all border border-gray-700 flex items-center justify-center gap-2"
               >
                 Create Account
               </button>
@@ -154,13 +141,13 @@ export default function Home() {
       </section>
 
       {/* Courses Section */}
-      <section id="why-choose" className="py-20 bg-gray-900/50">
+      <section id="why-choose" className="py-20 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
               Why Choose MINSU E-LEARN?
             </h2>
-            <p className="text-gray-400 text-base sm:text-lg">
+            <p className="text-gray-300 text-base sm:text-lg">
               Everything you need to succeed in your learning journey
             </p>
           </div>
@@ -169,38 +156,38 @@ export default function Home() {
             {[
               {
                 icon: BookOpen,
-                title: 'Expert-Led Courses',
-                description: 'Learn from industry professionals with real-world experience across 200+ courses.',
+                title: 'Organized Course Content',
+                description: 'Access well-structured lectures with rich multimedia content. Each course has organized modules for easy navigation.',
                 color: 'orange',
               },
               {
-                icon: MessageCircle,
-                title: '24/7 AI Assistant',
-                description: 'Get instant help anytime with our intelligent chatbot that understands your needs.',
+                icon: Users,
+                title: 'Role-Based Access',
+                description: 'Dedicated dashboards for students, faculty, and administrators. Each role has tailored features and permissions.',
                 color: 'blue',
               },
               {
-                icon: Users,
-                title: 'Thriving Community',
-                description: 'Connect with 5,000+ active learners, share knowledge, and grow together.',
+                icon: ClipboardList,
+                title: 'Assignment Management',
+                description: 'Submit assignments, track deadlines, and receive feedback. Faculty can create, grade, and manage submissions efficiently.',
                 color: 'green',
               },
               {
-                icon: GraduationCap,
-                title: 'Industry Certifications',
-                description: 'Earn recognized certificates that boost your career and validate your skills.',
+                icon: MessageCircle,
+                title: 'Announcements & Updates',
+                description: 'Stay informed with course announcements and important updates. Real-time notifications keep everyone connected.',
                 color: 'purple',
               },
               {
-                icon: CheckCircle,
-                title: 'Proven Success',
-                description: '95% of our students achieve their learning goals and advance their careers.',
+                icon: GraduationCap,
+                title: 'Student Enrollment',
+                description: 'Easy course enrollment system with approval workflow. Students can browse and request access to available courses.',
                 color: 'pink',
               },
               {
                 icon: CheckCircle,
-                title: 'Flexible Learning',
-                description: 'Study at your own pace, anytime, anywhere. Access course materials 24/7.',
+                title: 'Progress Tracking',
+                description: 'Monitor your learning progress with detailed dashboards. View submitted assignments, grades, and course completion status.',
                 color: 'yellow',
               },
             ].map((feature, index) => (
@@ -210,13 +197,13 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-gray-900 rounded-2xl border border-gray-800 p-8 hover:border-orange-500/50 transition-all group"
+                className="bg-gray-800 rounded-2xl border border-gray-700 p-8 hover:border-orange-500/50 transition-all group"
               >
                 <div className={`w-14 h-14 bg-${feature.color}-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                   <feature.icon size={28} className={`text-${feature.color}-500`} />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                <p className="text-gray-300 leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -224,9 +211,8 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 relative overflow-hidden">
+      <section id="about" className="py-20 relative overflow-hidden bg-gray-950">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10"></div>
-        
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -237,12 +223,12 @@ export default function Home() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
               Ready to Start Your Journey?
             </h2>
-            <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
               Join MINSU E-LEARN today and unlock your potential with world-class education.
             </p>
             <button
               onClick={() => setRegisterModalOpen(true)}
-              className="inline-flex items-center gap-2 px-10 py-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/50 hover:shadow-orange-500/70 text-lg"
+              className="inline-flex items-center gap-2 px-10 py-5 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 text-lg"
             >
               Get Started Now
               <ArrowRight size={24} />
@@ -252,7 +238,7 @@ export default function Home() {
       </section>
 
       {/* Values Section */}
-      <section id="values" className="py-20">
+      <section id="values" className="py-20 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -261,7 +247,7 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl font-bold text-white mb-4">Our Core Values</h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               The principles that guide everything we do
             </p>
           </motion.div>
@@ -274,13 +260,13 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-gray-900 rounded-2xl border border-gray-800 p-8 hover:border-orange-500/50 transition-all"
+                className="bg-gray-800 rounded-2xl border border-gray-700 p-8 hover:border-orange-500/50 transition-all"
               >
                 <div className={`w-14 h-14 bg-${value.color}-500/10 rounded-xl flex items-center justify-center mb-6`}>
                   <value.icon size={28} className={`text-${value.color}-500`} />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">{value.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{value.description}</p>
+                <p className="text-gray-300 leading-relaxed">{value.description}</p>
               </motion.div>
             ))}
           </div>
@@ -288,7 +274,7 @@ export default function Home() {
       </section>
 
       {/* Our Story Section */}
-      <section id="story" className="py-20 bg-gray-900/50">
+      <section id="story" className="py-20 bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -298,7 +284,7 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-4xl font-bold text-white mb-6">Our Story</h2>
-              <div className="space-y-4 text-gray-400 leading-relaxed">
+              <div className="space-y-4 text-gray-300 leading-relaxed">
                 <p>
                   Our platform was created to provide accessible and high-quality education to students within our local community. 
                   With a focus on innovation and collaboration, we aim to empower learners to achieve their academic and personal goals.
@@ -319,55 +305,23 @@ export default function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="space-y-4"
+              className="space-y-6"
             >
               {milestones.map((milestone, index) => (
                 <div key={index} className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-3 h-3 bg-orange-500 rounded-full mt-2"></div>
-                  <div className="flex-1 pb-4 border-l border-orange-500 pl-4">
-                    <p className="text-gray-300">{milestone.event}</p>
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                      {milestone.year.slice(2)}
+                    </div>
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <div className="font-semibold text-orange-500 text-sm mb-1">{milestone.year}</div>
+                    <p className="text-gray-300 leading-relaxed">{milestone.event}</p>
                   </div>
                 </div>
               ))}
             </motion.div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Join Our Growing Community
-            </h2>
-            <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-              Be part of a global learning community. Start your journey with MINSU E-LEARN today.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => setRegisterModalOpen(true)}
-                className="px-10 py-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/50 text-lg inline-flex items-center justify-center gap-2"
-              >
-                Get Started Free
-                <TrendingUp size={20} />
-              </button>
-              <Link
-                to="/courses"
-                className="px-10 py-5 bg-gray-800/50 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all border border-orange-500 hover:border-orange-600 text-lg inline-flex items-center justify-center gap-2"
-              >
-                Explore Courses
-                <BookOpen size={20} />
-              </Link>
-            </div>
-          </motion.div>
         </div>
       </section>
 

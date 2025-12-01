@@ -210,13 +210,6 @@ function AdminUsers() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleViewDetails(user)}
-                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
-                            title="View Details"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
                             onClick={() => handleEdit(user)}
                             className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
                             title="Edit"
@@ -258,13 +251,6 @@ function AdminUsers() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleViewDetails(user)}
-                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
-                          title="View Details"
-                        >
-                          <Eye size={18} />
-                        </button>
                         <button
                           onClick={() => handleEdit(user)}
                           className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
