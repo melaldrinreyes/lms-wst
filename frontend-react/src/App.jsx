@@ -57,7 +57,6 @@ import InstructorForm from './pages/admin/InstructorForm';
 import AdminLogin from './pages/AdminLogin';
 import FacultyDashboard from './pages/faculty/Dashboard';
 import FacultyCourses from './pages/faculty/Courses';
-import CourseCreate from './pages/faculty/CourseCreate';
 import FacultyCourseManage from './pages/faculty/CourseManage';
 import FacultyStudents from './pages/faculty/Students';
 import FacultySubmissions from './pages/faculty/Submissions';
@@ -185,7 +184,6 @@ function App() {
           >
             <Route index element={<FacultyDashboard />} />
             <Route path="courses" element={<FacultyCourses />} />
-            <Route path="courses/create" element={<CourseCreate />} />
             <Route path="courses/:id" element={<FacultyCourseManage />} />
             <Route path="students" element={<FacultyStudents />} />
             <Route path="students/new" element={<StudentRegistration />} />

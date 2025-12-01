@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Course extends Model
 {
@@ -21,7 +22,22 @@ class Course extends Model
         'academic_year',
         'thumbnail',
         'status',
+        'uuid',
     ];
+
+    /**
+     * Boot the model and auto-generate UUID
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($course) {
+            if (empty($course->uuid)) {
+                $course->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     protected $casts = [
         'credits' => 'integer',

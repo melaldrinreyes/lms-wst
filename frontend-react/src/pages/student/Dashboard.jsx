@@ -458,7 +458,7 @@ export default function StudentDashboard() {
       >
           <div className="relative z-10">
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.name || 'Student'}! 👋
+              Welcome back, {user?.name || 'Student'}!
           </h1>
           <p className="text-orange-100 mb-6">
             Ready to learn something new today? Check out your courses and assignments below.

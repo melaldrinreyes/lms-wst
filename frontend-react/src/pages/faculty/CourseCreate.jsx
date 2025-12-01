@@ -20,11 +20,6 @@ const CourseCreate = () => {
   });
 
   const semesters = ['1st Semester', '2nd Semester', 'Summer'];
-  const currentYear = new Date().getFullYear();
-  const academicYears = [
-    `${currentYear}-${currentYear + 1}`,
-    `${currentYear + 1}-${currentYear + 2}`,
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -224,20 +219,17 @@ const CourseCreate = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Academic Year <span className="text-red-500">*</span>
               </label>
-              <select
+              <input
+                type="text"
                 name="academic_year"
                 value={formData.academic_year}
                 onChange={handleChange}
+                placeholder="e.g., 2024-2025, 2025-2026"
                 className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${
                   errors.academic_year ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 } rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
                 required
-              >
-                <option value="">Select academic year</option>
-                {academicYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+              />
               {errors.academic_year && (
                 <p className="mt-1 text-sm text-red-500">{errors.academic_year[0]}</p>
               )}

@@ -14,7 +14,10 @@ import {
   Settings,
   Share2,
   Copy,
-  Check
+  Check,
+  AlertCircle,
+  Save,
+  X
 } from 'lucide-react';
 import { courseAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
@@ -29,7 +32,19 @@ export default function FacultyCourses() {
   const [copiedCourseId, setCopiedCourseId] = useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState({
+    code: '',
+    name: '',
+    description: '',
+    credits: '3',
+    semester: '',
+    academic_year: '',
+    thumbnail: ''
+  });
 
   useEffect(() => {
     fetchCourses();
@@ -127,6 +142,65 @@ export default function FacultyCourses() {
     }
   };
 
+  const handleCreateCourse = () => {
+    setFormData({
+      code: '',
+      name: '',
+      description: '',
+      credits: '3',
+      semester: '',
+      academic_year: '',
+      thumbnail: ''
+    });
+    setErrors({});
+    setShowCreateModal(true);
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: null
+      }));
+    }
+  };
+
+  const handleSubmitCreate = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    setCreating(true);
+
+    try {
+      const result = await courseAPI.create(formData);
+
+      if (result.success) {
+        setToast({ message: 'Course created successfully!', type: 'success' });
+        setShowCreateModal(false);
+        fetchCourses();
+      }
+    } catch (err) {
+      console.error('Error creating course:', err);
+      if (err.response?.data?.errors) {
+        setErrors(err.response.data.errors);
+        const firstErrorKey = Object.keys(err.response.data.errors)[0];
+        const firstError = err.response.data.errors[firstErrorKey][0];
+        setToast({ message: firstError, type: 'error' });
+      } else {
+        setToast({ 
+          message: err.response?.data?.message || 'Failed to create course', 
+          type: 'error' 
+        });
+      }
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const handleDeleteCourse = async (courseId, courseName) => {
     const res = await Swal.fire({
       title: 'Delete course',
@@ -170,13 +244,13 @@ export default function FacultyCourses() {
               Manage your courses, modules, and student activities
             </p>
           </div>
-          <Link
-            to="/faculty/courses/create"
+          <button
+            onClick={handleCreateCourse}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 font-semibold"
           >
             <Plus className="w-4 h-4" />
             Create Course
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -325,13 +399,209 @@ export default function FacultyCourses() {
           <p className="text-gray-400 mb-6">
             Try adjusting your search or create a new course
           </p>
-          <Link
-            to="/faculty/courses/create"
+          <button
+            onClick={handleCreateCourse}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
           >
             <Plus className="w-4 h-4" />
             Create Your First Course
-          </Link>
+          </button>
+        </div>
+      )}
+
+      {/* Create Course Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-2xl border border-orange-500 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+          >
+            <div className="p-6 border-b border-orange-500 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Create New Course</h2>
+                    <p className="text-sm text-gray-400 mt-1">Add a new course to your teaching portfolio</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitCreate} className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Course Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="code"
+                    value={formData.code}
+                    onChange={handleFormChange}
+                    placeholder="e.g., CS101, MATH201"
+                    className={`w-full px-4 py-2 border ${errors.code ? 'border-red-500' : 'border-gray-700'} rounded-lg focus:ring-2 focus:ring-orange-500 bg-gray-800 text-white placeholder-white/70`}
+                    required
+                  />
+                  {errors.code && (
+                    <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.code[0]}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Credits <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="credits"
+                    value={formData.credits}
+                    onChange={handleFormChange}
+                    min="1"
+                    max="10"
+                    className={`w-full px-4 py-2 border ${errors.credits ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                    required
+                  />
+                  {errors.credits && (
+                    <p className="mt-1 text-sm text-red-500">{errors.credits[0]}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Course Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleFormChange}
+                  placeholder="e.g., Introduction to Computer Science"
+                  className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                  required
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.name[0]}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Course Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleFormChange}
+                  placeholder="Describe what students will learn in this course..."
+                  rows="3"
+                  className={`w-full px-4 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none`}
+                />
+                {errors.description && (
+                  <p className="mt-1 text-sm text-red-500">{errors.description[0]}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Semester <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="semester"
+                    value={formData.semester}
+                    onChange={handleFormChange}
+                    className={`w-full px-4 py-2 border ${errors.semester ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                    required
+                  >
+                    <option value="">Select semester</option>
+                    <option value="1st Semester">1st Semester</option>
+                    <option value="2nd Semester">2nd Semester</option>
+                    <option value="Summer">Summer</option>
+                  </select>
+                  {errors.semester && (
+                    <p className="mt-1 text-sm text-red-500">{errors.semester[0]}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Academic Year <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="academic_year"
+                    value={formData.academic_year}
+                    onChange={handleFormChange}
+                    placeholder="e.g., 2024-2025, 2025-2026"
+                    className={`w-full px-4 py-2 border ${errors.academic_year ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                    required
+                  />
+                  {errors.academic_year && (
+                    <p className="mt-1 text-sm text-red-500">{errors.academic_year[0]}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Thumbnail Image URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  name="thumbnail"
+                  value={formData.thumbnail}
+                  onChange={handleFormChange}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">Leave empty to use default course image</p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Creating Course...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      Create Course
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-6 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </motion.div>
         </div>
       )}
 

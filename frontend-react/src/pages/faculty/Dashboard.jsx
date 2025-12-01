@@ -137,7 +137,7 @@ export default function FacultyDashboard() {
             </p>
         </div>
         <Link
-          to="/faculty/courses/create"
+          to="/faculty/courses"
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
         >
           <BookOpen className="w-4 h-4" />
