@@ -37,6 +37,7 @@ export default function CourseManage() {
   const [newSubmissionsCount, setNewSubmissionsCount] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [modules, setModules] = useState([]);
 
   const fetchCourseData = useCallback(async () => {
     try {
@@ -120,6 +121,30 @@ export default function CourseManage() {
       console.error('Error fetching comments:', error);
     }
   };
+
+  const fetchModules = useCallback(async () => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/courses/${id}/lectures`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        const allLectures = data.lectures || [];
+        const rootModules = allLectures.filter(l => !l.parent_id);
+        // Attach children to each module
+        const modulesWithChildren = rootModules.map(module => ({
+          ...module,
+          children: allLectures.filter(l => l.parent_id === module.id).sort((a, b) => a.order - b.order)
+        }));
+        setModules(modulesWithChildren);
+      }
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+    }
+  }, [id]);
 
 
 
@@ -804,8 +829,9 @@ export default function CourseManage() {
       fetchAssignments();
       fetchAllSubmissions();
       fetchAnnouncements();
+      fetchModules();
     }
-  }, [id, fetchCourseData, fetchAssignments, fetchAllSubmissions, fetchAnnouncements]);
+  }, [id, fetchCourseData, fetchAssignments, fetchAllSubmissions, fetchAnnouncements, fetchModules]);
 
   // Loading state
   if (loading) {
@@ -924,6 +950,20 @@ export default function CourseManage() {
       <div className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg border border-gray-800 overflow-hidden">
         <div className="flex overflow-x-auto scrollbar-hide">
           <button
+            onClick={() => setActiveTab('content')}
+            className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 relative ${
+              activeTab === 'content'
+                ? 'border-orange-500 text-orange-400 bg-gray-800/70'
+                : 'border-transparent text-gray-400 hover:text-orange-400 hover:bg-gray-800/50'
+            }`}
+          >
+            <FileEdit size={20} />
+            <span>Content</span>
+            <span className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+              ✓ NEW
+            </span>
+          </button>
+          <button
             onClick={() => setActiveTab('assignments')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
               activeTab === 'assignments'
@@ -982,16 +1022,6 @@ export default function CourseManage() {
           >
             <FileText size={20} />
             <span>Class Materials</span>
-          </button>
-          <button
-            onClick={() => navigate(`/faculty/courses/${id}/content`)}
-            className="flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 relative border-transparent text-gray-400 hover:text-orange-400 hover:bg-gray-800/50"
-          >
-            <FileEdit size={20} />
-            <span>Content</span>
-            <span className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
-              ✓ NEW
-            </span>
           </button>
         </div>
       </div>
@@ -2256,6 +2286,74 @@ export default function CourseManage() {
       )}
 
       {/* Content Tab */}
+      {activeTab === 'content' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Course Content</h2>
+              <p className="text-gray-400 text-sm">Modules and lessons for this course</p>
+            </div>
+            <button
+              onClick={() => navigate(`/faculty/courses/${id}/content`)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+            >
+              <FileEdit size={20} />
+              Manage Content
+            </button>
+          </div>
+
+          {modules.length === 0 ? (
+            <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+              <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-10 w-10 text-gray-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">No content yet</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                Create your first module to start building your course content.
+              </p>
+              <button
+                onClick={() => navigate(`/faculty/courses/${id}/content`)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-semibold"
+              >
+                <Plus size={20} />
+                Create First Module
+              </button>
+            </div>
+          ) : (
+            <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl overflow-hidden">
+              {modules.map((module, index) => (
+                <div key={module.id} className="border-b border-gray-800 last:border-b-0">
+                  {/* Module */}
+                  <div className="p-4 bg-gray-800/30 flex items-center gap-3">
+                    <span className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      {index + 1}
+                    </span>
+                    <span className="text-white font-semibold">{module.title}</span>
+                  </div>
+                  
+                  {/* Chapters */}
+                  {module.children && module.children.length > 0 && (
+                    <div className="bg-gray-900/50">
+                      {module.children.map((chapter, chapterIndex) => (
+                        <div
+                          key={chapter.id}
+                          className="px-4 py-3 pl-16 text-sm text-gray-300 hover:bg-gray-800/50 transition border-t border-gray-800/50"
+                        >
+                          <span className="text-orange-400 font-medium mr-3">
+                            {index + 1}.{chapterIndex + 1}
+                          </span>
+                          {chapter.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Class Material Modal */}
       <Modal
         isOpen={isModalOpen === 'classMaterial'}

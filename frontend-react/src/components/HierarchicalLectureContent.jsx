@@ -1129,53 +1129,6 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
         max-h-[calc(100vh-4rem)] lg:max-h-full
         flex flex-col
       `}>
-        {/* Sidebar Header - TRULY FIXED */}
-        <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-orange-100 flex-shrink-0">
-          <div className="flex items-center gap-2 mb-3">
-            <FolderOpen size={20} className="text-orange-600" />
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Content Structure</h3>
-          </div>
-          
-          {/* Search */}
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search content..."
-              className="w-full px-3 py-2 pr-8 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Actions - TRULY FIXED */}
-        <div className="px-4 py-2 border-b border-gray-200 bg-gray-50 flex gap-2 flex-shrink-0">
-          <button
-            onClick={expandAllLectures}
-            className="flex-1 px-2 py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50 transition flex items-center justify-center gap-1"
-            title="Expand All"
-          >
-            <ChevronDown size={12} />
-            Expand
-          </button>
-          <button
-            onClick={collapseAllLectures}
-            className="flex-1 px-2 py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50 transition flex items-center justify-center gap-1"
-            title="Collapse All"
-          >
-            <ChevronRight size={12} />
-            Collapse
-          </button>
-        </div>
-
         {/* Navigation Tree - Scrollable Area */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {getRootLectures().length === 0 ? (
