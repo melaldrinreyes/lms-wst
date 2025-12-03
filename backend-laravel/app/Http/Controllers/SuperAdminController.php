@@ -277,17 +277,25 @@ class SuperAdminController extends Controller
                 'email' => 'required|string|email|max:255|unique:users,email,' . $id,
                 'role' => 'required|in:student,faculty,admin',
                 'status' => 'required|in:active,inactive',
+                'password' => 'nullable|string|min:8',
             ]);
 
             $updateUser = User::findOrFail($id);
             $roleId = $request->role === 'admin' ? 1 : ($request->role === 'faculty' ? 2 : 3);
 
-            $updateUser->update([
+            $updateData = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'role_id' => $roleId,
                 'status' => $request->status,
-            ]);
+            ];
+
+            // Only update password if provided
+            if ($request->filled('password')) {
+                $updateData['password'] = bcrypt($request->password);
+            }
+
+            $updateUser->update($updateData);
 
             return response()->json([
                 'success' => true,

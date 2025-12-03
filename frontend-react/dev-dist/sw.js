@@ -100,8 +100,8 @@ define(['./workbox-95252022'], (function (workbox) { 'use strict';
       statuses: [0, 200]
     })]
   }), 'GET');
-  workbox.registerRoute(/^http:\/\/127\.0\.0\.1:8000\/api\/(login|logout|register|user|sanctum\/csrf-token).*/i, new workbox.NetworkOnly(), 'GET');
-  workbox.registerRoute(/^http:\/\/127\.0\.0\.1:8000\/api\/courses.*/i, new workbox.NetworkFirst({
+  workbox.registerRoute(/^http:\/\/(127\.0\.0\.1|localhost):8000\/api\/(login|logout|register|user|sanctum\/csrf-token).*/i, new workbox.NetworkOnly(), 'GET');
+  workbox.registerRoute(/^http:\/\/(127\.0\.0\.1|localhost):8000\/api\/courses.*/i, new workbox.NetworkFirst({
     "cacheName": "courses-cache",
     "networkTimeoutSeconds": 5,
     plugins: [new workbox.ExpirationPlugin({
@@ -111,7 +111,7 @@ define(['./workbox-95252022'], (function (workbox) { 'use strict';
       statuses: [200]
     })]
   }), 'GET');
-  workbox.registerRoute(/^http:\/\/127\.0\.0\.1:8000\/api\/.*/i, new workbox.NetworkFirst({
+  workbox.registerRoute(/^http:\/\/(127\.0\.0\.1|localhost):8000\/api\/.*/i, new workbox.NetworkFirst({
     "cacheName": "api-cache",
     "networkTimeoutSeconds": 10,
     plugins: [new workbox.ExpirationPlugin({

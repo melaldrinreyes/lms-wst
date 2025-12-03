@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, MessageCircle, ArrowRight, GraduationCap, CheckCircle, Sparkles, Target, Zap, Heart, TrendingUp, Users, ClipboardList } from 'lucide-react';
+import { BookOpen, MessageCircle, ArrowRight, GraduationCap, CheckCircle, Sparkles, Target, Zap, Heart, TrendingUp, Users, ClipboardList, Home as HomeIcon, Info, Award, LogIn } from 'lucide-react';
 import { useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
@@ -11,6 +11,15 @@ import RegisterModal from '../components/RegisterModal';
 export default function Home() {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+
+  const scrollToSection = (sectionId) => {
+    setActiveSection(sectionId);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // About page data
   const values = [
@@ -319,6 +328,59 @@ export default function Home() {
       </section>
 
       <Footer />
+
+      {/* Mobile Bottom Navigation - Only visible on mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 z-50">
+        <div className="grid grid-cols-5 h-16">
+          <button
+            onClick={() => scrollToSection('home')}
+            className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+              activeSection === 'home' ? 'text-orange-500' : 'text-gray-400'
+            }`}
+          >
+            <HomeIcon size={20} />
+            <span className="text-xs font-medium">Home</span>
+          </button>
+          
+          <button
+            onClick={() => scrollToSection('why-choose')}
+            className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+              activeSection === 'why-choose' ? 'text-orange-500' : 'text-gray-400'
+            }`}
+          >
+            <Award size={20} />
+            <span className="text-xs font-medium">Features</span>
+          </button>
+          
+          <button
+            onClick={() => scrollToSection('values')}
+            className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+              activeSection === 'values' ? 'text-orange-500' : 'text-gray-400'
+            }`}
+          >
+            <Heart size={20} />
+            <span className="text-xs font-medium">Values</span>
+          </button>
+          
+          <button
+            onClick={() => scrollToSection('story')}
+            className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+              activeSection === 'story' ? 'text-orange-500' : 'text-gray-400'
+            }`}
+          >
+            <Info size={20} />
+            <span className="text-xs font-medium">Story</span>
+          </button>
+
+          <button
+            onClick={() => setLoginModalOpen(true)}
+            className="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-orange-500 transition-colors"
+          >
+            <LogIn size={20} />
+            <span className="text-xs font-medium">Login</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

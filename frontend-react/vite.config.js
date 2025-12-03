@@ -16,29 +16,42 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['vite.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'MinSU LMS - Learning Management System',
         short_name: 'MinSU LMS',
         description: 'Mindoro State University Learning Management System',
         theme_color: '#ea580c',
-        background_color: '#121212',
+        background_color: '#111827',
         display: 'standalone',
         scope: '/',
         start_url: '/',
         orientation: 'portrait-primary',
+        categories: ['education', 'productivity'],
         icons: [
           {
             src: '/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
           },
           {
             src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
@@ -77,12 +90,12 @@ export default defineConfig({
           },
           {
             // Authentication endpoints - NEVER cache login/logout/register
-            urlPattern: /^http:\/\/127\.0\.0\.1:8000\/api\/(login|logout|register|user|sanctum\/csrf-token).*/i,
+            urlPattern: /^http:\/\/(127\.0\.0\.1|localhost):8000\/api\/(login|logout|register|user|sanctum\/csrf-token).*/i,
             handler: 'NetworkOnly'
           },
           {
             // Course endpoints - Always fresh data
-            urlPattern: /^http:\/\/127\.0\.0\.1:8000\/api\/courses.*/i,
+            urlPattern: /^http:\/\/(127\.0\.0\.1|localhost):8000\/api\/courses.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'courses-cache',
@@ -98,7 +111,7 @@ export default defineConfig({
           },
           {
             // Other API calls - NetworkFirst with short cache
-            urlPattern: /^http:\/\/127\.0\.0\.1:8000\/api\/.*/i,
+            urlPattern: /^http:\/\/(127\.0\.0\.1|localhost):8000\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

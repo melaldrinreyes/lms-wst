@@ -6,7 +6,8 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
     name: '',
     email: '',
     role: 'student',
-    status: 'active'
+    status: 'active',
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,7 +18,8 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
         name: user.name || '',
         email: user.email || '',
         role: user.role || 'student',
-        status: user.status || 'active'
+        status: user.status || 'active',
+        password: ''
       });
     }
   }, [user]);
@@ -111,6 +113,23 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
         </select>
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-white mb-1">
+          New Password
+        </label>
+        <input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Leave blank to keep current password"
+          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
+        />
+        <p className="mt-1 text-xs text-gray-400">
+          Only fill this if you want to change the user's password
+        </p>
+      </div>
+
       <div className="flex justify-end space-x-3 pt-4">
         <button
           type="button"
@@ -122,7 +141,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {loading ? 'Updating...' : 'Update User'}
         </button>
