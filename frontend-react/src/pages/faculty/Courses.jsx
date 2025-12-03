@@ -233,40 +233,6 @@ export default function FacultyCourses() {
     <div className="space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
-      {/* Header */}
-      {loading ? (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex-1">
-              <Skeleton className="h-8 w-48 mb-2" />
-              <Skeleton className="h-4 w-96" />
-            </div>
-            <Skeleton className="h-10 w-40 rounded-xl" />
-          </div>
-        </div>
-      ) : (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-orange-500">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <BookOpen className="text-orange-500" size={28} />
-                My Courses
-              </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                Manage your courses, modules, and student activities
-              </p>
-            </div>
-            <button
-              onClick={handleCreateCourse}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 font-semibold"
-            >
-              <Plus className="w-4 h-4" />
-              Create Course
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Filters */}
       {loading ? (
         <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-4">

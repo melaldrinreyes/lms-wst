@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -9,7 +9,8 @@ import {
   Menu,
   X,
   MoreHorizontal,
-  UserPlus
+  UserPlus,
+  Plus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import logo from '../logo/logo.jpg';
@@ -92,6 +93,9 @@ export default function DashboardLayout({ role }) {
 
   const links = sidebarLinks[currentRole] || sidebarLinks.student;
   const mobileLinks = mobileNavLinks[currentRole] || mobileNavLinks.student;
+
+  // Check if current page is content editor
+  const isContentPage = location.pathname.includes('/content');
 
   const isActive = (path, end = false) => {
     if (end) {
@@ -297,15 +301,20 @@ export default function DashboardLayout({ role }) {
       <div className="flex-1 flex flex-col lg:ml-64 w-full overflow-x-hidden bg-gray-950">
         {/* Top Bar - Hide hamburger menu on mobile */}
         <header className="bg-gray-900 border-b border-gray-800 px-4 sm:px-6 py-4 sticky top-0 z-10 w-full shadow-sm">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-4">
             <h1 className="text-lg sm:text-xl font-bold text-white capitalize truncate">
-              {currentRole} Dashboard
+              {location.pathname === '/faculty/courses' ? 'My Courses' : 
+               location.pathname === '/student/courses' ? 'My Courses' :
+               location.pathname === '/faculty/join-requests' ? 'Join Requests' :
+               location.pathname === '/admin/users' ? 'Manage Users' :
+               location.pathname === '/profile' ? 'Profile' :
+               `${currentRole} Dashboard`}
             </h1>
           </div>
         </header>
 
         {/* Page Content - Added pb-20 for mobile bottom nav */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-24 lg:pb-6 w-full">
+        <main className={`flex-1 w-full ${isContentPage ? 'overflow-y-auto overflow-x-hidden p-0 pb-16 lg:pb-0' : 'overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-24 lg:pb-6'}`}>
           <Outlet />
         </main>
       </div>

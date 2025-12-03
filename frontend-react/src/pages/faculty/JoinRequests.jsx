@@ -172,15 +172,6 @@ export default function JoinRequests() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Users className="text-orange-500" size={28} />
-          Join Requests
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">Manage student enrollment requests for your courses</p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">

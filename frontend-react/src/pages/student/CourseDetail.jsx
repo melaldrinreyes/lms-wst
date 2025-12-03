@@ -718,7 +718,14 @@ function CourseDetail() {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              if (tab.id === 'content') {
+                // Open content in new window/tab
+                window.open(`/student/courses/${id}/content`, '_blank');
+              } else {
+                setActiveTab(tab.id);
+              }
+            }}
             className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold whitespace-nowrap transition-all relative ${
               activeTab === tab.id
                 ? 'text-orange-500 border-b-2 border-orange-500'

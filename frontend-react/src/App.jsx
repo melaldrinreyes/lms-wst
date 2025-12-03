@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import SaveProvider from './contexts/SaveContext';
 
 /**
  * LMS Route Guards
@@ -58,6 +59,7 @@ import AdminLogin from './pages/AdminLogin';
 import FacultyDashboard from './pages/faculty/Dashboard';
 import FacultyCourses from './pages/faculty/Courses';
 import FacultyCourseManage from './pages/faculty/CourseManage';
+import FacultyCourseContent from './pages/faculty/CourseContent';
 import FacultyStudents from './pages/faculty/Students';
 import FacultySubmissions from './pages/faculty/Submissions';
 import StudentRegistration from './pages/faculty/StudentRegistration';
@@ -107,9 +109,10 @@ function PublicRoute({ children }) {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
+    <SaveProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route 
@@ -154,6 +157,16 @@ function App() {
             {/* Assignments page removed */}
           </Route>
 
+          {/* Student Content Page - Separate window without DashboardLayout */}
+          <Route
+            path="/student/courses/:id/content"
+            element={
+              <ProtectedRoute requiredRole="student">
+                <FacultyCourseContent />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Admin Routes */}
           <Route
             path="/admin"
@@ -185,6 +198,7 @@ function App() {
             <Route index element={<FacultyDashboard />} />
             <Route path="courses" element={<FacultyCourses />} />
             <Route path="courses/:id" element={<FacultyCourseManage />} />
+            <Route path="courses/:id/content" element={<FacultyCourseContent />} />
             <Route path="students" element={<FacultyStudents />} />
             <Route path="students/new" element={<StudentRegistration />} />
             <Route path="submissions" element={<FacultySubmissions />} />
@@ -208,6 +222,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+  </SaveProvider>
   );
 }
 

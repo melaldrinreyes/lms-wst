@@ -5,7 +5,6 @@ import { studentAPI } from '../../services/api';
 import { SkeletonCard } from '../../components/ui/Skeleton';
 
 export default function Courses() {
-  const [activeTab, setActiveTab] = useState('all');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,46 +26,11 @@ export default function Courses() {
     }
   };
 
-  const filteredCourses = courses.filter(course => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'in-progress') return course.progress < 100;
-    if (activeTab === 'completed') return course.progress === 100;
-    return true;
-  });
-
   // (Course stats removed — not used after removing stats cards)
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <BookOpen className="text-orange-500" size={28} />
-          My Courses
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">
-          {loading ? 'Loading...' : `${filteredCourses.length} ${filteredCourses.length === 1 ? 'Course' : 'Courses'}`}
-        </p>
-      </div>
-
       {/* Stats Cards removed as requested */}
-
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-800">
-        {['all', 'in-progress', 'completed'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 text-sm font-semibold capitalize transition-all ${
-              activeTab === tab
-                ? 'text-orange-500 border-b-2 border-orange-500'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            {tab.replace('-', ' ')}
-          </button>
-        ))}
-      </div>
 
       {/* Courses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -74,18 +38,16 @@ export default function Courses() {
           [...Array(6)].map((_, i) => (
             <SkeletonCard key={i} />
           ))
-        ) : filteredCourses.length === 0 ? (
+        ) : courses.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">No courses found</h3>
             <p className="text-gray-400">
-              {activeTab === 'all' 
-                ? "You haven't enrolled in any courses yet." 
-                : `No ${activeTab.replace('-', ' ')} courses.`}
+              You haven't enrolled in any courses yet.
             </p>
           </div>
         ) : (
-          filteredCourses.map((course) => (
+          courses.map((course) => (
             <div
               key={course.id}
               className="bg-gray-900 dark:bg-gray-950 rounded-xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition group flex flex-col h-full"

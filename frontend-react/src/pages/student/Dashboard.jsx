@@ -459,10 +459,10 @@ export default function StudentDashboard() {
       >
           <div className="relative z-10">
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.name || 'Student'}!
+              Welcome back, {user?.name || 'Student'}
           </h1>
           <p className="text-orange-100 mb-6">
-            Ready to learn something new today? Check out your courses and assignments below.
+            Continue your learning journey. Access your enrolled courses and stay on top of your assignments.
           </p>
           <p className="text-sm text-orange-100/80 mb-4">
             {user?.student_id ? `Student ID: ${user.student_id}` : ''}
@@ -478,7 +478,7 @@ export default function StudentDashboard() {
               to="/student/courses"
               className="px-6 py-3 bg-orange-700 text-white rounded-xl font-semibold hover:bg-orange-800 transition border border-orange-500 text-center"
             >
-              My Courses
+              View Courses
             </Link>
           </div>
         </div>

@@ -223,12 +223,6 @@ export default function Profile() {
     <div className="space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-orange-500">
-        <h1 className="text-2xl font-bold text-white">
-          Profile Settings
-        </h1>
-      </div>
-
       {loading ? (
         <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-orange-500">
           <div className="space-y-4">
