@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { 
   Save, Edit, X, Eye, Loader, Trash2, Plus, ChevronDown, ChevronRight, 
   Indent, ChevronUp, Menu, Settings, FileText, Video, Image, Link2,
@@ -47,7 +47,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
   const [showAddSubModal, setShowAddSubModal] = useState(null); // For adding sub-lectures
   const [subLectureTitle, setSubLectureTitle] = useState('');
   const [unsavedLectures, setUnsavedLectures] = useState([]); // Track newly created sub-lectures
-  const [searchQuery, setSearchQuery] = useState(''); // For searching lectures
+  const [searchQuery] = useState(''); // For searching lectures
   const [filteredLectures, setFilteredLectures] = useState([]); // Filtered lectures based on search
   const [showScrollUp, setShowScrollUp] = useState(false); // For scroll up button
   const [selectedLectureId, setSelectedLectureId] = useState(null); // For sidebar navigation
@@ -67,7 +67,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
   useEffect(() => {
     fetchLectures();
-  }, [courseId]);
+  }, [courseId, fetchLectures]);
 
   // Update filtered lectures when lectures or search query changes
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const fetchLectures = async () => {
+  const fetchLectures = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await api.get(`/courses/${courseId}/lectures`);
@@ -123,7 +123,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [courseId]);
 
   // Get root lectures (modules) - use filtered lectures when searching
   const getRootLectures = () => {
@@ -230,142 +230,6 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     setIsEditing(true);
   };
 
-  const saveLecture = async () => {
-    try {
-      // Block save if any blob: URLs are present
-      if (/blob:[^"'\s]+/.test(currentContent)) {
-        setToast({ message: 'Cannot save: May natitirang blob URL sa content. Hintayin matapos ang upload o alisin ang hindi pa uploaded na file.', type: 'error' });
-        return;
-      }
-      setIsSaving(true);
-      setIsUploading(true);
-      let html = currentContent;
-      // 1. Get pending files from editor
-      const pendingFiles = editorRef.current?.getPendingFiles?.() || [];
-      const urlMap = {};
-      // --- Total progress tracking ---
-      let totalSize = pendingFiles.reduce((sum, pf) => sum + (pf.file?.size || 0), 0);
-      let loadedSoFar = 0;
-      setUploadingTotal(totalSize);
-      setUploadingLoaded(0);
-      // Setup AbortController for this upload
-      uploadAbortController.current = new AbortController();
-      // 2. Upload each file and map objectUrl to real URL
-      const uploadErrors = [];
-      for (const pf of pendingFiles) {
-        try {
-          const formData = new FormData();
-          formData.append('file', pf.file);
-          const uploadRes = await api.post('/modules/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            onUploadProgress: (progressEvent) => {
-              if (progressEvent.total) {
-                // progressEvent.loaded is for this file only
-                // Add loadedSoFar (bytes from previous files)
-                const currentLoaded = loadedSoFar + progressEvent.loaded;
-                setUploadingLoaded(currentLoaded);
-                if (totalSize > 0) {
-                  setUploadProgress(Math.round((currentLoaded * 100) / totalSize));
-                }
-              }
-            },
-            signal: uploadAbortController.current.signal,
-          });
-          
-          loadedSoFar += pf.file?.size || 0;
-          setUploadingLoaded(loadedSoFar);
-          if (totalSize > 0) {
-            setUploadProgress(Math.round((loadedSoFar * 100) / totalSize));
-          }
-          
-          if (uploadRes.data?.url) {
-            urlMap[pf.objectUrl] = uploadRes.data.url;
-          } else {
-            uploadErrors.push(`Failed to upload ${pf.file?.name || 'unknown file'}: No URL returned`);
-          }
-        } catch (uploadError) {
-          loadedSoFar += pf.file?.size || 0; // Still count as loaded for progress
-          setUploadingLoaded(loadedSoFar);
-          if (totalSize > 0) {
-            setUploadProgress(Math.round((loadedSoFar * 100) / totalSize));
-          }
-          
-          const errorMsg = uploadError.response?.data?.message || uploadError.message || 'Upload failed';
-          uploadErrors.push(`Failed to upload ${pf.file?.name || 'unknown file'}: ${errorMsg}`);
-        }
-      }
-      
-      // If some uploads failed, show warning but continue with successful ones
-      if (uploadErrors.length > 0) {
-        setToast({ 
-          message: `Some files failed to upload: ${uploadErrors.join('; ')}. Content saved with available files.`, 
-          type: 'warning' 
-        });
-      }
-      // 3. Replace all object URLs in HTML with real URLs
-      Object.entries(urlMap).forEach(([objectUrl, realUrl]) => {
-        // Escape special regex characters and replace all occurrences
-        const escapedObjectUrl = objectUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedObjectUrl, 'g');
-        html = html.replace(regex, realUrl);
-      });
-      // 4. Clear pending files
-      editorRef.current?.clearPendingFiles?.();
-      // 5. Save lecture with updated HTML
-      const updatedLectures = lectures.map(l =>
-        l.id === editingLectureId
-          ? { 
-              ...l, 
-              content: html, // html is already real HTML, do not escape
-              updated_at: new Date().toISOString(),
-              parent_lecture_id: l.parent_lecture_id || null,
-              level: typeof l.level !== 'undefined' ? l.level : 0,
-            }
-          : {
-              ...l,
-              parent_lecture_id: l.parent_lecture_id || null,
-              level: typeof l.level !== 'undefined' ? l.level : 0,
-            }
-      );
-      const response = await api.post(`/courses/${courseId}/lectures`, {
-        lectures: updatedLectures,
-      });
-      if (response.data.success) {
-        const newLectures = response.data.lectures || updatedLectures;
-        setLectures(newLectures);
-        setUnsavedLectures([]);
-        // Update currentContent with the saved HTML (with real URLs)
-        const updated = newLectures.find(l => l.id === editingLectureId);
-        setCurrentContent(updated ? updated.content : '');
-        // Force the editor to reload the updated HTML so blob URLs are replaced with backend URLs
-        if (editorRef.current && editorRef.current.setContent) {
-          editorRef.current.setContent(updated ? updated.content : '');
-        }
-        setIsEditing(false);
-        setEditingLectureId(null);
-        if (onSave) {
-          onSave(newLectures);
-        }
-      }
-    } catch (error) {
-      if (axios.isCancel?.(error) || error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED' || error?.message === 'canceled') {
-        setToast({ message: 'Upload canceled.', type: 'warning' });
-      } else {
-        const errorMsg = error.response?.data?.message || error.message || 'Failed to save lecture';
-        const errorDetails = error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : '';
-        setToast({ message: `Error: ${errorMsg} ${errorDetails}`, type: 'error' });
-        console.error('Error saving lecture:', error);
-        console.error('Response data:', error.response?.data);
-      }
-    } finally {
-      setIsSaving(false);
-      setIsUploading(false);
-      setUploadProgress(0);
-      setUploadingTotal(0);
-      setUploadingLoaded(0);
-      uploadAbortController.current = null;
-    }
-  };
 
   const saveAllLectures = async () => {
     const result = await saveLecturesContext(courseId, lectures, pendingFilesMap);
@@ -463,32 +327,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     });
   };
 
-  // Expand all lectures
-  const expandAllLectures = () => {
-    const allExpanded = {};
-    const expandRecursively = (lectureList) => {
-      lectureList.forEach(lecture => {
-        allExpanded[lecture.id] = true;
-        const children = getChildren(lecture.id);
-        if (children.length > 0) {
-          expandRecursively(children);
-        }
-      });
-    };
-    expandRecursively(filteredLectures);
-    setExpandedLectures(allExpanded);
-  };
-
-  // Collapse all lectures
-  const collapseAllLectures = () => {
-    setExpandedLectures({});
-  };
-
   // Get all lectures to display (filtered or all)
   const getLecturesToDisplay = () => {
     if (searchQuery.trim()) {
       // When searching, show all matching lectures and their parents for context
-      const matchingIds = new Set(filteredLectures.map(l => l.id));
       const result = [];
       
       const addWithParents = (lecture) => {
@@ -907,7 +749,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 let cleanedHtml = html;
                 blobMatches.forEach(match => {
                   // Remove the entire element containing blob URL
-                  const elementRegex = new RegExp(`<${match.tag}[^>]*src=["']${match.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*>[^<]*<\/${match.tag}>`, 'gi');
+                  const elementRegex = new RegExp(`<${match.tag}[^>]*src=["']${match.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*>[^<]*</${match.tag}>`, 'gi');
                   cleanedHtml = cleanedHtml.replace(elementRegex, '');
                   // Also remove self-closing tags
                   const selfClosingRegex = new RegExp(`<${match.tag}[^>]*src=["']${match.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*/>`, 'gi');
@@ -1175,12 +1017,21 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       <div className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 lg:w-72
-        fixed lg:relative left-0 top-0 w-72 z-40
+        fixed lg:relative left-0 top-0 z-40
         transition-all duration-300 border-r border-gray-300 bg-white shadow-lg lg:shadow-sm 
         h-[calc(100vh-4rem)] lg:h-full
         max-h-[calc(100vh-4rem)] lg:max-h-full
         flex flex-col
+        ${isSidebarOpen ? 'w-72' : 'w-16'}
       `}>
+        {/* Always-visible hamburger for collapse/expand */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute top-2 left-2 z-50 p-2 rounded-xl bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition"
+          title={isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
+        >
+          <Menu size={22} className="text-[#718096]" />
+        </button>
         {/* Navigation Tree - Scrollable Area */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {getRootLectures().length === 0 ? (
@@ -1220,7 +1071,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden h-full md:h-screen">
         {/* Top Toolbar - Fixed Header */}
-        <div className="px-3 sm:px-6 py-3 border-b border-gray-300 bg-white flex items-center justify-between shadow-sm flex-shrink-0">
+        <div className="px-3 sm:px-6 py-3 border-b border-gray-300 bg-white flex items-center justify-between shadow-sm flex-shrink-0 fixed top-0 left-0 right-0 z-30 md:static">
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -1265,7 +1116,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
         </div>
 
         {/* Content Display Area - Scrollable */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white md:bg-white">
+        <div className="flex-1 flex flex-col overflow-hidden bg-white md:bg-white pt-[56px] md:pt-0">
           {/* Show selected lecture content OR the tree structure */}
           {selectedLectureId ? (
             // Display selected lecture content

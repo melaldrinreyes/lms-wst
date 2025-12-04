@@ -76,20 +76,20 @@ const CourseCreate = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate('/faculty/courses')}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors"
+          className="flex items-center gap-2 text-[#718096] dark:text-[#718096] hover:text-gray-900 dark:hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Courses
         </button>
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
-            <BookOpen className="w-8 h-8 text-white" />
+          <div className="p-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-xl shadow-lg">
+            <BookOpen className="w-8 h-8 text-[#1d2026]" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#1d2026]">
               Create New Course
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-[#718096] dark:text-[#718096] mt-1">
               Add a new course to your teaching portfolio
             </p>
           </div>
@@ -97,12 +97,12 @@ const CourseCreate = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-orange-500 p-6">
+      <div className="bg-white dark:bg-white rounded-xl shadow-lg border border-[#ff6b6b] p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course Code and Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Course Code <span className="text-red-500">*</span>
               </label>
               <input
@@ -111,9 +111,9 @@ const CourseCreate = () => {
                 value={formData.code}
                 onChange={handleChange}
                 placeholder="e.g., CS101, MATH201"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.code ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               />
               {errors.code && (
@@ -125,7 +125,7 @@ const CourseCreate = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Credits <span className="text-red-500">*</span>
               </label>
               <input
@@ -135,9 +135,9 @@ const CourseCreate = () => {
                 onChange={handleChange}
                 min="1"
                 max="10"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.credits ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               />
               {errors.credits && (
@@ -148,7 +148,7 @@ const CourseCreate = () => {
 
           {/* Course Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Course Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -157,9 +157,9 @@ const CourseCreate = () => {
               value={formData.name}
               onChange={handleChange}
               placeholder="e.g., Introduction to Computer Science"
-              className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${
+              className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                 errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+              } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
               required
             />
             {errors.name && (
@@ -172,7 +172,7 @@ const CourseCreate = () => {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Course Description
             </label>
             <textarea
@@ -181,9 +181,9 @@ const CourseCreate = () => {
               onChange={handleChange}
               placeholder="Describe what students will learn in this course..."
               rows="4"
-              className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${
+              className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                 errors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white resize-none`}
+              } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-white resize-none`}
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-500">{errors.description[0]}</p>
@@ -193,16 +193,16 @@ const CourseCreate = () => {
           {/* Semester and Academic Year */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Semester <span className="text-red-500">*</span>
               </label>
               <select
                 name="semester"
                 value={formData.semester}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.semester ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               >
                 <option value="">Select semester</option>
@@ -216,7 +216,7 @@ const CourseCreate = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Academic Year <span className="text-red-500">*</span>
               </label>
               <input
@@ -225,9 +225,9 @@ const CourseCreate = () => {
                 value={formData.academic_year}
                 onChange={handleChange}
                 placeholder="e.g., 2024-2025, 2025-2026"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.academic_year ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               />
               {errors.academic_year && (
@@ -238,7 +238,7 @@ const CourseCreate = () => {
 
           {/* Thumbnail URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Thumbnail Image URL (Optional)
             </label>
             <input
@@ -247,9 +247,9 @@ const CourseCreate = () => {
               value={formData.thumbnail}
               onChange={handleChange}
               placeholder="https://example.com/image.jpg"
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
+              className="w-full px-4 py-3 bg-white dark:bg-white border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-gray-500 dark:text-[#718096]">
               Leave empty to use default course image
             </p>
           </div>
@@ -259,14 +259,14 @@ const CourseCreate = () => {
             <button
               type="button"
               onClick={() => navigate('/faculty/courses')}
-              className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
+              className="flex-1 px-6 py-3 bg-white dark:bg-white text-[#2c3e50] dark:text-[#2c3e50] rounded-xl hover:bg-white dark:hover:bg-white transition-colors font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

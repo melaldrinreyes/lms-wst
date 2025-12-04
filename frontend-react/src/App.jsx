@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import SaveProvider from './contexts/SaveContext';
+import { useState, useEffect } from 'react';
 
 /**
  * LMS Route Guards
@@ -29,10 +30,10 @@ import SaveProvider from './contexts/SaveContext';
 // Loading Component for Route Guards
 function RouteLoading() {
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+    <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 border-t-orange-600 mx-auto mb-4"></div>
-        <p className="text-gray-400">Verifying access...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#FF4C60] 200 border-t-blue-600 mx-auto mb-4"></div>
+        <p className="text-[#718096]">Verifying access...</p>
       </div>
     </div>
   );
@@ -42,6 +43,7 @@ function RouteLoading() {
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import PublicCourses from './pages/Courses';
 import CourseInvite from './pages/CourseInvite';
 import StudentDashboard from './pages/student/Dashboard';
@@ -67,6 +69,7 @@ import JoinRequests from './pages/faculty/JoinRequests';
 
 // Layouts
 import DashboardLayout from './components/DashboardLayout';
+import ForgotPasswordModal from './components/ForgotPasswordModal';
 
 // Protected Route Component
 function ProtectedRoute({ children, requiredRole }) {
@@ -108,6 +111,14 @@ function PublicRoute({ children }) {
 }
 
 function App() {
+  // Forgot Password Modal State
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  useEffect(() => {
+    const handler = () => setForgotPasswordOpen(true);
+    window.addEventListener('open-forgot-password-modal', handler);
+    return () => window.removeEventListener('open-forgot-password-modal', handler);
+  }, []);
+
   return (
     <SaveProvider>
       <AuthProvider>
@@ -136,6 +147,14 @@ function App() {
             element={
               <PublicRoute>
                 <Register />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/forgot-password" 
+            element={
+              <PublicRoute>
+                <ForgotPassword />
               </PublicRoute>
             } 
           />
@@ -221,6 +240,11 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      <ForgotPasswordModal
+        isOpen={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+        onBackToLogin={() => setForgotPasswordOpen(false)}
+      />
     </AuthProvider>
   </SaveProvider>
   );

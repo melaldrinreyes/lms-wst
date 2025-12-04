@@ -20,6 +20,8 @@ use App\Http\Controllers\MediaUploadController;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // (Debug route removed) Temporary local-only debug route removed after verification.
 

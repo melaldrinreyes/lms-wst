@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Check, X, Clock, Calendar, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { facultyAPI } from '../../services/api';
 import Swal from 'sweetalert2';
 import Skeleton from '../../components/ui/Skeleton';

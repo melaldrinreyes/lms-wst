@@ -129,6 +129,21 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
                     </div>
                   </div>
 
+                  {/* Forgot Password Link */}
+                  <div className="flex justify-end mt-1 mb-2">
+                    <button
+                      type="button"
+                      className="text-sm text-[#FF4C60] hover:underline focus:outline-none font-medium"
+                      onClick={() => {
+                        onClose();
+                        window.dispatchEvent(new CustomEvent('open-forgot-password-modal'));
+                      }}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  {/* End Forgot Password Link */}
+
                   {/* Remember Me */}
                   <div className="flex items-center">
                     <label className="flex items-center">

@@ -227,22 +227,22 @@ export default function Students() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Students Management</h1>
-          <p className="text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-[#1d2026]">Students Management</h1>
+          <p className="text-[#718096] mt-1">
             Manage student accounts and enrollments
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleExportStudents}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FF4C60] text-gray-900 rounded-xl hover:bg-[#ff3451] transition-all font-semibold"
           >
             <Download className="w-4 h-4" />
             Export
           </button>
           <button
             onClick={handleAddStudent}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 font-semibold"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 hover:shadow-[#FF4C60]/50 font-semibold"
           >
             <Plus className="w-4 h-4" />
             Add Student
@@ -251,31 +251,31 @@ export default function Students() {
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
+      <div className="bg-white rounded-2xl border border-gray-800 p-6">
         <div className="relative">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-3 w-5 h-5 text-[#718096]" />
           <input
             type="text"
             placeholder="Search by name, email, or student ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-700 rounded-xl text-gray-900 placeholder-white/70 focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent"
           />
         </div>
       </div>
 
       {/* Students Table */}
       {loading ? (
-        <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
+        <div className="bg-white rounded-2xl border border-gray-800 p-8">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-gray-800 rounded-lg"></div>
+              <div key={i} className="h-16 bg-white rounded-xl"></div>
             ))}
           </div>
         </div>
       ) : filteredStudents.length === 0 ? (
-        <div className="bg-gray-900 rounded-2xl border border-gray-800 p-12 text-center">
-          <p className="text-gray-400 text-lg">No students found</p>
+        <div className="bg-white rounded-2xl border border-gray-800 p-12 text-center">
+          <p className="text-[#718096] text-lg">No students found</p>
         </div>
       ) : (
         <>
@@ -287,29 +287,29 @@ export default function Students() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-gray-900 rounded-2xl border border-gray-800 p-6 hover:bg-gray-800/50 transition-colors"
+                className="bg-white rounded-2xl border border-gray-800 p-6 hover:bg-white/50 transition-colors"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center text-white font-semibold">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] flex items-center justify-center text-gray-900 font-semibold">
                       {student.name?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold text-lg">{student.name}</h3>
-                      <p className="text-white font-medium text-sm">{student.student_id || '-'}</p>
+                      <h3 className="text-gray-900 font-semibold text-lg">{student.name}</h3>
+                      <p className="text-gray-900 font-medium text-sm">{student.student_id || '-'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleEditStudent(student)}
-                      className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition"
+                      className="p-2 text-[#ff9f66] hover:bg-[#FF4C60]/100/20 rounded-xl transition"
                       title="Edit"
                     >
                       <Edit size={18} />
                     </button>
                     <button
                       onClick={() => handleDeleteStudent(student)}
-                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition"
+                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition"
                       title="Delete"
                     >
                       <Trash2 size={18} />
@@ -319,25 +319,25 @@ export default function Students() {
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-sm">Email:</span>
-                    <span className="text-gray-300 text-sm">{student.email}</span>
+                    <span className="text-[#718096] text-sm">Email:</span>
+                    <span className="text-[#4a5568] text-sm">{student.email}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-sm">Phone:</span>
-                    <span className="text-gray-300 text-sm">{student.phone || '-'}</span>
+                    <span className="text-[#718096] text-sm">Phone:</span>
+                    <span className="text-[#4a5568] text-sm">{student.phone || '-'}</span>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <span className="text-gray-400 text-sm">Instructor(s):</span>
+                    <span className="text-[#718096] text-sm">Instructor(s):</span>
                     <div className="flex-1">
                       {Array.isArray(student.instructors) && student.instructors.length > 0 ? (
                         <div className="space-y-1">
                           {student.instructors.map((instructor, idx) => (
-                            <div key={idx} className="text-gray-300 text-sm">
+                            <div key={idx} className="text-[#4a5568] text-sm">
                               {instructor.name}
                               {instructor.email && (
-                                <span className="ml-2 text-xs text-gray-400">({instructor.email})</span>
+                                <span className="ml-2 text-xs text-[#718096]">({instructor.email})</span>
                               )}
                             </div>
                           ))}
@@ -356,28 +356,28 @@ export default function Students() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="hidden md:block bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden"
+            className="hidden md:block bg-white rounded-2xl border border-gray-800 overflow-hidden"
           >
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800/50">
+                <thead className="bg-white/50">
                   <tr>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Name
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Student ID
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Email
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Phone
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Instructor(s)
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Actions
                     </th>
                   </tr>
@@ -389,35 +389,35 @@ export default function Students() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="hover:bg-gray-800/50 transition-colors"
+                      className="hover:bg-white/50 transition-colors"
                     >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center text-white font-semibold">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] flex items-center justify-center text-gray-900 font-semibold">
                             {student.name?.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-white font-medium">{student.name}</p>
+                            <p className="text-gray-900 font-medium">{student.name}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-6 text-sm text-white font-medium">
+                      <td className="py-4 px-6 text-sm text-gray-900 font-medium">
                         {student.student_id || '-'}
                       </td>
-                      <td className="py-4 px-6 text-sm text-gray-400">
+                      <td className="py-4 px-6 text-sm text-[#718096]">
                         {student.email}
                       </td>
-                      <td className="py-4 px-6 text-sm text-gray-400">
+                      <td className="py-4 px-6 text-sm text-[#718096]">
                         {student.phone || '-'}
                       </td>
-                      <td className="py-4 px-6 text-sm text-gray-400">
+                      <td className="py-4 px-6 text-sm text-[#718096]">
                         {Array.isArray(student.instructors) && student.instructors.length > 0 ? (
                           <ul className="list-disc list-inside space-y-1">
                             {student.instructors.map((instructor, idx) => (
-                              <li key={idx} className="text-gray-300">
+                              <li key={idx} className="text-[#4a5568]">
                                 {instructor.name}
                                 {instructor.email ? (
-                                  <span className="ml-2 text-xs text-gray-400">({instructor.email})</span>
+                                  <span className="ml-2 text-xs text-[#718096]">({instructor.email})</span>
                                 ) : null}
                               </li>
                             ))}
@@ -430,14 +430,14 @@ export default function Students() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleEditStudent(student)}
-                            className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition"
+                            className="p-2 text-[#ff9f66] hover:bg-[#FF4C60]/100/20 rounded-xl transition"
                             title="Edit"
                           >
                             <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteStudent(student)}
-                            className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition"
+                            className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition"
                             title="Delete"
                           >
                             <Trash2 size={18} />
@@ -453,16 +453,16 @@ export default function Students() {
 
           {/* Pagination - Same for both views */}
           {filteredStudents.length >= 5 && (
-            <div className="px-6 py-4 bg-gray-800/50 border border-gray-800 rounded-2xl mt-4 md:mt-0 md:border-t-0 md:border-l md:border-r md:rounded-t-none">
+            <div className="px-6 py-4 bg-white/50 border border-gray-800 rounded-2xl mt-4 md:mt-0 md:border-t-0 md:border-l md:border-r md:rounded-t-none">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-[#718096]">
                   Showing {startIndex + 1} to {Math.min(endIndex, filteredStudents.length)} of {filteredStudents.length} students
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 text-[#718096] hover:text-gray-900 hover:bg-white/50 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Previous page"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -485,10 +485,10 @@ export default function Students() {
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`px-3 py-1 text-sm rounded-lg transition ${
+                          className={`px-3 py-1 text-sm rounded-xl transition ${
                             currentPage === pageNum
-                              ? 'bg-orange-500 text-white'
-                              : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                              ? 'bg-[#FF4C60] text-[#1d2026]'
+                              : 'text-[#718096] hover:text-gray-900 hover:bg-white/50'
                           }`}
                         >
                           {pageNum}
@@ -500,7 +500,7 @@ export default function Students() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 text-[#718096] hover:text-gray-900 hover:bg-white/50 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Next page"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -510,7 +510,7 @@ export default function Students() {
             </div>
           )}
           {totalPages <= 1 && (
-            <div className="px-6 py-4 bg-gray-800/50 text-sm text-gray-400 border border-gray-800 rounded-2xl mt-4 md:mt-0 md:border-t-0 md:border-l md:border-r md:rounded-t-none">
+            <div className="px-6 py-4 bg-white/50 text-sm text-[#718096] border border-gray-800 rounded-2xl mt-4 md:mt-0 md:border-t-0 md:border-l md:border-r md:rounded-t-none">
               Showing {filteredStudents.length} of {students.length} students
             </div>
           )}
@@ -527,27 +527,27 @@ export default function Students() {
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-white">
+                <label className="block text-sm font-semibold text-[#1d2026]">
                   Full Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 dark:bg-gray-700 text-white text-base min-h-[48px] overflow-visible placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent bg-white dark:bg-white text-gray-900 text-base min-h-[48px] overflow-visible placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Enter full name"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-white">
+                <label className="block text-sm font-semibold text-[#1d2026]">
                   Student ID *
                 </label>
                 <input
                   type="text"
                   value={formData.student_id || ''}
                   onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 dark:bg-gray-700 text-white text-base min-h-[48px] overflow-visible placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent bg-white dark:bg-white text-gray-900 text-base min-h-[48px] overflow-visible placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Enter student ID"
                   required
                 />
@@ -556,27 +556,27 @@ export default function Students() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-white">
+                <label className="block text-sm font-semibold text-[#1d2026]">
                   Email Address *
                 </label>
                 <input
                   type="email"
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 dark:bg-gray-700 text-white text-base min-h-[48px] overflow-visible break-all placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent bg-white dark:bg-white text-gray-900 text-base min-h-[48px] overflow-visible break-all placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Enter email address"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-white">
+                <label className="block text-sm font-semibold text-[#1d2026]">
                   Phone Number
                 </label>
                 <input
                   type="tel"
                   value={formData.phone || ''}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-800 dark:bg-gray-700 text-white text-base min-h-[48px] overflow-visible placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent bg-white dark:bg-white text-gray-900 text-base min-h-[48px] overflow-visible placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Enter phone number"
                 />
               </div>
@@ -586,13 +586,13 @@ export default function Students() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium"
+                className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 text-[#4a5568] dark:text-[#4a5568] rounded-xl hover:bg-white dark:hover:bg-white transition font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium shadow-lg shadow-orange-500/25"
+                className="flex-1 px-6 py-3 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition font-medium shadow-lg shadow-[#FF4C60]/25"
               >
                 {selectedStudent ? 'Update Student' : 'Add Student'}
               </button>

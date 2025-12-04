@@ -112,12 +112,12 @@ export default function Courses() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-white pb-20 md:pb-0 overflow-x-hidden">
       <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative bg-white dark:bg-gray-800 py-16 border-b border-gray-200 dark:border-gray-700">
+      <section className="relative bg-white dark:bg-white py-16 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -127,24 +127,24 @@ export default function Courses() {
           >
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               Explore Our{' '}
-              <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] bg-clip-text text-transparent">
                 Courses
               </span>
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-[#718096] dark:text-[#718096] mb-8 max-w-3xl mx-auto">
               Discover 200+ expert-led courses designed to help you master new skills and advance your career.
             </p>
 
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto mb-8">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white" size={20} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1d2026]" size={20} />
                 <input
                   type="text"
                   placeholder="Search courses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800 border border-orange-500 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white"
+                  className="w-full pl-12 pr-4 py-4 bg-white dark:bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white"
                 />
               </div>
             </div>
@@ -155,10 +155,10 @@ export default function Courses() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category === 'All' ? 'all' : category)}
-                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                  className={`px-4 py-2 rounded-xl font-medium transition ${
                     (category === 'All' ? 'all' : category) === selectedCategory
-                      ? 'bg-orange-500 text-white border border-orange-500'
-                      : 'bg-gray-100 dark:bg-gray-700 text-white hover:bg-gray-200 dark:hover:bg-gray-600 border border-orange-500'
+                      ? 'bg-[#FF4C60] text-gray-900 border border-[#ff6b6b]'
+                      : 'bg-white dark:bg-white text-gray-900 hover:bg-white dark:hover:bg-white border border-[#ff6b6b]'
                   }`}
                 >
                   {category}
@@ -170,18 +170,18 @@ export default function Courses() {
       </section>
 
       {/* Courses List */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-900">
+      <section className="py-16 bg-white dark:bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-[#1d2026]">
               {loading ? 'Loading Courses...' : `${filteredCourses.length} ${filteredCourses.length === 1 ? 'Course' : 'Courses'} Available`}
             </h2>
             <div className="flex gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-white rounded-lg transition border border-orange-500">
+              <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white hover:bg-white dark:hover:bg-white text-gray-900 rounded-xl transition border border-[#ff6b6b]">
                 <Filter size={18} />
                 Filter
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition">
+              <button className="flex items-center gap-2 px-4 py-2 bg-[#ff5252] hover:bg-[#ff4444] text-gray-900 rounded-xl transition">
                 <Search size={18} />
                 Search
               </button>
@@ -189,117 +189,117 @@ export default function Courses() {
           </div>
 
           {loading ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-orange-500 p-8">
+            <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-[#ff6b6b] p-8">
               <div className="animate-pulse space-y-4">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  <div key={i} className="h-24 bg-white dark:bg-white rounded-xl"></div>
                 ))}
               </div>
             </div>
           ) : error ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-orange-500 p-12 text-center">
-              <BookOpen size={64} className="mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+            <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-[#ff6b6b] p-12 text-center">
+              <BookOpen size={64} className="mx-auto text-[#718096] dark:text-[#718096] mb-4" />
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Courses</h3>
-              <p className="text-gray-600 dark:text-gray-400">{error}</p>
+              <p className="text-[#718096] dark:text-[#718096]">{error}</p>
             </div>
           ) : filteredCourses.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-orange-500 p-12 text-center">
-              <BookOpen size={64} className="mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+            <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-[#ff6b6b] p-12 text-center">
+              <BookOpen size={64} className="mx-auto text-[#718096] dark:text-[#718096] mb-4" />
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No courses found</h3>
-              <p className="text-gray-600 dark:text-gray-400">Try adjusting your search or filters</p>
+              <p className="text-[#718096] dark:text-[#718096]">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-white rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1400px]">
-                  <thead className="bg-gray-900">
+                  <thead className="bg-white">
                     <tr>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Thumbnail</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Course Code</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Course Name</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Description</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Credits</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Semester</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Year Level</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Section</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Academic Year</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Students</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Assignments</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Announcements</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-white border-b-2 border-orange-500">Status</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Thumbnail</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Course Code</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Course Name</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Description</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Credits</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Semester</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Year Level</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Section</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Academic Year</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Students</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Assignments</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Announcements</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900 border-b-2 border-[#ff6b6b]">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-orange-500">
+                  <tbody className="divide-y divide-blue-600">
                     {filteredCourses.map((course, index) => (
                       <motion.tr
                         key={course.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className="hover:bg-gray-800 transition-colors"
+                        className="hover:bg-white transition-colors"
                       >
                         <td className="py-4 px-6">
                           {course.thumbnail ? (
                             <img 
                               src={course.thumbnail} 
                               alt={course.title}
-                              className="w-16 h-16 rounded-lg object-cover"
+                              className="w-16 h-16 rounded-xl object-cover"
                             />
                           ) : (
-                            <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                              <BookOpen size={24} className="text-gray-400 dark:text-gray-500" />
+                            <div className="w-16 h-16 rounded-xl bg-white dark:bg-white flex items-center justify-center">
+                              <BookOpen size={24} className="text-[#718096] dark:text-gray-500" />
                             </div>
                           )}
                         </td>
                         <td className="py-4 px-6">
-                          <p className="text-white font-semibold text-lg">{course.code}</p>
+                          <p className="text-gray-900 font-semibold text-lg">{course.code}</p>
                         </td>
                         <td className="py-4 px-6">
-                          <p className="text-white font-medium">{course.title}</p>
+                          <p className="text-gray-900 font-medium">{course.title}</p>
                         </td>
                         <td className="py-4 px-6 max-w-sm">
-                          <p className="text-white text-sm line-clamp-3">{course.description}</p>
+                          <p className="text-gray-900 text-sm line-clamp-3">{course.description}</p>
                         </td>
                         <td className="py-4 px-6">
-                          <span className="text-white font-medium text-lg">{course.credits}</span>
+                          <span className="text-gray-900 font-medium text-lg">{course.credits}</span>
                         </td>
                         <td className="py-4 px-6">
-                          <span className="text-white font-medium">{course.semester}</span>
+                          <span className="text-gray-900 font-medium">{course.semester}</span>
                         </td>
                         <td className="py-4 px-6">
-                          <span className="text-white">{course.year_level || '-'}</span>
+                          <span className="text-[#1d2026]">{course.year_level || '-'}</span>
                         </td>
                         <td className="py-4 px-6">
-                          <span className="text-white">{course.section || '-'}</span>
+                          <span className="text-[#1d2026]">{course.section || '-'}</span>
                         </td>
                         <td className="py-4 px-6">
-                          <span className="text-white font-medium">{course.academic_year}</span>
+                          <span className="text-gray-900 font-medium">{course.academic_year}</span>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
-                            <Users size={18} className="text-white" />
-                            <span className="text-white font-bold text-lg">{course.students}</span>
+                            <Users size={18} className="text-[#1d2026]" />
+                            <span className="text-gray-900 font-bold text-lg">{course.students}</span>
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
-                            <FileText className="text-white" size={18} />
-                            <span className="text-white font-bold text-lg">{course.assignments}</span>
+                            <FileText className="text-[#1d2026]" size={18} />
+                            <span className="text-gray-900 font-bold text-lg">{course.assignments}</span>
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
-                            <Calendar className="text-white" size={18} />
-                            <span className="text-white font-bold text-lg">{course.announcements}</span>
+                            <Calendar className="text-[#1d2026]" size={18} />
+                            <span className="text-gray-900 font-bold text-lg">{course.announcements}</span>
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           <span
-                            className={`inline-block px-4 py-2 rounded-full text-sm font-bold capitalize text-white ${
+                            className={`inline-block px-4 py-2 rounded-full text-sm font-bold capitalize text-gray-900 ${
                               course.status === 'active'
                                 ? 'bg-green-700'
                                 : course.status === 'inactive'
-                                ? 'bg-gray-700'
+                                ? 'bg-white'
                                 : 'bg-red-700'
                             }`}
                           >
@@ -326,7 +326,7 @@ export default function Courses() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-40 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
+            className="fixed bottom-6 right-6 z-40 bg-[#ff5252] hover:bg-[#ff4444] text-gray-900 p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
             title="Scroll to top"
           >
             <ChevronUp size={24} />

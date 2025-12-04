@@ -98,8 +98,8 @@ export default function FacultyStudents() {
 
   const getPerformanceColor = (grade) => {
     if (grade >= 90) return 'text-green-600 dark:text-green-400';
-    if (grade >= 80) return 'text-blue-600 dark:text-blue-400';
-    if (grade >= 75) return 'text-orange-600 dark:text-orange-400';
+    if (grade >= 80) return 'text-[#FF4C60] dark:text-[#ff9f66]';
+    if (grade >= 75) return 'text-[#ff5252] dark:text-[#FF4C60]';
     return 'text-red-600 dark:text-red-400';
   };
 
@@ -175,20 +175,20 @@ export default function FacultyStudents() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Students</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#1d2026]">My Students</h1>
+          <p className="text-[#718096] dark:text-[#718096] mt-1">
             View and manage student progress across your courses
           </p>
         </div>
         <div className="flex gap-3">
           <button 
             onClick={() => navigate('/faculty/students/new')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 font-semibold"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 hover:shadow-[#FF4C60]/50 font-semibold"
           >
             <UserPlus className="w-4 h-4" />
             Add Student
           </button>
-          <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800/50 dark:bg-gray-800 text-white rounded-xl hover:bg-gray-700 dark:hover:bg-gray-700 transition-all border border-gray-700 dark:border-gray-600 font-medium">
+          <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/50 dark:bg-white text-gray-900 rounded-xl hover:bg-white dark:hover:bg-white transition-all border border-gray-700 dark:border-gray-600 font-medium">
             <Download className="w-4 h-4" />
             Export Data
           </button>
@@ -197,79 +197,79 @@ export default function FacultyStudents() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-white rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Students</p>
+              <p className="text-sm text-[#718096] dark:text-[#718096]">Total Students</p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{students.length}</p>
             </div>
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-              <Award className="w-6 h-6 text-white" />
+            <div className="p-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-xl">
+              <Award className="w-6 h-6 text-[#1d2026]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-white rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Avg Grade</p>
+              <p className="text-sm text-[#718096] dark:text-[#718096]">Avg Grade</p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                 {Math.round(students.reduce((acc, s) => acc + s.average_grade, 0) / students.length)}%
               </p>
             </div>
-            <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-white" />
+            <div className="p-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-xl">
+              <TrendingUp className="w-6 h-6 text-[#1d2026]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-white rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Active Students</p>
+              <p className="text-sm text-[#718096] dark:text-[#718096]">Active Students</p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                 {students.filter(s => s.status === 'active').length}
               </p>
             </div>
-            <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-white" />
+            <div className="p-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-xl">
+              <CheckCircle className="w-6 h-6 text-[#1d2026]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-white rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Completion Rate</p>
+              <p className="text-sm text-[#718096] dark:text-[#718096]">Completion Rate</p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                 {Math.round((students.reduce((acc, s) => acc + s.submissions, 0) / 
                   students.reduce((acc, s) => acc + s.total_assignments, 0)) * 100)}%
               </p>
             </div>
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
-              <Clock className="w-6 h-6 text-white" />
+            <div className="p-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-xl">
+              <Clock className="w-6 h-6 text-[#1d2026]" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-4">
+      <div className="bg-white dark:bg-white rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#718096]" />
             <input
               type="text"
               placeholder="Search students..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 dark:text-white"
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-white border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 dark:text-[#1d2026]"
             />
           </div>
           <select
             value={filterCourse}
             onChange={(e) => setFilterCourse(e.target.value)}
-            className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 dark:text-white"
+            className="px-4 py-2 bg-white dark:bg-white border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 dark:text-[#1d2026]"
           >
             {courses.map(course => (
               <option key={course} value={course}>
@@ -281,27 +281,27 @@ export default function FacultyStudents() {
       </div>
 
       {/* Students Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-white rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <thead className="bg-white dark:bg-white border-b border-gray-200 dark:border-gray-600">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#718096] dark:text-[#4a5568] uppercase tracking-wider">
                   Student
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#718096] dark:text-[#4a5568] uppercase tracking-wider">
                   Course
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#718096] dark:text-[#4a5568] uppercase tracking-wider">
                   Progress
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#718096] dark:text-[#4a5568] uppercase tracking-wider">
                   Avg Grade
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#718096] dark:text-[#4a5568] uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#718096] dark:text-[#4a5568] uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -313,7 +313,7 @@ export default function FacultyStudents() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.05 }}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  className="hover:bg-white dark:hover:bg-white/50 transition-colors"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -323,27 +323,27 @@ export default function FacultyStudents() {
                         className="w-10 h-10 rounded-full"
                       />
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-white">{student.name}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{student.student_id || student.id || '-'}</div>
+                          <div className="font-medium text-gray-900 dark:text-[#1d2026]">{student.name}</div>
+                        <div className="text-sm text-gray-500 dark:text-[#718096]">{student.student_id || student.id || '-'}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-[#1d2026]">
                     {student.courses?.join(', ') || 'N/A'}
                   </td>
                   <td className="px-6 py-4">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-[#718096] dark:text-[#718096]">
                           {student.submissions}/{student.total_assignments}
                         </span>
                         <span className="text-xs text-gray-500">
                           {Math.round(getProgressPercentage(student.submissions, student.total_assignments))}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
+                      <div className="w-full bg-white dark:bg-white rounded-full h-1.5">
                         <div
-                          className="bg-gradient-to-r from-orange-500 to-orange-600 h-1.5 rounded-full"
+                          className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] h-1.5 rounded-full"
                           style={{ width: `${getProgressPercentage(student.submissions, student.total_assignments)}%` }}
                         />
                       </div>
@@ -363,19 +363,19 @@ export default function FacultyStudents() {
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => handleViewDetails(student)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        className="p-2 text-[#FF4C60] hover:bg-[#FF4C60]/10 dark:hover:bg-[#FF4C60] 900/20 rounded-xl transition-colors"
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleEnrollClick(student)}
-                        className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                        className="p-2 text-[#ff5252] hover:bg-[#FF4C60]/10 dark:hover:bg-[#FF4C60] 900/20 rounded-xl transition-colors"
                         title="Enroll to Class"
                       >
                         <GraduationCap className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                      <button className="p-2 text-[#718096] hover:bg-white dark:hover:bg-white rounded-xl transition-colors">
                         <Mail className="w-4 h-4" />
                       </button>
                     </div>
@@ -390,11 +390,11 @@ export default function FacultyStudents() {
       {/* Empty State */}
       {filteredStudents.length === 0 && (
         <div className="text-center py-12">
-          <Award className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <Award className="w-16 h-16 text-[#718096] mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             No students found
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-[#718096] dark:text-[#718096]">
             Try adjusting your search or filters
           </p>
         </div>
@@ -406,14 +406,14 @@ export default function FacultyStudents() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="modal-panel modal-panel--md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full p-6"
+            className="modal-panel modal-panel--md bg-white dark:bg-white rounded-2xl shadow-2xl w-full p-6"
           >
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Enroll Student to Class
             </h3>
             
             {selectedStudentForEnroll && (
-              <div className="mb-6 p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/10 rounded-2xl border border-orange-200 dark:border-orange-800">
+              <div className="mb-6 p-4 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] dark:from-blue-900/20 dark:to-blue-900/10 rounded-2xl border border-[#FF4C60] 200 dark:border-[#FF4C60] 800">
                 <div className="flex items-center gap-3">
                   <img
                     src={selectedStudentForEnroll.profile_image}
@@ -421,10 +421,10 @@ export default function FacultyStudents() {
                     className="w-12 h-12 rounded-full border-2 border-white"
                   />
                   <div>
-                    <div className="font-semibold text-gray-900 dark:text-white">
+                    <div className="font-semibold text-gray-900 dark:text-[#1d2026]">
                       {selectedStudentForEnroll.name}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-[#718096] dark:text-[#718096]">
                       {selectedStudentForEnroll.student_id || selectedStudentForEnroll.id || '-'}
                     </div>
                   </div>
@@ -433,13 +433,13 @@ export default function FacultyStudents() {
             )}
 
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Select Class/Subject
               </label>
               <select
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 bg-white dark:bg-white border border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 dark:text-[#1d2026]"
               >
                 <option value="">Choose a class...</option>
                 {classes.map(cls => (
@@ -462,14 +462,14 @@ export default function FacultyStudents() {
                   setSelectedStudentForEnroll(null);
                   setSelectedClass('');
                 }}
-                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-2xl transition-colors"
+                className="flex-1 px-4 py-2.5 bg-white hover:bg-white dark:bg-white dark:hover:bg-white text-[#4a5568] dark:text-[#4a5568] font-medium rounded-2xl transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleEnrollSubmit}
                 disabled={!selectedClass}
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] hover:from-[#0a3d62] hover:to-[#0a3d62] text-gray-900 font-medium rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Enroll Student
               </button>

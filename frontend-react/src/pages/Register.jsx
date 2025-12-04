@@ -49,7 +49,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
       <motion.div
@@ -58,16 +58,16 @@ export default function Register() {
         transition={{ duration: 0.3 }}
         className="w-full max-w-md"
       >
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-8">
+        <div className="bg-white rounded-xl border border-gray-800 p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-block w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-white font-bold text-2xl">M</span>
+            <div className="inline-block w-16 h-16 bg-[#FF4C60] rounded-xl flex items-center justify-center mb-4">
+              <span className="text-gray-900 font-bold text-2xl">M</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-[#1d2026]">
               Create Student Account
             </h1>
-            <p className="text-gray-400 mt-2">
+            <p className="text-[#718096] mt-2">
               Register as a student at MINSU E-LEARN
             </p>
           </div>
@@ -76,7 +76,7 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 Full Name
               </label>
               <div className="relative">
@@ -86,7 +86,7 @@ export default function Register() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                   placeholder="John Doe"
                 />
               </div>
@@ -94,7 +94,7 @@ export default function Register() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 Email Address
               </label>
               <div className="relative">
@@ -104,7 +104,7 @@ export default function Register() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                   placeholder="you@example.com"
                 />
               </div>
@@ -112,7 +112,7 @@ export default function Register() {
 
             {/* Role */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 Student ID (Optional)
               </label>
               <div className="relative">
@@ -122,7 +122,7 @@ export default function Register() {
                   value={formData.student_id}
                   onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
                   onBlur={(e) => setFormData({ ...formData, student_id: (e.target.value || '').trim() })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                   placeholder="2024-00001"
                 />
               </div>
@@ -130,7 +130,7 @@ export default function Register() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 Password
               </label>
               <div className="relative">
@@ -140,7 +140,7 @@ export default function Register() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                   placeholder="••••••••"
                 />
               </div>
@@ -148,7 +148,7 @@ export default function Register() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -158,7 +158,7 @@ export default function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                   placeholder="••••••••"
                 />
               </div>
@@ -168,23 +168,23 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#FF4C60] text-gray-900 py-3 rounded-xl font-semibold hover:bg-[#ff3451] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Create Student Account'}
             </button>
           </form>
 
           {/* Info Note */}
-          <div className="mt-5 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-            <p className="text-xs text-blue-400 text-center">
+          <div className="mt-5 p-3 bg-[#FF4C60]/100/10 border border-[#FF4C60]/20 rounded-xl">
+            <p className="text-xs text-[#ff9f66] text-center">
               <strong>Student Registration Only.</strong> Faculty and staff accounts are created by administrators.
             </p>
           </div>
 
           {/* Login Link */}
-          <p className="mt-6 text-center text-sm text-gray-400">
+          <p className="mt-6 text-center text-sm text-[#718096]">
             Already have an account?{' '}
-            <Link to="/login" className="text-orange-500 hover:text-orange-400 font-semibold">
+            <Link to="/login" className="text-[#FF4C60] hover:text-[#FF4C60] font-semibold">
               Sign In
             </Link>
           </p>

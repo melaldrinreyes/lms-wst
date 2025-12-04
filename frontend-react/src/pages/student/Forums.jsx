@@ -63,15 +63,15 @@ export default function Forums() {
     <div className="space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
+      <div className="bg-white dark:bg-white rounded-xl p-6 border border-gray-800">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Discussion Forums</h1>
-            <p className="text-sm text-gray-400 mt-1">Engage with peers and instructors</p>
+            <h1 className="text-2xl font-bold text-[#1d2026]">Discussion Forums</h1>
+            <p className="text-sm text-[#718096] mt-1">Engage with peers and instructors</p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold"
+            className="flex items-center gap-2 px-6 py-3 bg-[#FF4C60] text-gray-900 rounded-xl hover:bg-[#ff3451] transition font-semibold"
           >
             <Plus size={20} />
             New Topic
@@ -86,9 +86,9 @@ export default function Forums() {
           { label: 'Your Posts', value: '23' },
           { label: 'Unread', value: '8' },
         ].map((stat) => (
-          <div key={stat.label} className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800">
-            <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
-            <p className="text-2xl font-bold text-white">{stat.value}</p>
+          <div key={stat.label} className="bg-white dark:bg-white rounded-xl p-6 border border-gray-800">
+            <p className="text-sm text-[#718096] mb-1">{stat.label}</p>
+            <p className="text-2xl font-bold text-[#1d2026]">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -101,19 +101,19 @@ export default function Forums() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border border-gray-800 hover:border-orange-500/50 cursor-pointer transition"
+            className="bg-white dark:bg-white rounded-xl p-6 border border-gray-800 hover:border-[#ff6b6b]/50 cursor-pointer transition"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-white mb-2 hover:text-orange-500 transition">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-[#FF4C60] transition">
                   {thread.title}
                 </h3>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-[#718096]">
                   <span className="flex items-center gap-1">
                     <User size={14} />
                     {thread.author}
                   </span>
-                  <span className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-medium border border-blue-500/20">
+                  <span className="px-3 py-1 bg-[#FF4C60]/100/10 text-[#ff9f66] rounded-xl text-xs font-medium border border-[#FF4C60]/20">
                     {thread.category}
                   </span>
                   <span className="flex items-center gap-1">
@@ -139,13 +139,13 @@ export default function Forums() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Category
             </label>
             <select
               value={newTopic.category}
               onChange={(e) => setNewTopic({ ...newTopic, category: e.target.value })}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-white dark:text-[#1d2026]"
             >
               <option value="general">General</option>
               <option value="web-development">Web Development</option>
@@ -155,7 +155,7 @@ export default function Forums() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Title
             </label>
             <input
@@ -163,13 +163,13 @@ export default function Forums() {
               required
               value={newTopic.title}
               onChange={(e) => setNewTopic({ ...newTopic, title: e.target.value })}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-white dark:text-[#1d2026]"
               placeholder="Enter topic title..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Content
             </label>
             <textarea
@@ -177,7 +177,7 @@ export default function Forums() {
               rows={6}
               value={newTopic.content}
               onChange={(e) => setNewTopic({ ...newTopic, content: e.target.value })}
-              className="w-full px-4 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
+              className="w-full px-4 py-2 border dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-white dark:text-white resize-none"
               placeholder="Write your question or discussion topic..."
             />
           </div>
@@ -186,13 +186,13 @@ export default function Forums() {
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="flex-1 px-4 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              className="flex-1 px-4 py-2 border dark:border-gray-600 rounded-xl hover:bg-white dark:hover:bg-white transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+              className="flex-1 px-4 py-2 bg-primary-600 text-gray-900 rounded-xl hover:bg-primary-700 transition"
             >
               Create Topic
             </button>

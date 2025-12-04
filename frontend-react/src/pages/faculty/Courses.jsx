@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -23,8 +24,10 @@ import { courseAPI } from '../../services/api';
 import Toast from '../../components/ui/Toast';
 import Swal from 'sweetalert2';
 import Skeleton from '../../components/ui/Skeleton';
+import CourseCard from '../../components/ui/CourseCard';
 
 export default function FacultyCourses() {
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSemester, setFilterSemester] = useState('all');
   const [courses, setCourses] = useState([]);
@@ -50,6 +53,13 @@ export default function FacultyCourses() {
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  // Open Create Course modal when navigated with state { openCreate: true }
+  useEffect(() => {
+    if (location?.state?.openCreate) {
+      setShowCreateModal(true);
+    }
+  }, [location]);
 
   const fetchCourses = async () => {
     try {
@@ -177,7 +187,15 @@ export default function FacultyCourses() {
     setCreating(true);
 
     try {
-      const result = await courseAPI.create(formData);
+      // Ensure the created course is associated with the current faculty user
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const payload = { ...formData };
+      // Use known faculty key if present, fall back to generic id
+      if (currentUser) {
+        payload.faculty_id = currentUser.id || currentUser.faculty_id || currentUser.user_id || payload.faculty_id;
+      }
+
+      const result = await courseAPI.create(payload);
 
       if (result.success) {
         setToast({ message: 'Course created successfully!', type: 'success' });
@@ -235,24 +253,24 @@ export default function FacultyCourses() {
       
       {/* Filters */}
       {loading ? (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-4">
+        <div className="bg-white dark:bg-white rounded-xl border border-gray-800 p-4">
           <div className="flex flex-col md:flex-row gap-4">
-            <Skeleton className="flex-1 h-10 rounded-lg" />
-            <Skeleton className="h-10 w-48 rounded-lg" />
+            <Skeleton className="flex-1 h-10 rounded-xl" />
+            <Skeleton className="h-10 w-48 rounded-xl" />
           </div>
         </div>
       ) : (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-4">
+        <div className="bg-white dark:bg-white rounded-xl border border-[#ff6b6b] p-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#718096]" />
             <input
               type="text"
               placeholder="Search courses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 dark:bg-gray-900 border border-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-white border border-gray-700 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
             />
           </div>
 
@@ -260,7 +278,7 @@ export default function FacultyCourses() {
           <select
             value={filterSemester}
             onChange={(e) => setFilterSemester(e.target.value)}
-            className="px-4 py-2.5 bg-gray-800 dark:bg-gray-900 border border-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+            className="px-4 py-2.5 bg-white dark:bg-white border border-gray-700 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-[#1d2026]"
           >
             <option value="all">All Semesters</option>
             <option value="1st Semester">1st Semester</option>
@@ -276,7 +294,7 @@ export default function FacultyCourses() {
         {loading ? (
           // Skeleton loading for courses
           Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+            <div key={index} className="bg-white dark:bg-white rounded-xl border border-gray-800 overflow-hidden">
               <Skeleton className="h-48 w-full rounded-none" />
               <div className="p-6 space-y-3">
                 <Skeleton className="h-4 w-20" />
@@ -288,131 +306,41 @@ export default function FacultyCourses() {
                   <Skeleton className="h-4 w-16" />
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <Skeleton className="h-10 flex-1 rounded-lg" />
-                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <Skeleton className="h-10 flex-1 rounded-xl" />
+                  <Skeleton className="h-10 w-10 rounded-xl" />
                 </div>
               </div>
             </div>
           ))
         ) : (
           filteredCourses.map((course, index) => (
-            <motion.div
+            <CourseCard
               key={course.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 overflow-hidden hover:border-orange-500/50 transition-all group flex flex-col h-full"
-            >
-            {/* Thumbnail */}
-            <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-500/10 to-purple-500/10">
-              {course.thumbnail ? (
-                <img
-                  src={course.thumbnail}
-                  alt={course.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <BookOpen className="w-16 h-16 text-gray-600" />
-                </div>
-              )}
-              <div className="absolute top-3 right-3">
-                <span className={`px-3 py-1 text-white text-xs font-semibold rounded-full ${
-                  course.status === 'active' ? 'bg-green-500' : 
-                  course.status === 'inactive' ? 'bg-gray-500' : 'bg-blue-500'
-                }`}>
-                  {course.status}
-                </span>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 flex-1 flex flex-col justify-between">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <span className="text-sm font-semibold text-orange-500">{course.code}</span>
-                  <h3 className="text-xl font-bold text-white mt-1">
-                    {course.name}
-                  </h3>
-                </div>
-              </div>
-
-              <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                {course.description}
-              </p>
-
-              <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4 text-green-500" />
-                  <span>{course.students}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <BarChart className="w-4 h-4 text-purple-500" />
-                  <span>{course.assignments}</span>
-                </div>
-              </div>
-
-              <div className="text-xs text-gray-500 mb-4">
-                {course.semester} • {course.academic_year}
-                {(course.year_level || course.section) && (
-                  <> • {course.year_level}{course.year_level && course.section ? ' - ' : ''}{course.section}</>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 mt-4">
-                <Link
-                  to={`/faculty/courses/${course.id}`}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all text-center text-sm font-semibold shadow-lg shadow-orange-500/30"
-                >
-                  Manage
-                </Link>
-                <button
-                  onClick={() => handleShareCourse(course.id, course.name)}
-                  className="px-4 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 transition-all"
-                  title="Share course link"
-                >
-                  {copiedCourseId === course.id ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    <Share2 className="w-4 h-4" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleEditCourse(course)}
-                  className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all"
-                  title="Edit course"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteCourse(course.id, course.name)}
-                  disabled={deleting}
-                  className="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Delete course"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))
+              course={course}
+              variant="teacher"
+              index={index}
+              onEdit={handleEditCourse}
+              onDelete={handleDeleteCourse}
+              onShare={handleShareCourse}
+              copiedCourseId={copiedCourseId}
+            />
+          ))
         )}
       </div>
 
       {/* Empty State */}
       {!loading && filteredCourses.length === 0 && (
-        <div className="text-center py-12 bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500">
-          <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">
+        <div className="text-center py-12 bg-white dark:bg-white rounded-xl border border-[#ff6b6b]">
+          <BookOpen className="w-16 h-16 text-[#718096] mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
             No courses found
           </h3>
-          <p className="text-gray-400 mb-6">
+          <p className="text-[#718096] mb-6">
             Try adjusting your search or create a new course
           </p>
           <button
             onClick={handleCreateCourse}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#007AFF] to-[#0051D5] text-white rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 font-semibold"
           >
             <Plus className="w-4 h-4" />
             Create Your First Course
@@ -426,24 +354,24 @@ export default function FacultyCourses() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-2xl border border-orange-500 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white dark:bg-white rounded-xl shadow-2xl border border-[#ff6b6b] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
           >
-            <div className="p-6 border-b border-orange-500 flex-shrink-0">
+            <div className="p-6 border-b border-[#ff6b6b] flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
-                    <BookOpen className="w-6 h-6 text-white" />
+                  <div className="p-2 bg-gradient-to-br from-[#007AFF] to-[#0051D5] rounded-xl">
+                    <BookOpen className="w-6 h-6 text-[#1d2026]" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">Create New Course</h2>
-                    <p className="text-sm text-gray-400 mt-1">Add a new course to your teaching portfolio</p>
+                    <h2 className="text-2xl font-bold text-[#1d2026]">Create New Course</h2>
+                    <p className="text-sm text-[#718096] mt-1">Add a new course to your teaching portfolio</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-[#718096]" />
                 </button>
               </div>
             </div>
@@ -451,7 +379,7 @@ export default function FacultyCourses() {
             <form onSubmit={handleSubmitCreate} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Course Code <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -460,7 +388,7 @@ export default function FacultyCourses() {
                     value={formData.code}
                     onChange={handleFormChange}
                     placeholder="e.g., CS101, MATH201"
-                    className={`w-full px-4 py-2 border ${errors.code ? 'border-red-500' : 'border-gray-700'} rounded-lg focus:ring-2 focus:ring-orange-500 bg-gray-800 text-white placeholder-white/70`}
+                    className={`w-full px-4 py-2 border ${errors.code ? 'border-red-500' : 'border-gray-700'} rounded-xl focus:ring-2 focus:ring-[#ff6b6b] bg-white text-gray-900 placeholder-white/70`}
                     required
                   />
                   {errors.code && (
@@ -472,7 +400,7 @@ export default function FacultyCourses() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Credits <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -482,7 +410,7 @@ export default function FacultyCourses() {
                     onChange={handleFormChange}
                     min="1"
                     max="10"
-                    className={`w-full px-4 py-2 border ${errors.credits ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                    className={`w-full px-4 py-2 border ${errors.credits ? 'border-red-500' : 'border-gray-700'} bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]`}
                     required
                   />
                   {errors.credits && (
@@ -492,7 +420,7 @@ export default function FacultyCourses() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Course Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -501,7 +429,7 @@ export default function FacultyCourses() {
                   value={formData.name}
                   onChange={handleFormChange}
                   placeholder="e.g., Introduction to Computer Science"
-                  className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                  className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-700'} bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]`}
                   required
                 />
                 {errors.name && (
@@ -513,7 +441,7 @@ export default function FacultyCourses() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Course Description
                 </label>
                 <textarea
@@ -522,7 +450,7 @@ export default function FacultyCourses() {
                   onChange={handleFormChange}
                   placeholder="Describe what students will learn in this course..."
                   rows="3"
-                  className={`w-full px-4 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none`}
+                  className={`w-full px-4 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-700'} bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] resize-none`}
                 />
                 {errors.description && (
                   <p className="mt-1 text-sm text-red-500">{errors.description[0]}</p>
@@ -531,14 +459,14 @@ export default function FacultyCourses() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Semester <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="semester"
                     value={formData.semester}
                     onChange={handleFormChange}
-                    className={`w-full px-4 py-2 border ${errors.semester ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                    className={`w-full px-4 py-2 border ${errors.semester ? 'border-red-500' : 'border-gray-700'} bg-white text-gray-900 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]`}
                     required
                   >
                     <option value="">Select semester</option>
@@ -552,7 +480,7 @@ export default function FacultyCourses() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Academic Year <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -561,7 +489,7 @@ export default function FacultyCourses() {
                     value={formData.academic_year}
                     onChange={handleFormChange}
                     placeholder="e.g., 2024-2025, 2025-2026"
-                    className={`w-full px-4 py-2 border ${errors.academic_year ? 'border-red-500' : 'border-gray-700'} bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500`}
+                    className={`w-full px-4 py-2 border ${errors.academic_year ? 'border-red-500' : 'border-gray-700'} bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]`}
                     required
                   />
                   {errors.academic_year && (
@@ -571,7 +499,7 @@ export default function FacultyCourses() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Thumbnail Image URL (Optional)
                 </label>
                 <input
@@ -580,7 +508,7 @@ export default function FacultyCourses() {
                   value={formData.thumbnail}
                   onChange={handleFormChange}
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                 />
                 <p className="mt-1 text-xs text-gray-500">Leave empty to use default course image</p>
               </div>
@@ -589,7 +517,7 @@ export default function FacultyCourses() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-br from-[#007AFF] to-[#0051D5] text-white rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all font-semibold shadow-lg shadow-[#FF4C60]/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creating ? (
                     <>
@@ -605,7 +533,7 @@ export default function FacultyCourses() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-6 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all font-semibold"
+                  className="px-6 py-3 bg-white text-[#4a5568] rounded-xl hover:bg-white transition-all font-semibold"
                 >
                   Cancel
                 </button>
@@ -621,30 +549,30 @@ export default function FacultyCourses() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="modal-panel modal-panel--lg bg-gray-900 dark:bg-gray-950 rounded-xl shadow-2xl border border-orange-500 w-full max-h-[90vh] overflow-y-auto"
+            className="modal-panel modal-panel--lg bg-white dark:bg-white rounded-xl shadow-2xl border border-[#ff6b6b] w-full max-h-[90vh] overflow-y-auto"
           >
-            <div className="p-6 border-b border-orange-500">
-              <h2 className="text-2xl font-bold text-white">Edit Course</h2>
-              <p className="text-sm text-gray-400 mt-1">Update course information</p>
+            <div className="p-6 border-b border-[#ff6b6b]">
+              <h2 className="text-2xl font-bold text-[#1d2026]">Edit Course</h2>
+              <p className="text-sm text-[#718096] mt-1">Update course information</p>
             </div>
 
             <form onSubmit={handleUpdateCourse} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Course Code *
                   </label>
                   <input
                     type="text"
                     value={editingCourse.code}
                     onChange={(e) => setEditingCourse({ ...editingCourse, code: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 bg-gray-800 text-white placeholder-white/70"
+                    className="w-full px-4 py-2 border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] bg-white text-gray-900 placeholder-white/70"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Credits *
                   </label>
                   <input
@@ -653,46 +581,46 @@ export default function FacultyCourses() {
                     max="10"
                     value={editingCourse.credits}
                     onChange={(e) => setEditingCourse({ ...editingCourse, credits: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Course Name *
                 </label>
                 <input
                   type="text"
                   value={editingCourse.name}
                   onChange={(e) => setEditingCourse({ ...editingCourse, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Description
                 </label>
                 <textarea
                   value={editingCourse.description}
                   onChange={(e) => setEditingCourse({ ...editingCourse, description: e.target.value })}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Semester *
                   </label>
                   <select
                     value={editingCourse.semester}
                     onChange={(e) => setEditingCourse({ ...editingCourse, semester: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                     required
                   >
                     <option value="1st Semester">1st Semester</option>
@@ -702,7 +630,7 @@ export default function FacultyCourses() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Academic Year *
                   </label>
                   <input
@@ -710,7 +638,7 @@ export default function FacultyCourses() {
                     value={editingCourse.academic_year}
                     onChange={(e) => setEditingCourse({ ...editingCourse, academic_year: e.target.value })}
                     placeholder="e.g., 2024-2025"
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                     required
                   />
                 </div>
@@ -718,7 +646,7 @@ export default function FacultyCourses() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Year Level
                   </label>
                   <input
@@ -726,12 +654,12 @@ export default function FacultyCourses() {
                     value={editingCourse.year_level}
                     onChange={(e) => setEditingCourse({ ...editingCourse, year_level: e.target.value })}
                     placeholder="e.g., 1st Year, 2nd Year"
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#4a5568] mb-2">
                     Section
                   </label>
                   <input
@@ -739,19 +667,19 @@ export default function FacultyCourses() {
                     value={editingCourse.section}
                     onChange={(e) => setEditingCourse({ ...editingCourse, section: e.target.value })}
                     placeholder="e.g., A, B, C"
-                    className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Status *
                 </label>
                 <select
                   value={editingCourse.status}
                   onChange={(e) => setEditingCourse({ ...editingCourse, status: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                   required
                 >
                   <option value="active">Active</option>
@@ -761,7 +689,7 @@ export default function FacultyCourses() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Thumbnail URL
                 </label>
                 <input
@@ -769,21 +697,21 @@ export default function FacultyCourses() {
                   value={editingCourse.thumbnail}
                   onChange={(e) => setEditingCourse({ ...editingCourse, thumbnail: e.target.value })}
                   placeholder="https://..."
-                  className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b]"
                 />
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg shadow-orange-500/30"
+                  className="flex-1 px-6 py-3 bg-gradient-to-br from-[#007AFF] to-[#0051D5] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all font-semibold shadow-lg shadow-[#FF4C60]/30"
                 >
                   Update Course
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-6 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all font-semibold"
+                  className="px-6 py-3 bg-white text-[#4a5568] rounded-xl hover:bg-white transition-all font-semibold"
                 >
                   Cancel
                 </button>

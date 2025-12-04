@@ -104,14 +104,14 @@ export default function FacultyDashboard() {
       title: 'My Courses',
       value: stats.totalCourses,
       icon: BookOpen,
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-[#ff6b6b] to-[#0d4973]',
       link: '/faculty/courses',
     },
     {
       title: 'Pending Reviews',
       value: stats.pendingSubmissions,
       icon: ClipboardCheck,
-      color: 'from-orange-500 to-orange-600',
+      color: 'from-[#ff6b6b] to-[#0d4973]',
       link: '/faculty/submissions',
       badge: stats.pendingSubmissions > 0,
     },
@@ -126,22 +126,23 @@ export default function FacultyDashboard() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 p-6 min-h-screen">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Faculty Dashboard</h1>
-            <p className="text-gray-400 mt-1">
+            <h1 className="text-3xl font-bold text-[#1d2026]">Faculty Dashboard</h1>
+            <p className="text-[#718096] mt-1">
               Welcome back! Here's what's happening with your courses.
             </p>
         </div>
         <Link
-          to="/faculty/courses"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
+          to={{ pathname: '/faculty/courses' }}
+          state={{ openCreate: true }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-white rounded-xl font-semibold hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 hover:shadow-[#FF4C60]/50"
         >
-          <BookOpen className="w-4 h-4" />
+          <BookOpen className="w-4 h-4 text-white" />
           Create New Course
         </Link>
       </div>
@@ -151,7 +152,7 @@ export default function FacultyDashboard() {
         {loading ? (
           // Skeleton loading for stats cards
           Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+            <div key={index} className="bg-white backdrop-blur-sm rounded-xl p-6 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <Skeleton className="h-4 w-24 mb-3" />
@@ -170,17 +171,17 @@ export default function FacultyDashboard() {
             transition={{ delay: index * 0.1 }}
           >
             <Link to={stat.link}>
-              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all cursor-pointer group relative">
+              <div className="bg-white backdrop-blur-sm rounded-xl p-6 border border-gray-200 hover:border-[#FF4C60] hover:shadow-xl transition-all duration-300 cursor-pointer group relative hover:-translate-y-1">
                 {/* Notification Badge */}
                 {stat.badge && (
-                  <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full min-w-[28px] text-center shadow-lg shadow-orange-500/50 animate-pulse">
+                  <div className="absolute -top-2 -right-2 bg-[#FF4C60] text-white xs font-bold px-2.5 py-1 rounded-full min-w-[28px] text-center shadow-lg shadow-[#FF4C60]/50 animate-pulse">
                     {stat.value}
                   </div>
                 )}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">{stat.title}</p>
-                    <p className="text-3xl font-bold text-white mt-2">
+                    <p className="text-sm text-[#718096]">{stat.title}</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">
                       {stat.value}
                     </p>
                   </div>
@@ -201,18 +202,18 @@ export default function FacultyDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-gray-900 rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all"
+          className="bg-white rounded-2xl border border-gray-800 hover:border-[#ff6b6b]/50 transition-all"
         >
           <div className="p-6 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-orange-500" />
-              <h2 className="text-xl font-bold text-white">Upcoming Deadlines</h2>
+              <Calendar className="w-5 h-5 text-[#FF4C60]" />
+              <h2 className="text-xl font-bold text-[#1d2026]">Upcoming Deadlines</h2>
             </div>
           </div>
           <div className="p-6">
             <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400">No upcoming deadlines</p>
+              <Calendar className="w-12 h-12 text-[#718096] mx-auto mb-3" />
+              <p className="text-[#718096]">No upcoming deadlines</p>
               <p className="text-gray-500 text-sm mt-1">Assignment deadlines will appear here</p>
             </div>
           </div>
@@ -223,18 +224,18 @@ export default function FacultyDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-gray-900 rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all"
+          className="bg-white rounded-2xl border border-gray-800 hover:border-[#ff6b6b]/50 transition-all"
         >
           <div className="p-6 border-b border-gray-800">
             <div className="flex items-center gap-3">
               <TrendingUp className="w-5 h-5 text-green-500" />
-              <h2 className="text-xl font-bold text-white">Recent Activity</h2>
+              <h2 className="text-xl font-bold text-[#1d2026]">Recent Activity</h2>
             </div>
           </div>
           <div className="p-6">
             <div className="text-center py-8">
-              <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400">No recent activity</p>
+              <TrendingUp className="w-12 h-12 text-[#718096] mx-auto mb-3" />
+              <p className="text-[#718096]">No recent activity</p>
               <p className="text-gray-500 text-sm mt-1">Student activities will appear here</p>
             </div>
           </div>
@@ -246,30 +247,30 @@ export default function FacultyDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="bg-gray-900 rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all p-6"
+        className="bg-white rounded-2xl border border-gray-800 hover:border-[#ff6b6b]/50 transition-all p-6"
       >
-        <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link
             to="/faculty/courses"
-            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-orange-500 hover:bg-orange-500/10 transition-all text-center group"
+            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-[#ff6b6b] hover:bg-[#FF4C60]/10 transition-all text-center group"
           >
-            <BookOpen className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-            <p className="font-medium text-white">Manage Courses</p>
+            <BookOpen className="w-8 h-8 text-[#FF4C60] mx-auto mb-2" />
+            <p className="font-medium text-[#1d2026]">Manage Courses</p>
           </Link>
           <Link
             to="/faculty/submissions"
             className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-green-500 hover:bg-green-500/10 transition-all text-center group"
           >
             <ClipboardCheck className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="font-medium text-white">Grade Submissions</p>
+            <p className="font-medium text-[#1d2026]">Grade Submissions</p>
           </Link>
           <Link
             to="/faculty/join-requests"
             className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500 hover:bg-purple-500/10 transition-all text-center group"
           >
             <UserPlus className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-            <p className="font-medium text-white">Enrollment Requests</p>
+            <p className="font-medium text-[#1d2026]">Enrollment Requests</p>
           </Link>
         </div>
       </motion.div>

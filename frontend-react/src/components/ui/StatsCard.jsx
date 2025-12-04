@@ -21,7 +21,7 @@ const StatsCard = ({
             statsCardStyles.icon,
             statsCardStyles.iconVariants[iconVariant]
           )}>
-            <Icon className="w-6 h-6 text-white" />
+            <Icon className="w-6 h-6 text-[#1d2026]" />
           </div>
         )}
       </div>

@@ -43,7 +43,7 @@ const AddUserForm = ({ onSuccess, onCancel }) => {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Name
         </label>
         <input
@@ -52,12 +52,12 @@ const AddUserForm = ({ onSuccess, onCancel }) => {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60]"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Email
         </label>
         <input
@@ -66,19 +66,19 @@ const AddUserForm = ({ onSuccess, onCancel }) => {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60]"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Role
         </label>
         <select
           name="role"
           value={formData.role}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60]"
         >
           <option value="student">Student</option>
           <option value="faculty">Faculty</option>
@@ -87,7 +87,7 @@ const AddUserForm = ({ onSuccess, onCancel }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Password
         </label>
         <input
@@ -96,12 +96,12 @@ const AddUserForm = ({ onSuccess, onCancel }) => {
           value={formData.password}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60]"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Confirm Password
         </label>
         <input
@@ -110,7 +110,7 @@ const AddUserForm = ({ onSuccess, onCancel }) => {
           value={formData.password_confirmation}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-700 bg-gray-800 text-white placeholder-white/70 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-700 bg-white text-gray-900 placeholder-white/70 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60]"
         />
       </div>
 
@@ -118,14 +118,14 @@ const AddUserForm = ({ onSuccess, onCancel }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 rounded-xl hover:bg-white dark:hover:bg-white"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-[#FF4C60]/100 text-gray-900 rounded-xl hover:bg-[#FF4C60] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Creating...' : 'Create User'}
         </button>

@@ -38,13 +38,13 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`modal-panel modal-panel--${size} bg-gray-900 border border-orange-500 rounded-xl shadow-xl mx-auto w-full ${sizes[size]} max-h-[90vh] overflow-hidden flex flex-col`}
+              className={`modal-panel modal-panel--${size} bg-white border border-[#ff6b6b] rounded-xl shadow-xl mx-auto w-full ${sizes[size]} max-h-[90vh] overflow-hidden flex flex-col`}
             >
-              <div className="flex items-center justify-between p-6 border-b border-orange-500 flex-shrink-0">
-                <h2 className="text-xl font-semibold text-white">{title}</h2>
+              <div className="flex items-center justify-between p-6 border-b border-[#ff6b6b] flex-shrink-0">
+                <h2 className="text-xl font-semibold text-[#1d2026]">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="text-gray-400 hover:text-gray-300 p-2 rounded-md touch-manipulation"
+                  className="text-[#718096] hover:text-[#4a5568] p-2 rounded-xl touch-manipulation"
                 >
                   <X size={24} />
                 </button>

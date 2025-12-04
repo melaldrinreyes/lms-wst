@@ -1648,7 +1648,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
 
         <div className="toolbar-group">
           <div className="flex items-center gap-2">
-            <Palette size={18} className="text-gray-400" />
+            <Palette size={18} className="text-[#718096]" />
             <input
               type="color"
               value={textColor}
@@ -1686,27 +1686,27 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
 
       {/* YouTube Video Modal */}
       {showVideoModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
-          <div className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700">
-            <h3 className="text-lg font-bold text-white mb-4">Add YouTube Video</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-xl">
+          <div className="modal-panel modal-panel--md bg-white rounded-xl p-6 w-full mx-4 border border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Add YouTube Video</h3>
             <input
               type="text"
               placeholder="Paste YouTube URL (e.g., https://youtu.be/dQw4w9WgXcQ)"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
+              className="w-full px-4 py-2 bg-white border border-gray-700 rounded-xl text-gray-900 placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] mb-4"
               onKeyPress={(e) => e.key === 'Enter' && addYoutubeVideo()}
             />
             <div className="flex gap-2">
               <button
                 onClick={() => setShowVideoModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-xl text-[#4a5568] hover:bg-white transition"
               >
                 Cancel
               </button>
               <button
                 onClick={addYoutubeVideo}
-                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+                className="flex-1 px-4 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition"
               >
                 Add Video
               </button>
@@ -1717,9 +1717,9 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
 
       {/* Video Drag-and-Drop Modal */}
       {showVideoDropzone && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
-          <div className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700">
-            <h3 className="text-lg font-bold text-white mb-4">Upload Video</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-xl">
+          <div className="modal-panel modal-panel--md bg-white rounded-xl p-6 w-full mx-4 border border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Upload Video</h3>
             <VideoDropzone onVideoDrop={async (file) => {
               setUploadError(null);
               setLastUploadFile(file);
@@ -1732,13 +1732,13 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={retryLastUpload}
-                    className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                    className="px-3 py-2 bg-[#ff5252] text-gray-900 rounded hover:bg-[#ff4444]"
                   >
                     Retry
                   </button>
                   <button
                     onClick={() => { setShowVideoDropzone(false); setUploadError(null); setLastUploadFile(null); }}
-                    className="px-3 py-2 border border-gray-600 rounded text-gray-300 hover:bg-gray-800"
+                    className="px-3 py-2 border border-gray-600 rounded text-[#4a5568] hover:bg-white"
                   >
                     Cancel
                   </button>
@@ -1749,7 +1749,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowVideoDropzone(false)}
-                  className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+                  className="flex-1 px-4 py-2 border border-gray-600 rounded-xl text-[#4a5568] hover:bg-white transition"
                 >
                   Cancel
                 </button>
@@ -1781,7 +1781,7 @@ const RichTextEditor = forwardRef(function RichTextEditor({ value = '', onChange
             <div className="drag-overlay-content">
               <Upload size={48} className="mb-2" />
               <p className="text-lg font-semibold">Drop files here</p>
-              <p className="text-sm text-gray-400">Images, Videos (MP4/WebM), PDFs, Excel (.xlsx/.xls), CSV (.csv), Word (.docx)</p>
+              <p className="text-sm text-[#718096]">Images, Videos (MP4/WebM), PDFs, Excel (.xlsx/.xls), CSV (.csv), Word (.docx)</p>
             </div>
           </div>
         )}

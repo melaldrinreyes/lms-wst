@@ -245,7 +245,7 @@ export default function SuperAdminDashboard() {
       title: 'Total Instructors',
       value: stats.instructors.total,
       icon: Users,
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-[#ff6b6b] to-[#0d4973]',
       link: '/admin/instructors',
     },
   ];
@@ -256,7 +256,7 @@ export default function SuperAdminDashboard() {
 
       {/* Admin Profile Section */}
       {adminProfile && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-orange-500">
+        <div className="bg-white dark:bg-white rounded-2xl p-6 shadow-md border border-[#ff6b6b]">
           <div className="flex items-center gap-4">
             <img
               src={adminProfile.pictureUrl || '/default-profile.png'}
@@ -264,8 +264,8 @@ export default function SuperAdminDashboard() {
               className="profile-picture"
             />
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{adminProfile.name}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">System Administrator</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-[#1d2026]">{adminProfile.name}</h2>
+              <p className="text-sm text-gray-500 dark:text-[#718096]">System Administrator</p>
             </div>
           </div>
         </div>
@@ -274,8 +274,8 @@ export default function SuperAdminDashboard() {
       {/* Material Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-white drop-shadow mb-1">Admin Dashboard</h1>
-          <p className="text-base text-gray-300 drop-shadow-sm">Manage instructors, monitor activities, and view statistics</p>
+          <h1 className="text-4xl font-bold text-gray-900 drop-shadow mb-1">Admin Dashboard</h1>
+          <p className="text-base text-[#4a5568] drop-shadow-sm">Manage instructors, monitor activities, and view statistics</p>
         </div>
       </div>
 
@@ -284,8 +284,8 @@ export default function SuperAdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2].map((i) => (
             <div key={i} className="card p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+              <div className="h-4 bg-white dark:bg-white rounded w-1/2 mb-4"></div>
+              <div className="h-8 bg-white dark:bg-white rounded w-1/3"></div>
             </div>
           ))}
         </div>
@@ -301,14 +301,14 @@ export default function SuperAdminDashboard() {
               <Link to={stat.link}>
                 <div className="bg-white dark:bg-[#fff] rounded-2xl p-8 flex items-center justify-between shadow-md">
                   <div>
-                    <p className="text-xs uppercase tracking-wider font-bold text-gray-700 mb-2">{stat.title}</p>
+                    <p className="text-xs uppercase tracking-wider font-bold text-[#4a5568] mb-2">{stat.title}</p>
                     <p className="text-5xl font-extrabold text-[#181c23] mb-1" style={{letterSpacing:'-2px'}}>{stat.value}</p>
                     {stat.subtitle && (
                       <p className="text-xs text-gray-500 mt-2">{stat.subtitle}</p>
                     )}
                   </div>
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg">
-                    <stat.icon size={32} className="text-white" />
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] flex items-center justify-center shadow-lg">
+                    <stat.icon size={32} className="text-[#1d2026]" />
                   </div>
                 </div>
               </Link>
@@ -322,17 +322,17 @@ export default function SuperAdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-gray-900 rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all p-6"
+        className="bg-white rounded-2xl border border-gray-800 hover:border-[#ff6b6b]/50 transition-all p-6"
       >
-        <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             to="/admin/courses"
-            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-orange-500 hover:bg-orange-500/10 transition-all text-center group"
+            className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-[#ff6b6b] hover:bg-[#FF4C60]/10 transition-all text-center group"
           >
-            <BookOpen className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-            <p className="font-medium text-white">View All Courses</p>
-            <p className="text-xs text-gray-400 mt-1">{stats.courses.total} courses</p>
+            <BookOpen className="w-8 h-8 text-[#FF4C60] mx-auto mb-2" />
+            <p className="font-medium text-[#1d2026]">View All Courses</p>
+            <p className="text-xs text-[#718096] mt-1">{stats.courses.total} courses</p>
           </Link>
 
           <Link
@@ -340,8 +340,8 @@ export default function SuperAdminDashboard() {
             className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-green-500 hover:bg-green-500/10 transition-all text-center group"
           >
             <GraduationCap className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="font-medium text-white">View All Students</p>
-            <p className="text-xs text-gray-400 mt-1">{stats.students.total} students</p>
+            <p className="font-medium text-[#1d2026]">View All Students</p>
+            <p className="text-xs text-[#718096] mt-1">{stats.students.total} students</p>
           </Link>
 
           <button
@@ -350,8 +350,8 @@ export default function SuperAdminDashboard() {
             className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500 hover:bg-purple-500/10 transition-all text-center group disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-8 h-8 text-purple-500 mx-auto mb-2 ${actionLoading === 'refresh' ? 'animate-spin' : ''}`} />
-            <p className="font-medium text-white">Refresh Stats</p>
-            <p className="text-xs text-gray-400 mt-1">Update data</p>
+            <p className="font-medium text-[#1d2026]">Refresh Stats</p>
+            <p className="text-xs text-[#718096] mt-1">Update data</p>
           </button>
 
           <button
@@ -360,8 +360,8 @@ export default function SuperAdminDashboard() {
             className="p-4 border-2 border-dashed border-gray-700 rounded-xl hover:border-cyan-500 hover:bg-cyan-500/10 transition-all text-center group disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-8 h-8 text-cyan-500 mx-auto mb-2" />
-            <p className="font-medium text-white">Export to Excel</p>
-            <p className="text-xs text-gray-400 mt-1">Download data</p>
+            <p className="font-medium text-[#1d2026]">Export to Excel</p>
+            <p className="text-xs text-[#718096] mt-1">Download data</p>
           </button>
         </div>
       </motion.div>
@@ -371,14 +371,14 @@ export default function SuperAdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="bg-gray-900 rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all"
+        className="bg-white rounded-2xl border border-gray-800 hover:border-[#ff6b6b]/50 transition-all"
       >
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">System Overview</h2>
+            <h2 className="text-xl font-bold text-[#1d2026]">System Overview</h2>
             <button
               onClick={toggleOverview}
-              className="text-orange-500 hover:text-orange-600 text-sm font-medium"
+              className="text-[#FF4C60] hover:text-[#ff5252] text-sm font-medium"
               aria-expanded={showOverviewAll}
             >
               {showOverviewAll ? 'Hide Details' : overviewLoading ? 'Loading…' : 'View Details →'}
@@ -390,8 +390,8 @@ export default function SuperAdminDashboard() {
             {[
               { icon: GraduationCap, value: stats.students.total, label: 'Total Students', color: 'bg-green-500/10', iconColor: 'text-green-500' },
               { icon: BookOpen, value: stats.courses.total, label: 'Active Courses', color: 'bg-purple-500/10', iconColor: 'text-purple-500' },
-              { icon: Users, value: stats.instructors.total, label: 'Total Instructors', color: 'bg-blue-500/10', iconColor: 'text-blue-500' },
-              { icon: ClipboardCheck, value: stats.submissions.total, label: 'Total Submissions', color: 'bg-orange-500/10', iconColor: 'text-orange-500' },
+              { icon: Users, value: stats.instructors.total, label: 'Total Instructors', color: 'bg-[#FF4C60]/100/10', iconColor: 'text-[#FF4C60]' },
+              { icon: ClipboardCheck, value: stats.submissions.total, label: 'Total Submissions', color: 'bg-[#FF4C60]/10', iconColor: 'text-[#FF4C60]' },
             ].map((s) => (
               <div key={s.label} className="bg-transparent">
                 <div className="flex items-center gap-4 md:flex-col md:items-center">
@@ -399,8 +399,8 @@ export default function SuperAdminDashboard() {
                     <s.icon className={`w-6 h-6 ${s.iconColor}`} />
                   </div>
                   <div className="text-left md:text-center">
-                    <p className="text-2xl md:text-2xl font-bold text-white">{s.value}</p>
-                    <p className="text-sm text-gray-400">{s.label}</p>
+                    <p className="text-2xl md:text-2xl font-bold text-[#1d2026]">{s.value}</p>
+                    <p className="text-sm text-[#718096]">{s.label}</p>
                   </div>
                 </div>
               </div>
@@ -411,52 +411,52 @@ export default function SuperAdminDashboard() {
             <div className="mt-6 border-t border-gray-800 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Students List */}
-                <div className="bg-gray-800 rounded-xl p-4 border border-orange-500">
+                <div className="bg-white rounded-xl p-4 border border-[#ff6b6b]">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="text-sm text-gray-400">Total Students</div>
-                      <div className="text-lg font-bold text-white">{studentsTotal}</div>
+                      <div className="text-sm text-[#718096]">Total Students</div>
+                      <div className="text-lg font-bold text-[#1d2026]">{studentsTotal}</div>
                     </div>
-                    <div className="text-xs text-gray-400">{studentsTotal > 8 ? `${studentsTotal} total` : ''}</div>
+                    <div className="text-xs text-[#718096]">{studentsTotal > 8 ? `${studentsTotal} total` : ''}</div>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     {studentsList.length === 0 ? (
-                      <div className="text-sm text-gray-400 text-center py-8">No students available.</div>
+                      <div className="text-sm text-[#718096] text-center py-8">No students available.</div>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[600px]">
-                          <thead className="bg-gray-700/50">
+                          <thead className="bg-white/50">
                             <tr>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Student</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">ID</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Email</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Status</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Student</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">ID</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Email</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Status</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-700">
                             {studentsList.map((s) => (
-                              <tr key={s.id} className="hover:bg-gray-700/30">
+                              <tr key={s.id} className="hover:bg-white/30">
                                 <td className="py-2 px-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-600 flex-shrink-0">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex-shrink-0">
                                       <img src={s.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}`} alt={s.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                      <div className="text-sm text-white font-medium truncate">{s.name}</div>
+                                      <div className="text-sm text-gray-900 font-medium truncate">{s.name}</div>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="py-2 px-3">
-                                  <span className="text-sm text-gray-300 font-mono">{s.student_id || s.id}</span>
+                                  <span className="text-sm text-[#4a5568] font-mono">{s.student_id || s.id}</span>
                                 </td>
                                 <td className="py-2 px-3">
-                                  <span className="text-sm text-gray-400 truncate">{s.email}</span>
+                                  <span className="text-sm text-[#718096] truncate">{s.email}</span>
                                 </td>
                                 <td className="py-2 px-3">
                                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                                     s.status === 'active' || !s.status
                                       ? 'bg-green-500/20 text-green-400'
-                                      : 'bg-gray-500/20 text-gray-400'
+                                      : 'bg-white/20 text-[#718096]'
                                   }`}>
                                     {s.status || 'active'}
                                   </span>
@@ -470,24 +470,24 @@ export default function SuperAdminDashboard() {
 
                     {studentsList.length > 0 && (
                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-[#718096]">
                           Showing {studentsTotal === 0 ? 0 : ((studentsPage - 1) * STUDENTS_PER_PAGE + 1)} - {Math.min(studentsPage * STUDENTS_PER_PAGE, studentsTotal)} of {studentsTotal}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
-                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            className="p-1 rounded-xl hover:bg-white/50 disabled:opacity-50"
                             onClick={() => fetchStudentsPage(Math.max(1, studentsPage - 1))}
                             disabled={studentsPage <= 1}
                           >
-                            <ChevronLeft className="w-4 h-4 text-gray-300" />
+                            <ChevronLeft className="w-4 h-4 text-[#4a5568]" />
                           </button>
-                          <div className="text-xs text-gray-400">{studentsPage} / {studentsTotalPages}</div>
+                          <div className="text-xs text-[#718096]">{studentsPage} / {studentsTotalPages}</div>
                           <button
-                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            className="p-1 rounded-xl hover:bg-white/50 disabled:opacity-50"
                             onClick={() => fetchStudentsPage(Math.min(studentsTotalPages, studentsPage + 1))}
                             disabled={studentsPage >= studentsTotalPages}
                           >
-                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                            <ChevronRight className="w-4 h-4 text-[#4a5568]" />
                           </button>
                         </div>
                       </div>
@@ -496,35 +496,35 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Active Courses List */}
-                <div className="bg-gray-800 rounded-xl p-4 border border-orange-500">
+                <div className="bg-white rounded-xl p-4 border border-[#ff6b6b]">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="text-sm text-gray-400">Active Courses</div>
-                      <div className="text-lg font-bold text-white">{coursesTotal}</div>
+                      <div className="text-sm text-[#718096]">Active Courses</div>
+                      <div className="text-lg font-bold text-[#1d2026]">{coursesTotal}</div>
                     </div>
-                    <div className="text-xs text-gray-400">{coursesTotal > 8 ? `${coursesTotal} total` : ''}</div>
+                    <div className="text-xs text-[#718096]">{coursesTotal > 8 ? `${coursesTotal} total` : ''}</div>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     {coursesList.length === 0 ? (
-                      <div className="text-sm text-gray-400 text-center py-8">No active courses.</div>
+                      <div className="text-sm text-[#718096] text-center py-8">No active courses.</div>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[800px]">
-                          <thead className="bg-gray-700/50">
+                          <thead className="bg-white/50">
                             <tr>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Course</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Code</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Credits</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Students</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Status</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Course</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Code</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Credits</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Students</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Status</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-700">
                             {coursesList.map((c) => (
-                              <tr key={c.id} className="hover:bg-gray-700/30">
+                              <tr key={c.id} className="hover:bg-white/30">
                                 <td className="py-2 px-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-gray-600 rounded overflow-hidden flex-shrink-0">
+                                    <div className="w-8 h-8 bg-white rounded overflow-hidden flex-shrink-0">
                                       {c.thumbnail ? (
                                         <img 
                                           src={c.thumbnail} 
@@ -533,34 +533,34 @@ export default function SuperAdminDashboard() {
                                         />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                          <BookOpen size={12} className="text-gray-400" />
+                                          <BookOpen size={12} className="text-[#718096]" />
                                         </div>
                                       )}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                      <div className="text-sm text-white font-medium truncate">
+                                      <div className="text-sm text-gray-900 font-medium truncate">
                                         {c.name || c.title || c.course_name}
                                       </div>
-                                      <div className="text-xs text-gray-400 truncate">
+                                      <div className="text-xs text-[#718096] truncate">
                                         {c.instructor || c.faculty_name || ''}
                                       </div>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="py-2 px-3">
-                                  <span className="text-sm text-gray-300 font-mono">{c.code}</span>
+                                  <span className="text-sm text-[#4a5568] font-mono">{c.code}</span>
                                 </td>
                                 <td className="py-2 px-3">
-                                  <span className="text-sm text-white">{c.credits}</span>
+                                  <span className="text-sm text-[#1d2026]">{c.credits}</span>
                                 </td>
                                 <td className="py-2 px-3">
-                                  <span className="text-sm text-blue-400">{c.students ?? 0}</span>
+                                  <span className="text-sm text-[#ff9f66]">{c.students ?? 0}</span>
                                 </td>
                                 <td className="py-2 px-3">
                                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                                     c.status === 'active'
                                       ? 'bg-green-500/20 text-green-400'
-                                      : 'bg-gray-500/20 text-gray-400'
+                                      : 'bg-white/20 text-[#718096]'
                                   }`}>
                                     {c.status}
                                   </span>
@@ -574,24 +574,24 @@ export default function SuperAdminDashboard() {
 
                     {coursesList.length > 0 && (
                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-[#718096]">
                           Showing {coursesTotal === 0 ? 0 : ((coursesPage - 1) * COURSES_PER_PAGE + 1)} - {Math.min(coursesPage * COURSES_PER_PAGE, coursesTotal)} of {coursesTotal}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
-                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            className="p-1 rounded-xl hover:bg-white/50 disabled:opacity-50"
                             onClick={() => fetchCoursesPage(Math.max(1, coursesPage - 1))}
                             disabled={coursesPage <= 1}
                           >
-                            <ChevronLeft className="w-4 h-4 text-gray-300" />
+                            <ChevronLeft className="w-4 h-4 text-[#4a5568]" />
                           </button>
-                          <div className="text-xs text-gray-400">{coursesPage} / {coursesTotalPages}</div>
+                          <div className="text-xs text-[#718096]">{coursesPage} / {coursesTotalPages}</div>
                           <button
-                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            className="p-1 rounded-xl hover:bg-white/50 disabled:opacity-50"
                             onClick={() => fetchCoursesPage(Math.min(coursesTotalPages, coursesPage + 1))}
                             disabled={coursesPage >= coursesTotalPages}
                           >
-                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                            <ChevronRight className="w-4 h-4 text-[#4a5568]" />
                           </button>
                         </div>
                       </div>
@@ -600,48 +600,48 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Instructors List */}
-                <div className="bg-gray-800 rounded-xl p-4 border border-orange-500">
+                <div className="bg-white rounded-xl p-4 border border-[#ff6b6b]">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="text-sm text-gray-400">Instructors</div>
-                      <div className="text-lg font-bold text-white">{instructorsTotal}</div>
+                      <div className="text-sm text-[#718096]">Instructors</div>
+                      <div className="text-lg font-bold text-[#1d2026]">{instructorsTotal}</div>
                     </div>
-                    <div className="text-xs text-gray-400">{instructorsTotal > 8 ? `${instructorsTotal} total` : ''}</div>
+                    <div className="text-xs text-[#718096]">{instructorsTotal > 8 ? `${instructorsTotal} total` : ''}</div>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     {instructorsList.length === 0 ? (
-                      <div className="text-sm text-gray-400 text-center py-8">No instructors.</div>
+                      <div className="text-sm text-[#718096] text-center py-8">No instructors.</div>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[500px]">
-                          <thead className="bg-gray-700/50">
+                          <thead className="bg-white/50">
                             <tr>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Instructor</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Email</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-300">Status</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Instructor</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Email</th>
+                              <th className="text-left py-2 px-3 text-xs font-semibold text-[#4a5568]">Status</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-700">
                             {instructorsList.map((ins) => (
-                              <tr key={ins.id} className="hover:bg-gray-700/30">
+                              <tr key={ins.id} className="hover:bg-white/30">
                                 <td className="py-2 px-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-600 flex-shrink-0">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex-shrink-0">
                                       <img src={ins.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(ins.name)}`} alt={ins.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                      <div className="text-sm text-white font-medium truncate">{ins.name}</div>
+                                      <div className="text-sm text-gray-900 font-medium truncate">{ins.name}</div>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="py-2 px-3">
-                                  <span className="text-sm text-gray-400 truncate">{ins.email}</span>
+                                  <span className="text-sm text-[#718096] truncate">{ins.email}</span>
                                 </td>
                                 <td className="py-2 px-3">
                                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                                     ins.status === 'active' || !ins.status
                                       ? 'bg-green-500/20 text-green-400'
-                                      : 'bg-gray-500/20 text-gray-400'
+                                      : 'bg-white/20 text-[#718096]'
                                   }`}>
                                     {ins.status || 'active'}
                                   </span>
@@ -655,24 +655,24 @@ export default function SuperAdminDashboard() {
 
                     {instructorsList.length > 0 && (
                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-[#718096]">
                           Showing {instructorsTotal === 0 ? 0 : ((instructorsPage - 1) * INSTRUCTORS_PER_PAGE + 1)} - {Math.min(instructorsPage * INSTRUCTORS_PER_PAGE, instructorsTotal)} of {instructorsTotal}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
-                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            className="p-1 rounded-xl hover:bg-white/50 disabled:opacity-50"
                             onClick={() => fetchInstructorsPage(Math.max(1, instructorsPage - 1))}
                             disabled={instructorsPage <= 1}
                           >
-                            <ChevronLeft className="w-4 h-4 text-gray-300" />
+                            <ChevronLeft className="w-4 h-4 text-[#4a5568]" />
                           </button>
-                          <div className="text-xs text-gray-400">{instructorsPage} / {instructorsTotalPages}</div>
+                          <div className="text-xs text-[#718096]">{instructorsPage} / {instructorsTotalPages}</div>
                           <button
-                            className="p-1 rounded-md hover:bg-gray-700/50 disabled:opacity-50"
+                            className="p-1 rounded-xl hover:bg-white/50 disabled:opacity-50"
                             onClick={() => fetchInstructorsPage(Math.min(instructorsTotalPages, instructorsPage + 1))}
                             disabled={instructorsPage >= instructorsTotalPages}
                           >
-                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                            <ChevronRight className="w-4 h-4 text-[#4a5568]" />
                           </button>
                         </div>
                       </div>

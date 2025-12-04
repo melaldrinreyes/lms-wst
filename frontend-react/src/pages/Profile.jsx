@@ -224,7 +224,7 @@ export default function Profile() {
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
       {loading ? (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-12 border border-orange-500">
+        <div className="bg-white dark:bg-white rounded-xl p-12 border border-[#ff6b6b]">
           <div className="space-y-4">
             <Skeleton variant="avatar" className="mx-auto" />
             <Skeleton variant="title" className="w-1/3 mx-auto" />
@@ -245,8 +245,8 @@ export default function Profile() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 font-semibold border-b-2 transition text-sm ${
                 activeTab === tab.id
-                  ? 'border-orange-500 text-orange-500'
-                  : 'border-transparent text-gray-400 hover:text-gray-300'
+                  ? 'border-[#ff6b6b] text-[#FF4C60]'
+                  : 'border-transparent text-[#718096] hover:text-[#4a5568]'
               }`}
             >
               <tab.icon size={18} />
@@ -258,14 +258,14 @@ export default function Profile() {
 
       {/* Account Info Tab */}
       {activeTab === 'account' && (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-6">
+        <div className="bg-white dark:bg-white rounded-xl border border-[#ff6b6b] p-6">
           <form onSubmit={handleSave} className="space-y-6">
-            <div className="flex items-center gap-6 pb-6 border-b border-orange-500">
+            <div className="flex items-center gap-6 pb-6 border-b border-[#ff6b6b]">
               {imagePreview ? (
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="w-24 h-24 rounded-full object-cover border-2 border-orange-500"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-[#ff6b6b]"
                 />
               ) : user?.profile_image ? (
                 <img
@@ -274,22 +274,22 @@ export default function Profile() {
                   className="w-24 h-24 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-24 h-24 bg-orange-500/10 rounded-full flex items-center justify-center">
-                  <User className="text-orange-500" size={48} />
+                <div className="w-24 h-24 bg-[#FF4C60]/10 rounded-full flex items-center justify-center">
+                  <User className="text-[#FF4C60]" size={48} />
                 </div>
               )}
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-[#1d2026]">
                   {formData.name}
                 </h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-[#718096]">
                   {user?.student_id ? `Student ID: ${formData.studentId}` : user?.email}
                 </p>
                 <div className="flex gap-2 mt-2">
                   <button
                     type="button"
                     onClick={() => document.getElementById('profile-image-input').click()}
-                    className="text-sm text-orange-500 hover:text-orange-400"
+                    className="text-sm text-[#FF4C60] hover:text-[#FF4C60]"
                   >
                     Change Photo
                   </button>
@@ -329,62 +329,62 @@ export default function Profile() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Full Name
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-[#1d2026]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Email
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-[#1d2026]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Phone
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-[#1d2026]"
                   placeholder="+63 XXX XXX XXXX"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Date of Birth
                 </label>
                 <input
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-[#1d2026]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Gender
                 </label>
                 <select
                   value={formData.gender}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-[#1d2026]"
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -394,14 +394,14 @@ export default function Profile() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] mb-2">
                   Address
                 </label>
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white"
+                  className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-[#1d2026]"
                   placeholder="Enter your complete address"
                 />
               </div>
@@ -410,7 +410,7 @@ export default function Profile() {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2 bg-[#FF4C60] text-gray-900 rounded-xl hover:bg-[#ff3451] transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save size={18} />
               {saving ? 'Saving...' : 'Save Changes'}
@@ -421,31 +421,31 @@ export default function Profile() {
 
       {/* Security Tab */}
       {activeTab === 'security' && (
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-orange-500 p-6">
+        <div className="bg-white dark:bg-white rounded-xl border border-[#ff6b6b] p-6">
           <form onSubmit={handlePasswordChange} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 Current Password
               </label>
               <input
                 type="password"
                 value={passwordData.current_password}
                 onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                 placeholder="••••••••"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 New Password
               </label>
               <input
                 type="password"
                 value={passwordData.new_password}
                 onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -453,14 +453,14 @@ export default function Profile() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] mb-2">
                 Confirm New Password
               </label>
               <input
                 type="password"
                 value={passwordData.new_password_confirmation}
                 onChange={(e) => setPasswordData({ ...passwordData, new_password_confirmation: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/70"
+                className="w-full px-4 py-2 bg-white border border-[#ff6b6b] rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-white/70"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -470,7 +470,7 @@ export default function Profile() {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2 bg-[#FF4C60] text-gray-900 rounded-xl hover:bg-[#ff3451] transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Lock size={18} />
               {saving ? 'Updating...' : 'Change Password'}

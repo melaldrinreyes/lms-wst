@@ -122,7 +122,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Loader className="w-8 h-8 text-orange-500" />
+          <Loader className="w-8 h-8 text-[#FF4C60]" />
         </motion.div>
       </div>
     );
@@ -138,17 +138,17 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-800 overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4">
+            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] border-b border-gray-700 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1">Create Course Content</h2>
-                  <p className="text-sm text-gray-400">Build engaging course materials with our WYSIWYG editor</p>
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">Create Course Content</h2>
+                  <p className="text-sm text-[#718096]">Build engaging course materials with our WYSIWYG editor</p>
                 </div>
                 <button
                   onClick={() => setShowPreview(!showPreview)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 rounded-lg hover:bg-blue-600/30 transition"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#8B0000]/20 border border-[#FF4C60]/50 text-[#ff9f66] rounded-xl hover:bg-[#8B0000]/30 transition"
                   title={showPreview ? "Hide preview" : "Show preview"}
                 >
                   <Eye size={18} />
@@ -162,7 +162,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
               {/* Editor Section */}
               <div className="flex-1 p-6">
                 <div className="mb-3">
-                  <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                  <label className="text-sm font-semibold text-[#4a5568] mb-2 block">
                     📝 Editor
                   </label>
                 </div>
@@ -171,16 +171,16 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
 
               {/* Preview Section */}
               {showPreview && (
-                <div className="flex-1 p-6 bg-gradient-to-b from-gray-800/50 to-gray-900/50">
+                <div className="flex-1 p-6 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a]
                   <div className="mb-3">
-                    <label className="text-sm font-semibold text-gray-300 mb-2 block">
+                    <label className="text-sm font-semibold text-[#4a5568] mb-2 block">
                       👁️ Live Preview (Student View)
                     </label>
                   </div>
-                  <div className="bg-gray-900 rounded-xl border border-gray-700 p-4 max-h-[600px] overflow-y-auto">
+                  <div className="bg-white rounded-xl border border-gray-700 p-4 max-h-[600px] overflow-y-auto">
                     {content ? (
                       <div 
-                        className="prose prose-invert max-w-none text-gray-300 leading-relaxed space-y-4"
+                        className="prose prose-invert max-w-none text-[#4a5568] leading-relaxed space-y-4"
                         style={{ fontSize: '0.95rem', lineHeight: '1.7' }}
                       >
                         <div 
@@ -199,10 +199,10 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-800/50 border-t border-gray-700 px-6 py-4 flex gap-3 justify-end">
+            <div className="bg-white/50 border-t border-gray-700 px-6 py-4 flex gap-3 justify-end">
               <button
                 onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700 transition"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-600 rounded-xl text-[#718096] hover:bg-white transition"
               >
                 <X size={18} />
                 Cancel
@@ -210,7 +210,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition disabled:opacity-50 font-medium shadow-lg shadow-orange-900/30"
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 font-medium shadow-lg shadow-blue-900/30"
               >
                 <Save size={18} />
                 {isSaving ? 'Saving...' : 'Save Content'}
@@ -228,7 +228,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+                className="flex items-center gap-2 px-4 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition"
               >
                 <Edit size={18} />
                 Edit Content
@@ -236,7 +236,7 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
               {content && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-gray-900 rounded-xl hover:bg-red-700 transition"
                 >
                   <Trash2 size={18} />
                   Delete Content
@@ -246,20 +246,20 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
           )}
 
           {content ? (
-            <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+            <div className="bg-white rounded-2xl border border-gray-800 overflow-hidden">
               {/* Header */}
-              <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4">
-                <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
-                  <Eye size={20} className="text-blue-400" />
+              <div className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] border-b border-gray-700 px-6 py-4">
+                <h2 className="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+                  <Eye size={20} className="text-[#ff9f66]" />
                   Course Content
                 </h2>
-                <p className="text-sm text-gray-400">Course materials and resources from your instructor</p>
+                <p className="text-sm text-[#718096]">Course materials and resources from your instructor</p>
               </div>
               
               {/* Content Area */}
               <div className="p-6 md:p-8">
                 <div 
-                  className="prose prose-invert max-w-none text-gray-200 leading-relaxed"
+                  className="prose prose-invert max-w-none text-[#2c3e50] leading-relaxed"
                   style={{
                     fontSize: '1rem',
                     lineHeight: '1.8',
@@ -297,8 +297,8 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
               </div>
             </div>
           ) : (
-            <div className="bg-gray-900 rounded-2xl border border-gray-800 p-12 text-center">
-              <p className="text-gray-400">
+            <div className="bg-white rounded-2xl border border-gray-800 p-12 text-center">
+              <p className="text-[#718096]">
                 {isTeacher
                   ? 'No course content yet. Click "Edit Content" to add information about this course.'
                   : 'No course content available'}
@@ -310,27 +310,27 @@ export default function CourseContent({ courseId, isTeacher = false, onSave }) {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-xl">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700"
+            className="modal-panel modal-panel--md bg-white rounded-xl p-6 w-full mx-4 border border-gray-700"
           >
-            <h3 className="text-lg font-bold text-white mb-4">Delete Course Content?</h3>
-            <p className="text-gray-300 mb-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Delete Course Content?</h3>
+            <p className="text-[#4a5568] mb-6">
               Are you sure you want to delete all course content for this course? This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-xl text-[#4a5568] hover:bg-white transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isSaving}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-red-600 text-gray-900 rounded-xl hover:bg-red-700 transition disabled:opacity-50"
               >
                 {isSaving ? 'Deleting...' : 'Delete'}
               </button>

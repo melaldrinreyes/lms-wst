@@ -115,25 +115,25 @@ const ClassForm = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate('/faculty/classes')}
-          className="flex items-center gap-2 text-gray-400 hover:text-orange-500 mb-4 transition-colors"
+          className="flex items-center gap-2 text-[#718096] hover:text-[#FF4C60] mb-4 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Classes
         </button>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-[#1d2026]">
           {isEditMode ? 'Edit Class' : 'Create New Class'}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-[#718096] dark:text-[#718096] mt-2">
           {isEditMode ? 'Update class information' : 'Add a new class section'}
         </p>
       </div>
 
       {/* Form */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-6">
+      <div className="bg-white dark:bg-white rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course/Subject Name Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Course / Subject <span className="text-red-500">*</span>
             </label>
             <input
@@ -142,9 +142,9 @@ const ClassForm = () => {
               value={formData.subject_name}
               onChange={handleChange}
               placeholder="e.g., Mathematics, Computer Science, English"
-              className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border ${
+              className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                 errors.subject_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
-              } rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+              } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
               required
             />
             {errors.subject_name && (
@@ -158,16 +158,16 @@ const ClassForm = () => {
           {/* Year Level and Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Year Level <span className="text-red-500">*</span>
               </label>
               <select
                 name="year_level"
                 value={formData.year_level}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.year_level ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
-                } rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               >
                 <option value="">Select year level</option>
@@ -181,7 +181,7 @@ const ClassForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Section <span className="text-red-500">*</span>
               </label>
               <input
@@ -190,9 +190,9 @@ const ClassForm = () => {
                 value={formData.section}
                 onChange={handleChange}
                 placeholder="e.g., A, B, 1, 2"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.section ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
-                } rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               />
               {errors.section && (
@@ -204,7 +204,7 @@ const ClassForm = () => {
           {/* School Year and Semester */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 School Year <span className="text-red-500">*</span>
               </label>
               <input
@@ -213,9 +213,9 @@ const ClassForm = () => {
                 value={formData.school_year}
                 onChange={handleChange}
                 placeholder="e.g., 2024-2025"
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.school_year ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
-                } rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               />
               {errors.school_year && (
@@ -224,16 +224,16 @@ const ClassForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Semester <span className="text-red-500">*</span>
               </label>
               <select
                 name="semester"
                 value={formData.semester}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border ${
+                className={`w-full px-4 py-3 bg-white dark:bg-white border ${
                   errors.semester ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
-                } rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white`}
+                } rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]`}
                 required
               >
                 <option value="">Select semester</option>
@@ -250,14 +250,14 @@ const ClassForm = () => {
           {/* Status (Edit mode only) */}
           {isEditMode && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Status
               </label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 bg-white dark:bg-white border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all text-gray-900 dark:text-[#1d2026]"
               >
                 <option value="active">Active</option>
                 <option value="archived">Archived</option>
@@ -270,14 +270,14 @@ const ClassForm = () => {
             <button
               type="button"
               onClick={() => navigate('/faculty/classes')}
-              className="flex-1 px-6 py-3 bg-gray-800/50 dark:bg-gray-800 hover:bg-gray-700 dark:hover:bg-gray-700 text-white rounded-xl transition-all font-medium border border-gray-700 dark:border-gray-600"
+              className="flex-1 px-6 py-3 bg-white/50 dark:bg-white hover:bg-white dark:hover:bg-white text-gray-900 rounded-xl transition-all font-medium border border-gray-700 dark:border-gray-600"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all duration-200 shadow-lg shadow-[#FF4C60]/30 hover:shadow-[#FF4C60]/50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

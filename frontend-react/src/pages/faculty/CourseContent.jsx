@@ -60,8 +60,8 @@ function CourseContent() {
 
   return (
     <div className="h-full md:h-screen bg-white flex flex-col overflow-hidden">
-      {/* Header - Fixed */}
-      <div className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+      {/* Header - Fixed on mobile, static on desktop */}
+      <div className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0 fixed top-0 left-0 right-0 z-30 md:static">
         <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={() => {
@@ -87,7 +87,7 @@ function CourseContent() {
       </div>
 
       {/* Content Editor - NetAcad Style */}
-      <div className="flex-1 bg-white overflow-hidden">
+      <div className="flex-1 bg-white overflow-hidden pt-[64px] md:pt-0">
         <div className="relative min-h-0">
           <div className="pb-20 md:pb-0">
             <HierarchicalLectureContent 

@@ -152,12 +152,12 @@ export default function CourseInvite() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-white">
         <Navbar />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="mt-4 text-gray-300">Loading course details...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6b6b] mx-auto"></div>
+            <p className="mt-4 text-[#4a5568]">Loading course details...</p>
           </div>
         </div>
         <Footer />
@@ -167,18 +167,18 @@ export default function CourseInvite() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-white">
         <Navbar />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <BookOpen className="mx-auto h-16 w-16 text-gray-400" />
-            <h2 className="mt-4 text-2xl font-bold text-white">Course Not Found</h2>
-            <p className="mt-2 text-gray-300">
+            <BookOpen className="mx-auto h-16 w-16 text-[#718096]" />
+            <h2 className="mt-4 text-2xl font-bold text-[#1d2026]">Course Not Found</h2>
+            <p className="mt-2 text-[#4a5568]">
               The course you're looking for doesn't exist or is no longer available.
             </p>
             <button
               onClick={() => navigate('/courses')}
-              className="mt-6 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+              className="mt-6 px-6 py-2 bg-[#FF4C60] text-gray-900 rounded-xl hover:bg-[#ff3451] transition"
             >
               Browse Courses
             </button>
@@ -190,7 +190,7 @@ export default function CourseInvite() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-white">
       <Navbar />
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       {showLoginModal && (
@@ -208,31 +208,31 @@ export default function CourseInvite() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="modal-panel modal-panel--md bg-gray-900 dark:bg-gray-950 rounded-2xl shadow-2xl w-full overflow-hidden border border-gray-800"
+            className="modal-panel modal-panel--md bg-white dark:bg-white rounded-2xl shadow-2xl w-full overflow-hidden border border-gray-800"
           >
             {/* Header with gradient */}
-            <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 text-white text-center">
-              <div className="w-20 h-20 bg-gray-900/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] p-6 text-white text-center">
+              <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-12 h-12 text-white" />
               </div>
-              <h3 className="text-2xl font-bold mb-2">
+              <h3 className="text-2xl font-bold mb-2 text-white">
                 Request Submitted!
               </h3>
-              <p className="text-green-100">
+              <p className="text-white/90">
                 Your enrollment request has been sent
               </p>
             </div>
 
             {/* Content */}
             <div className="p-6">
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <div className="bg-[#FF4C60]/10 dark:bg-[#FF4C60] 900/20 border border-[#FF4C60] 200 dark:border-[#FF4C60] 800 rounded-xl p-4 mb-6">
                 <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                  <Clock className="w-5 h-5 text-[#FF4C60] dark:text-[#ff9f66] flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-sm text-blue-900 dark:text-blue-100 mb-1">
+                    <p className="font-semibold text-sm text-[#FF4C60] 900 dark:text-[#FF4C60] 100 mb-1">
                       What happens next?
                     </p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="text-sm text-[#ff5252] dark:text-[#FF4C60] 300">
                       The instructor will review your request. You'll be notified once it's approved, and you can then access the course materials.
                     </p>
                   </div>
@@ -246,14 +246,14 @@ export default function CourseInvite() {
                     setShowSuccessModal(false);
                     navigate('/student');
                   }}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-semibold flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 py-3 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition font-semibold flex items-center justify-center gap-2"
                 >
                   Go to Dashboard
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowSuccessModal(false)}
-                  className="w-full bg-gray-800 border border-gray-700 text-gray-300 py-3 rounded-lg hover:bg-gray-700 transition font-medium"
+                  className="w-full bg-white border border-gray-700 text-[#4a5568] py-3 rounded-xl hover:bg-white transition font-medium"
                 >
                   Stay on Page
                 </button>
@@ -268,17 +268,17 @@ export default function CourseInvite() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-500/10 border-b border-blue-500/20"
+          className="bg-[#FF4C60]/100/10 border-b border-[#FF4C60]/20"
         >
           <div className="max-w-6xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-blue-400" />
+                <div className="w-10 h-10 bg-[#FF4C60]/100/20 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-[#ff9f66]" />
                 </div>
                 <div>
-                  <p className="text-blue-300 font-semibold">Login Required</p>
-                  <p className="text-blue-400/80 text-sm">You need to log in to enroll in this course</p>
+                  <p className="text-[#FF4C60] 300 font-semibold">Login Required</p>
+                  <p className="text-[#ff9f66]/80 text-sm">You need to log in to enroll in this course</p>
                 </div>
               </div>
               <button
@@ -286,7 +286,7 @@ export default function CourseInvite() {
                   sessionStorage.setItem('autoEnrollCourseId', id);
                   setShowLoginModal(true);
                 }}
-                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition font-medium whitespace-nowrap"
+                className="px-6 py-2 bg-[#FF4C60]/100 hover:bg-[#FF4C60] text-gray-900 rounded-xl transition font-medium whitespace-nowrap"
               >
                 Log In Now
               </button>
@@ -300,23 +300,23 @@ export default function CourseInvite() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-8 md:p-12 text-white mb-8"
+          className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-2xl p-8 md:p-12 text-gray-900 mb-8"
         >
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-gray-900/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
               <Award className="w-4 h-4" />
               <span className="text-sm font-medium">Course Invitation</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               You've Been Invited to Join
             </h1>
-            <p className="text-2xl md:text-3xl font-semibold text-orange-100 mb-2">
+            <p className="text-2xl md:text-3xl font-semibold text-[#FF4C60] 100 mb-2">
               {course.name}
             </p>
-            <p className="text-lg text-orange-100 mb-6">
+            <p className="text-lg text-[#FF4C60] 100 mb-6">
               {course.code}
             </p>
-            <div className="bg-gray-900/20 backdrop-blur-sm border border-white/30 rounded-lg p-4">
+            <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-4">
               <p className="text-sm">
                 {!user ? (
                   <><strong>Note:</strong> You need to be logged in to enroll in this course.</>
@@ -336,12 +336,12 @@ export default function CourseInvite() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg border border-gray-800 p-6"
+              className="bg-white dark:bg-white rounded-xl shadow-lg border border-gray-800 p-6"
             >
-              <h2 className="text-2xl font-bold text-white mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 About This Course
               </h2>
-              <p className="text-gray-300 leading-relaxed">
+              <p className="text-[#4a5568] leading-relaxed">
                 {course.description || 'This course will provide you with comprehensive knowledge and practical skills in the subject matter.'}
               </p>
             </motion.div>
@@ -351,9 +351,9 @@ export default function CourseInvite() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg border border-gray-800 p-6"
+              className="bg-white dark:bg-white rounded-xl shadow-lg border border-gray-800 p-6"
             >
-              <h2 className="text-2xl font-bold text-white mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 Your Instructor
               </h2>
               <div className="flex items-start gap-4">
@@ -364,19 +364,19 @@ export default function CourseInvite() {
                     className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-8 h-8 text-white" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-8 h-8 text-[#1d2026]" />
                   </div>
                 )}
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold text-[#1d2026]">
                     {course.faculty?.name || 'Expert Instructor'}
                   </h3>
-                  <p className="text-gray-300 text-sm mb-2">
+                  <p className="text-[#4a5568] text-sm mb-2">
                     Course Instructor
                   </p>
                   {course.faculty?.email && (
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <div className="flex items-center gap-2 text-sm text-[#718096]">
                       <Mail className="w-4 h-4" />
                       <span>{course.faculty.email}</span>
                     </div>
@@ -393,16 +393,16 @@ export default function CourseInvite() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg border border-gray-800 p-6 sticky top-6"
+              className="bg-white dark:bg-white rounded-xl shadow-lg border border-gray-800 p-6 sticky top-6"
             >
               <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-10 h-10 text-[#1d2026]" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   Ready to Request Enrollment?
                 </h3>
-                <p className="text-gray-300 text-sm">
+                <p className="text-[#4a5568] text-sm">
                   Submit your enrollment request and the instructor will review it
                 </p>
               </div>
@@ -410,7 +410,7 @@ export default function CourseInvite() {
               <button
                 onClick={handleEnroll}
                 disabled={enrolling}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg flex items-center justify-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 py-3 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg flex items-center justify-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {enrolling ? (
                   <>
@@ -430,31 +430,31 @@ export default function CourseInvite() {
                 )}
               </button>
 
-              <p className="mt-3 text-xs text-center text-gray-400">
+              <p className="mt-3 text-xs text-center text-[#718096]">
                 Your enrollment request will be sent to the instructor for approval
               </p>
 
               <div className="mt-6 pt-6 border-t border-gray-800 space-y-3">
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Users className="w-5 h-5 text-orange-500" />
+                <div className="flex items-center gap-3 text-[#4a5568]">
+                  <Users className="w-5 h-5 text-[#FF4C60]" />
                   <span className="text-sm">
                     {course.students || 0} student{course.students !== 1 ? 's' : ''} enrolled
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <BookOpen className="w-5 h-5 text-orange-500" />
+                <div className="flex items-center gap-3 text-[#4a5568]">
+                  <BookOpen className="w-5 h-5 text-[#FF4C60]" />
                   <span className="text-sm">
                     {course.credits || 3} Credit{course.credits !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Calendar className="w-5 h-5 text-orange-500" />
+                <div className="flex items-center gap-3 text-[#4a5568]">
+                  <Calendar className="w-5 h-5 text-[#FF4C60]" />
                   <span className="text-sm">
                     {course.semester} {course.academic_year}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <FileText className="w-5 h-5 text-orange-500" />
+                <div className="flex items-center gap-3 text-[#4a5568]">
+                  <FileText className="w-5 h-5 text-[#FF4C60]" />
                   <span className="text-sm">
                     {course.modules?.length || 0} Module{course.modules?.length !== 1 ? 's' : ''} • {course.assignments?.length || 0} Assignment{course.assignments?.length !== 1 ? 's' : ''}
                   </span>

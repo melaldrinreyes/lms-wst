@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, ClipboardList, Bell, User, Megaphone, Clock, AlertCircle, Calendar, CheckCircle2, ChevronLeft, ChevronRight, DownloadCloud, ChevronUp } from 'lucide-react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 /* eslint-disable react-hooks/exhaustive-deps */
@@ -14,13 +12,11 @@ export default function StudentDashboard() {
   const [classes, setClasses] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [allAssignments, setAllAssignments] = useState([]); // Store all assignments
-  const [downloadingMap, setDownloadingMap] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [classesError, setClassesError] = useState(null);
-  const assignmentsPerPage = 5;
   const [showScrollUp, setShowScrollUp] = useState(false);
+  const [assignmentsPage, setAssignmentsPage] = useState(1);
+  const [activeCoursesPage, setActiveCoursesPage] = useState(1);
+  const [announcementsPage, setAnnouncementsPage] = useState(1);
   // Dev debug panel state removed
 
   
@@ -33,7 +29,6 @@ export default function StudentDashboard() {
     };
 
     try {
-      setLoading(true);
       setClassesError(null);
       const response = await fetchWithTimeout(studentAPI.getMyClasses(), 10000);
       console.log('getMyClasses response (dashboard):', response);
@@ -81,8 +76,6 @@ export default function StudentDashboard() {
     } catch (error) {
       console.error('Error fetching enrolled classes:', error);
       setClassesError(String(error?.message || error));
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -92,7 +85,6 @@ export default function StudentDashboard() {
     try {
       const classesToUse = Array.isArray(classList) && classList.length > 0 ? classList : classes;
       if (!classesToUse || classesToUse.length === 0) {
-        setAllAssignments([]);
         setAssignments([]);
         return [];
       }
@@ -156,19 +148,16 @@ export default function StudentDashboard() {
         return createdB - createdA;
       });
 
-      setAllAssignments(sorted);
       // Debug: show a sample normalized assignment so we can inspect field names
       if (sorted && sorted.length > 0) console.log('Sample normalized assignment (dashboard):', sorted[0]);
-      const startIndex = (currentPage - 1) * assignmentsPerPage;
-      const endIndex = startIndex + assignmentsPerPage;
-      setAssignments(sorted.slice(startIndex, endIndex));
+      setAssignments(sorted);
       console.log('Fetched and normalized assignments for enrolled classes:', sorted.length);
       return sorted;
     } catch (error) {
       console.error('Error fetching assignments for enrolled classes:', error);
       return [];
     }
-  }, [classes, currentPage]);
+  }, [classes]);
 
   const fetchRecentAnnouncements = useCallback(async () => {
     try {
@@ -226,14 +215,11 @@ export default function StudentDashboard() {
 
       console.log('Sorted assignments (first 5):', sortedAssignments.slice(0,5));
 
-      setAllAssignments(sortedAssignments);
-      const startIndex = (currentPage - 1) * assignmentsPerPage;
-      const endIndex = startIndex + assignmentsPerPage;
-      setAssignments(sortedAssignments.slice(startIndex, endIndex));
+      setAssignments(sortedAssignments);
     } catch (error) {
       console.error('Error fetching assignments:', error);
     }
-  }, [currentPage]);
+  }, []);
 
   const initRun = useRef(false);
   // Run init once on mount. We intentionally omit the callback deps to avoid re-running
@@ -252,8 +238,6 @@ export default function StudentDashboard() {
         await fetchUpcomingAssignments();
       }
       console.log('Dashboard init complete');
-      // Ensure loading is cleared after init (defensive)
-      setLoading(false);
     };
     init();
     // run only once on mount
@@ -269,6 +253,21 @@ export default function StudentDashboard() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Reset assignments page when assignments change
+  useEffect(() => {
+    setAssignmentsPage(1);
+  }, [assignments]);
+
+  // Reset active courses page when classes change
+  useEffect(() => {
+    setActiveCoursesPage(1);
+  }, [classes]);
+
+  // Reset announcements page when announcements change
+  useEffect(() => {
+    setAnnouncementsPage(1);
+  }, [announcements]);
+
   // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
@@ -277,177 +276,62 @@ export default function StudentDashboard() {
     });
   };
 
-  // Handle page change
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    const startIndex = (newPage - 1) * assignmentsPerPage;
-    const endIndex = startIndex + assignmentsPerPage;
-    setAssignments(allAssignments.slice(startIndex, endIndex));
-  };
-
-  // Calculate total pages
-  const totalPages = Math.ceil(allAssignments.length / assignmentsPerPage);
-
-  const formatRelativeTime = (dateString) => {
-    if (!dateString) return '';
-    const then = new Date(dateString).getTime();
-    const now = Date.now();
-    const diff = Math.floor((now - then) / 1000);
-
-    if (diff < 60) return 'just now';
-    if (diff < 3600) {
-      const m = Math.floor(diff / 60);
-      return `${m} min${m > 1 ? 's' : ''} ago`;
-    }
-    if (diff < 86400) {
-      const h = Math.floor(diff / 3600);
-      return `${h} hour${h > 1 ? 's' : ''} ago`;
-    }
-    if (diff < 2592000) {
-      const d = Math.floor(diff / 86400);
-      return `${d} day${d > 1 ? 's' : ''} ago`;
-    }
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
-
-  const getPriorityStyles = (priority) => {
-    switch (priority) {
-      case 'high':
-        return {
-          bg: 'bg-red-900/20',
-          border: 'border-red-500/30',
-          text: 'text-red-400',
-          icon: '🔴'
-        };
-      case 'normal':
-        return {
-          bg: 'bg-yellow-900/20',
-          border: 'border-yellow-500/30',
-          text: 'text-yellow-400',
-          icon: '🟡'
-        };
-      case 'low':
-        return {
-          bg: 'bg-green-900/20',
-          border: 'border-green-500/30',
-          text: 'text-green-400',
-          icon: '🟢'
-        };
-      default:
-        return {
-          bg: 'bg-gray-900/20',
-          border: 'border-gray-500/30',
-          text: 'text-gray-400',
-          icon: '⚪'
-        };
-    }
-  };
-
-  const getTimeUntilDue = (dueDate) => {
-    if (!dueDate) return null;
-    const due = new Date(dueDate).getTime();
-    const now = Date.now();
-    const diff = Math.floor((due - now) / 1000); // seconds
-
-    if (diff < 0) return { text: 'Overdue', color: 'text-red-400', bgColor: 'bg-red-900/20', urgent: true };
-    if (diff < 3600) {
-      const m = Math.floor(diff / 60);
-      return { text: `${m} min${m > 1 ? 's' : ''} left`, color: 'text-red-400', bgColor: 'bg-red-900/20', urgent: true };
-    }
-    if (diff < 86400) {
-      const h = Math.floor(diff / 3600);
-      return { text: `${h} hour${h > 1 ? 's' : ''} left`, color: 'text-orange-400', bgColor: 'bg-orange-900/20', urgent: true };
-    }
-    if (diff < 172800) { // 2 days
-      return { text: 'Due tomorrow', color: 'text-yellow-400', bgColor: 'bg-yellow-900/20', urgent: true };
-    }
-    if (diff < 604800) { // 7 days
-      const d = Math.floor(diff / 86400);
-      return { text: `${d} days left`, color: 'text-yellow-400', bgColor: 'bg-yellow-900/20', urgent: false };
-    }
-    return { text: 'On track', color: 'text-green-400', bgColor: 'bg-green-900/20', urgent: false };
-  };
-
-  const formatDueDate = (dueDate) => {
-    if (!dueDate) return 'No due date';
-    const date = new Date(dueDate);
-    const options = { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return date.toLocaleDateString('en-US', options);
-  };
-
-  const handleViewFileById = async (fileId) => {
-    try {
-      const response = await studentAPI.downloadAssignmentFile(fileId);
-      const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
-    } catch (error) {
-      console.error('Error viewing file by id:', error);
-      toast.error('Failed to open file');
-    }
-  };
-
-  const handleDownloadFileById = async (fileId, fileName) => {
-    try {
-      setDownloadingMap(prev => ({ ...prev, ['file-' + fileId]: true }));
-      const response = await studentAPI.downloadAssignmentFile(fileId);
-      const blob = new Blob([response.data], { type: response.data?.type || response.headers['content-type'] || 'application/octet-stream' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      let filename = fileName || 'downloaded_file';
-      const contentDisposition = response.headers['content-disposition'];
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = decodeURIComponent(filenameMatch[1]);
-        } else {
-          const filenameMatch2 = contentDisposition.match(/filename="?([^";\n]+)"?/);
-          if (filenameMatch2 && filenameMatch2[1]) filename = filenameMatch2[1];
-        }
-      }
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Download started');
-    } catch (error) {
-      console.error('Error downloading file by id:', error);
-      toast.error('Download failed');
-    } finally {
-      setDownloadingMap(prev => ({ ...prev, ['file-' + fileId]: false }));
-    }
-  };
-
-  // Find the latest student submission for an assignment (best-effort across response shapes)
-  const getLatestSubmission = (assignment) => {
-    if (!assignment) return null;
-    if (assignment.latest_submission) return assignment.latest_submission;
-    if (assignment.submission) return assignment.submission;
-    if (Array.isArray(assignment.submissions) && assignment.submissions.length > 0) {
-      const sorted = assignment.submissions.slice().sort((a, b) => {
-        const ta = new Date(a.submitted_at || a.created_at || a.createdAt || 0).getTime();
-        const tb = new Date(b.submitted_at || b.created_at || b.createdAt || 0).getTime();
-        return tb - ta;
-      });
-      return sorted[0];
-    }
-    if (assignment.student_submission) return assignment.student_submission;
-    if (assignment.submitted_files && Array.isArray(assignment.submitted_files) && assignment.submitted_files.length > 0) {
-      return assignment.submitted_files.slice().sort((a,b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0))[0];
-    }
-    return null;
-  };
-
   const activeClasses = classes.filter(c => {
     // Treat classes without an explicit status as active (backend may omit status)
     if (!('status' in c)) return true;
     return String(c.status).toLowerCase() === 'active';
   });
-  const displayClasses = activeClasses.slice(0, 3);
+
+  // Utility functions
+  const formatRelativeTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getTimeUntilDue = (dueDate) => {
+    if (!dueDate) return null;
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffInMs = due - now;
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+
+    if (diffInHours < 0) return { text: 'Overdue', urgent: true, color: 'text-red-400' };
+    if (diffInHours < 24) return { text: `${Math.ceil(diffInHours)}h left`, urgent: diffInHours < 6, color: diffInHours < 6 ? 'text-red-400' : 'text-yellow-400' };
+    const diffInDays = Math.ceil(diffInHours / 24);
+    return { text: `${diffInDays}d left`, urgent: false, color: 'text-green-400' };
+  };
+
+  // Pagination for assignments
+  const assignmentsPerPage = 4;
+  const totalAssignmentPages = Math.ceil(assignments.length / assignmentsPerPage);
+  const assignmentsStartIndex = (assignmentsPage - 1) * assignmentsPerPage;
+  const displayedAssignments = assignments.slice(assignmentsStartIndex, assignmentsStartIndex + assignmentsPerPage);
+
+  // Pagination for active courses
+  const activeCoursesPerPage = 4;
+  const totalActivePages = Math.ceil(activeClasses.length / activeCoursesPerPage);
+  const activeCoursesStartIndex = (activeCoursesPage - 1) * activeCoursesPerPage;
+  const displayedActiveCourses = activeClasses.slice(activeCoursesStartIndex, activeCoursesStartIndex + activeCoursesPerPage);
+
+  // Helper function to get course name by ID
+  const getCourseName = (courseId) => {
+    if (!courseId) return 'Unknown Course';
+    const course = classes.find(c => c.id == courseId);
+    return course ? (course.name || course.course_name || 'Unknown Course') : 'Unknown Course';
+  };
+
+  // Pagination for announcements
+  const announcementsPerPage = 4;
+  const totalAnnouncementPages = Math.ceil(announcements.length / announcementsPerPage);
+  const announcementsStartIndex = (announcementsPage - 1) * announcementsPerPage;
+  const displayedAnnouncements = announcements.slice(announcementsStartIndex, announcementsStartIndex + announcementsPerPage);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -455,28 +339,28 @@ export default function StudentDashboard() {
       <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-lg shadow-orange-500/30"
+        className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-xl p-8 text-white shadow-xl relative overflow-hidden"
       >
-          <div className="relative z-10">
-            <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.name || 'Student'}
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome back, {user?.name || 'Student'}
           </h1>
-          <p className="text-orange-100 mb-6">
+          <p className="text-gray-100 mb-6">
             Continue your learning journey. Access your enrolled courses and stay on top of your assignments.
           </p>
-          <p className="text-sm text-orange-100/80 mb-4">
+          <p className="text-sm text-gray-200 mb-4">
             {user?.student_id ? `Student ID: ${user.student_id}` : ''}
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               to="/student/courses"
-              className="px-6 py-3 bg-white text-orange-600 rounded-xl font-semibold hover:bg-orange-50 transition text-center shadow-lg"
+              className="px-6 py-3 bg-[#FF4C60] text-white rounded-xl font-semibold hover:bg-[#ff3451] transition text-center shadow-sm"
             >
               View Assignments
             </Link>
             <Link
               to="/student/courses"
-              className="px-6 py-3 bg-orange-700 text-white rounded-xl font-semibold hover:bg-orange-800 transition border border-orange-500 text-center"
+              className="px-6 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-white/30 transition border border-white/30 text-center"
             >
               View Courses
             </Link>
@@ -487,8 +371,8 @@ export default function StudentDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { label: 'Active Courses', value: String(activeClasses.length), icon: BookOpen, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-500/10', border: 'border-blue-500/20', iconBg: 'bg-blue-500' },
-          { label: 'Assignments', value: String(assignments.length), icon: ClipboardList, color: 'from-orange-500 to-orange-600', bg: 'bg-orange-500/10', border: 'border-orange-500/20', iconBg: 'bg-orange-500' },
+          { label: 'Active Courses', value: String(activeClasses.length), icon: BookOpen, color: 'from-[#ff6b6b] to-[#0d4973]', bg: 'bg-[#FF4C60]/100/10', border: 'border-[#FF4C60]/20', iconBg: 'bg-[#FF4C60]/100' },
+          { label: 'Assignments', value: String(assignments.length), icon: ClipboardList, color: 'from-[#ff6b6b] to-[#0d4973]', bg: 'bg-[#FF4C60]/10', border: 'border-[#ff6b6b]/20', iconBg: 'bg-[#FF4C60]' },
           { label: 'Announcements', value: String(announcements.length), icon: Bell, color: 'from-purple-500 to-purple-600', bg: 'bg-purple-500/10', border: 'border-purple-500/20', iconBg: 'bg-purple-500' },
         ].map((stat, index) => (
           <Motion.div
@@ -496,360 +380,238 @@ export default function StudentDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 hover:border-orange-500/50 transition-all group"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:border-[#FF4C60] hover:shadow-xl transition-all duration-300 group hover:-translate-y-1"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm text-[#718096] dark:text-[#718096] mb-1">{stat.label}</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-[#1d2026]">
                   {stat.value}
                 </p>
               </div>
               <div className={`p-4 ${stat.iconBg} rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}>
-                <stat.icon className="w-7 h-7 text-white" />
+                <stat.icon className="w-7 h-7 text-[#1d2026]" />
               </div>
             </div>
           </Motion.div>
         ))}
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
         {/* Active Courses */}
-        <div className="lg:col-span-2">
-          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">
-                Active Courses
-              </h2>
-              <Link
-                to="/student/courses"
-                className="text-orange-500 text-sm font-medium hover:text-orange-600 transition"
-              >
-                See All →
-              </Link>
-            </div>
-            {/* Dev debug panel removed */}
-            <div className="space-y-4">
-              {loading ? (
-                <SkeletonList items={3} />
-              ) : classesError ? (
-                <div className="text-center py-8">
-                  <div className="text-red-400 mb-3">Failed to load classes</div>
-                  <p className="text-gray-500 text-sm mb-3">{classesError}</p>
-                  <div className="flex items-center justify-center gap-2">
-                    <button onClick={async () => { setLoading(true); setClassesError(null); await fetchEnrolledClasses(); setLoading(false); }} className="px-4 py-2 bg-orange-500 text-white rounded-lg">Retry</button>
-                  </div>
-                </div>
-              ) : displayClasses.length === 0 ? (
-                <div className="text-center py-8">
-                  <BookOpen className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">No enrolled classes yet</p>
-                  <p className="text-gray-500 text-sm mt-1">Your enrolled classes will appear here</p>
-                </div>
-              ) : (
-                displayClasses.map((classItem) => (
-                  <Link
-                    key={classItem.id}
-                    to={`/student/courses/${classItem.id}`}
-                    className="block bg-gray-800/50 rounded-xl p-4 border border-orange-500 hover:border-orange-600 transition cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-white">
-                          {classItem.course_name || classItem.name || classItem.subject_name}
-                        </h3>
-                        {/* Instructor Info */}
-                        <div className="flex items-center gap-2 mt-1">
-                          {classItem.faculty?.profile_image ? (
-                            <img 
-                              src={classItem.faculty.profile_image} 
-                              alt={classItem.faculty.name}
-                              className="w-5 h-5 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-5 h-5 bg-orange-500/20 rounded-full flex items-center justify-center">
-                              <User size={12} className="text-orange-400" />
-                            </div>
-                          )}
-                          <p className="text-sm text-gray-400">
-                            {classItem.faculty?.name || 'Instructor'}
-                          </p>
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+        >
+          <h3 className="text-lg font-bold text-[#1d2026] mb-4 flex items-center gap-2">
+            <BookOpen size={20} className="text-white" />
+            Active Courses
+          </h3>
+          {activeClasses.length > 0 ? (
+            <div className="space-y-3">
+              {displayedActiveCourses.map((course, index) => (
+                <Motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                  onClick={() => window.location.href = `/student/courses/${course.id}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-[#FF4C60]/10 rounded-lg flex items-center justify-center">
+                          <BookOpen className="w-5 h-5 text-white" />
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {classItem.semester} • {classItem.academic_year}
-                        </p>
+                        <div>
+                          <h4 className="text-sm font-semibold text-[#1d2026]">{course.name || course.course_name}</h4>
+                          <p className="text-xs text-[#4a5568]">{course.code || course.course_code}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-[#718096]">
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          {course.faculty?.name || 'Instructor'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {course.semester || 'Ongoing'}
+                        </span>
                       </div>
                     </div>
-                  </Link>
-                ))
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                        Active
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                </Motion.div>
+              ))}
+              {totalActivePages > 1 && (
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setActiveCoursesPage(prev => Math.max(1, prev - 1))}
+                    disabled={activeCoursesPage === 1}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    Page {activeCoursesPage} of {totalActivePages}
+                  </span>
+                  <button
+                    onClick={() => setActiveCoursesPage(prev => Math.min(totalActivePages, prev + 1))}
+                    disabled={activeCoursesPage === totalActivePages}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+                  >
+                    Next
+                  </button>
+                </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Announcements */}
-        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Megaphone className="w-5 h-5 text-orange-500" />
-              Recent Announcements
-            </h2>
-            {announcements.length > 0 && (
-              <span className="text-sm text-gray-400">
-                {announcements.length} new
-              </span>
-            )}
-          </div>
-          
-          {announcements.length === 0 ? (
-            <div className="text-center py-8">
-              <Bell className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400">No announcements yet</p>
-              <p className="text-gray-500 text-sm mt-1">Check back later for updates</p>
-            </div>
           ) : (
-            <div className="space-y-3">
-              {announcements.map((announcement) => {
-                const priorityStyle = getPriorityStyles(announcement.priority);
-                return (
-                  <Link
-                    key={announcement.id}
-                    to={`/student/courses/${announcement.course_id}`}
-                    className={`block p-4 rounded-xl border ${priorityStyle.border} ${priorityStyle.bg} hover:border-orange-500/50 transition-all group`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        <span className="text-lg">{priorityStyle.icon}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <h3 className="font-semibold text-white group-hover:text-orange-400 transition-colors line-clamp-1">
-                            {announcement.title}
-                          </h3>
-                          <span className={`text-xs ${priorityStyle.text} uppercase font-medium flex-shrink-0`}>
-                            {announcement.priority}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-400 line-clamp-2 mb-2">
-                          {announcement.content}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <BookOpen className="w-3 h-3" />
-                            {announcement.course?.name || 'General'}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatRelativeTime(announcement.created_at)}
-                          </span>
-                          {announcement.comments_count > 0 && (
-                            <span className="flex items-center gap-1">
-                              <Bell className="w-3 h-3" />
-                              {announcement.comments_count} comment{announcement.comments_count !== 1 ? 's' : ''}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="text-center py-8 text-[#4a5568]">
+              <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p>No active courses enrolled.</p>
             </div>
           )}
-        </div>
-      </div>
+        </Motion.div>
 
-      {/* Upcoming Assignments */}
-      <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">
+        {/* Upcoming Assignments */}
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+        >
+          <h3 className="text-lg font-bold text-[#1d2026] mb-4 flex items-center gap-2">
+            <ClipboardList size={20} className="text-white" />
             Upcoming Assignments
-          </h2>
-          <Link
-            to="/student/courses"
-            className="text-orange-500 text-sm font-medium hover:text-orange-600 transition"
-          >
-            See All →
-          </Link>
-        </div>
-        
-        {assignments.length === 0 ? (
-          <div className="text-center py-8">
-            <ClipboardList className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">No upcoming assignments</p>
-            <p className="text-gray-500 text-sm mt-1">Your assignments will appear here</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {assignments.map((assignment) => {
-              const timeUntil = getTimeUntilDue(assignment.due_date);
-              return (
-                <Link
-                  key={assignment.id}
-                  to={`/student/courses/${assignment.course_id}`}
-                  className={`block p-4 rounded-xl border border-gray-800 hover:border-orange-500 transition-all duration-300 bg-gray-800/30 hover:bg-gray-800/60 group hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-0.5`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white group-hover:text-orange-400 transition-colors duration-300 line-clamp-1 mb-1">
-                        {assignment.title}
-                      </h3>
-                      <div className="flex items-center gap-3 text-xs text-gray-400 group-hover:text-gray-300 transition-colors mb-2">
-                        <span className="flex items-center gap-1">
-                          <BookOpen className="w-3 h-3 group-hover:text-orange-400 transition-colors" />
-                          {assignment.course || 'Course'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 group-hover:text-orange-400 transition-colors" />
-                          Due: {formatDueDate(assignment.due_date)}
-                        </span>
-                      </div>
-                      {assignment.description && (
-                        <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors line-clamp-1 mb-2">
-                          {assignment.description}
-                        </p>
-                      )}
-                      {/* Latest student submission */}
-                      {(() => {
-                        const latest = getLatestSubmission(assignment);
-                        if (!latest) return null;
-                        const fileId = latest.id || latest.file_id || latest.file?.id;
-                        const fileName = latest.original_name || latest.name || latest.file?.original_name || latest.file?.name || latest.filename || latest.file_name;
-                        const submittedAt = latest.submitted_at || latest.created_at || latest.createdAt || latest.uploaded_at || latest.date;
-                        return (
-                          <div className="mt-2 border-t border-gray-700 pt-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <FileText className="w-4 h-4 text-green-400" />
-                                <div className="text-sm text-gray-300">
-                                  {fileName || 'Your submission'}
-                                  <div className="text-xs text-gray-400">
-                                    {submittedAt ? (
-                                      <span title={new Date(submittedAt).toLocaleString()}>{formatRelativeTime(submittedAt)}</span>
-                                    ) : ''}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {fileId && (
-                                  <>
-                                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleViewFileById(fileId); }} className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">View</button>
-                                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadFileById(fileId, fileName); }} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Download</button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                      <div className="flex items-center gap-2">
-                        {timeUntil && (
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${timeUntil.bgColor} ${timeUntil.color}`}>
-                            {timeUntil.urgent && <AlertCircle className="w-3 h-3" />}
-                            {timeUntil.text}
-                          </span>
-                        )}
-                        {assignment.has_submitted && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-green-900/20 text-green-400 group-hover:bg-green-900/30 transition-colors">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Submitted
-                          </span>
-                        )}
-                        {assignment.max_points && (
-                          <span className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors">
-                            {assignment.max_points} points
-                          </span>
-                        )}
-                      </div>
+          </h3>
+          {assignments.length > 0 ? (
+            <div className="space-y-3">
+              {displayedAssignments.map((assignment, index) => {
+                const timeInfo = getTimeUntilDue(assignment.due_date);
+                return (
+                  <Motion.div
+                    key={assignment.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                  >
+                    <div className="text-sm text-[#1d2026] font-semibold mb-1">{assignment.title}</div>
+                    <div className="text-xs text-[#FF4C60] font-medium mb-1">
+                      {assignment.course?.name || assignment.course?.title || getCourseName(assignment.course_id)}
                     </div>
-                    <div className="flex-shrink-0 flex items-center gap-2">
-                      <button
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const id = assignment.id;
-                          try {
-                            setDownloadingMap(prev => ({ ...prev, [id]: true }));
-                            await assignmentAPI.download(id);
-                            toast.success('Download started');
-                          } catch (err) {
-                            console.error('Download failed', err);
-                            toast.error('Download failed');
-                          } finally {
-                            setDownloadingMap(prev => ({ ...prev, [id]: false }));
-                          }
-                        }}
-                        className="p-2 rounded bg-gray-800 text-gray-300 hover:bg-orange-500 hover:text-white text-xs flex items-center justify-center"
-                        title="Download assignment"
-                        aria-label={`Download assignment ${assignment.title}`}
-                      >
-                        {downloadingMap[assignment.id] ? (
-                          <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <DownloadCloud className="w-4 h-4" />
-                        )}
-                      </button>
-                      <ClipboardList className="w-5 h-5 text-gray-600 group-hover:text-orange-500 group-hover:scale-110 transition-all duration-300" />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-        
-        {/* Pagination Controls */}
-        {allAssignments.length > assignmentsPerPage && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-800">
-            <p className="text-sm text-gray-400">
-              Showing {((currentPage - 1) * assignmentsPerPage) + 1} to {Math.min(currentPage * assignmentsPerPage, allAssignments.length)} of {allAssignments.length} assignments
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`p-2 rounded-lg transition-all ${
-                  currentPage === 1
-                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                    : 'bg-gray-800 text-gray-300 hover:bg-orange-500 hover:text-white'
-                }`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              
-              <div className="flex items-center gap-1">
-                {[...Array(totalPages)].map((_, index) => {
-                  const pageNum = index + 1;
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                        currentPage === pageNum
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`p-2 rounded-lg transition-all ${
-                  currentPage === totalPages
-                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                    : 'bg-gray-800 text-gray-300 hover:bg-orange-500 hover:text-white'
-                }`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+                    <div className="text-xs text-[#718096]">Due: {new Date(assignment.due_date).toLocaleDateString()}</div>
+                    {timeInfo && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1 inline-block ${timeInfo.color}`}>
+                        {timeInfo.text}
+                      </span>
+                    )}
+                  </Motion.div>
+                );
+              })}
+              {totalAssignmentPages > 1 && (
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setAssignmentsPage(prev => Math.max(1, prev - 1))}
+                    disabled={assignmentsPage === 1}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    Page {assignmentsPage} of {totalAssignmentPages}
+                  </span>
+                  <button
+                    onClick={() => setAssignmentsPage(prev => Math.min(totalAssignmentPages, prev + 1))}
+                    disabled={assignmentsPage === totalAssignmentPages}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-8 text-[#4a5568]">
+              <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p>No upcoming assignments.</p>
+            </div>
+          )}
+        </Motion.div>
+
+        {/* Recent Announcements */}
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+        >
+          <h3 className="text-lg font-bold text-[#1d2026] mb-4 flex items-center gap-2">
+            <Bell size={20} className="text-white" />
+            Recent Announcements
+          </h3>
+          {announcements.length > 0 ? (
+            <div className="space-y-3">
+              {displayedAnnouncements.map((announcement, index) => (
+                <Motion.div
+                  key={announcement.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                  onClick={() => {
+                    if (announcement.course_id) {
+                      window.location.href = `/student/courses/${announcement.course_id}`;
+                    }
+                  }}
+                >
+                  <div className="text-sm text-[#1d2026] font-semibold mb-1">{announcement.title}</div>
+                  <div className="text-xs text-[#FF4C60] font-medium mb-1">
+                    {announcement.course?.name || announcement.course?.title || getCourseName(announcement.course_id)}
+                  </div>
+                  <div className="text-xs text-[#4a5568] truncate mb-1">{announcement.content}</div>
+                  <div className="text-xs text-[#718096]">{formatRelativeTime(announcement.created_at)}</div>
+                </Motion.div>
+              ))}
+              {totalAnnouncementPages > 1 && (
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setAnnouncementsPage(prev => Math.max(1, prev - 1))}
+                    disabled={announcementsPage === 1}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    Page {announcementsPage} of {totalAnnouncementPages}
+                  </span>
+                  <button
+                    onClick={() => setAnnouncementsPage(prev => Math.min(totalAnnouncementPages, prev + 1))}
+                    disabled={announcementsPage === totalAnnouncementPages}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-lg text-sm font-medium transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-[#4a5568]">
+              <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p>No recent announcements.</p>
+            </div>
+          )}
+        </Motion.div>
       </div>
 
       {/* Scroll Up Button */}
@@ -860,7 +622,7 @@ export default function StudentDashboard() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-40 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
+            className="fixed bottom-6 right-6 z-40 bg-[#ff5252] hover:bg-[#ff4444] text-gray-900 p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
             title="Scroll to top"
           >
             <ChevronUp size={24} />

@@ -306,4 +306,81 @@ class AuthController extends Controller
             'message' => 'Password updated successfully',
         ], 200);
     }
+
+    /**
+     * Send password reset link
+     */
+    public function forgotPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string|email|exists:users,email',
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        // Generate reset token
+        $token = \Illuminate\Support\Str::random(60);
+
+        // Store token in database
+        \DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $validated['email']],
+            ['token' => \Illuminate\Support\Facades\Hash::make($token), 'created_at' => now()]
+        );
+
+        // Send email with reset link
+        // For now, we'll return the token in response for testing
+        // In production, send email
+        // \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\ResetPasswordMail($token, $user));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset link sent to your email',
+            'token' => $token, // Remove this in production
+        ], 200);
+    }
+
+    /**
+     * Reset password using token
+     */
+    public function resetPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string|email|exists:users,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check if token exists and is valid
+        $resetToken = \DB::table('password_reset_tokens')
+            ->where('email', $validated['email'])
+            ->first();
+
+        if (!$resetToken || !\Illuminate\Support\Facades\Hash::check($validated['token'], $resetToken->token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired reset token',
+            ], 400);
+        }
+
+        // Check if token is not expired (24 hours)
+        if (now()->diffInHours(\Carbon\Carbon::parse($resetToken->created_at)) > 24) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reset token has expired',
+            ], 400);
+        }
+
+        // Update password
+        $user = User::where('email', $validated['email'])->first();
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        // Delete the reset token
+        \DB::table('password_reset_tokens')->where('email', $validated['email'])->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset successfully',
+        ], 200);
+    }
 }

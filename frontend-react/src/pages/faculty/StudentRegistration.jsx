@@ -143,15 +143,15 @@ export default function StudentRegistration() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/faculty/students')}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-2 hover:bg-white dark:hover:bg-white rounded-xl transition-colors"
         >
-          <ArrowLeft className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+          <ArrowLeft className="w-6 h-6 text-[#718096] dark:text-[#718096]" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#1d2026]">
             Register New Student
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-[#718096] dark:text-[#718096] mt-1">
             Create a new student account for your course
           </p>
         </div>
@@ -161,22 +161,22 @@ export default function StudentRegistration() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-orange-500"
+        className="bg-white dark:bg-white rounded-xl p-6 shadow-lg border border-[#ff6b6b]"
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student ID */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Student ID *
             </label>
             <div className="relative">
-              <IdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <IdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
               <input
                 type="text"
                 name="student_id"
                 value={formData.student_id}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b] ${
                   errors.student_id
                     ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
@@ -189,17 +189,17 @@ export default function StudentRegistration() {
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Full Name *
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b] ${
                   errors.name
                     ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
@@ -212,17 +212,17 @@ export default function StudentRegistration() {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Email Address *
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b] ${
                   errors.email
                     ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
@@ -235,17 +235,17 @@ export default function StudentRegistration() {
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Phone Number
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b]"
                 placeholder="+63-912-345-6789"
               />
             </div>
@@ -253,16 +253,16 @@ export default function StudentRegistration() {
 
           {/* Address */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
               Address
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+              <MapPin className="absolute left-3 top-3 text-[#718096] w-5 h-5" />
               <textarea
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b]"
                 placeholder="Street, City, Province"
                 rows={2}
               />
@@ -272,31 +272,31 @@ export default function StudentRegistration() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Date of Birth */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Date of Birth
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
                 <input
                   type="date"
                   name="date_of_birth"
                   value={formData.date_of_birth}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b]"
                 />
               </div>
             </div>
 
             {/* Gender */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                 Gender
               </label>
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b]"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -314,7 +314,7 @@ export default function StudentRegistration() {
             <div className="space-y-4">
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                   Password
                 </label>
                 <input
@@ -322,7 +322,7 @@ export default function StudentRegistration() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-4 py-2 border rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b] ${
                     errors.password
                       ? 'border-red-500 dark:border-red-500'
                       : 'border-gray-300 dark:border-gray-600'
@@ -334,7 +334,7 @@ export default function StudentRegistration() {
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[#4a5568] dark:text-[#4a5568] mb-2">
                   Confirm Password
                 </label>
                 <input
@@ -342,7 +342,7 @@ export default function StudentRegistration() {
                   name="password_confirmation"
                   value={formData.password_confirmation}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-4 py-2 border rounded-xl bg-white dark:bg-white text-gray-900 dark:text-white focus:ring-2 focus:ring-[#ff6b6b] ${
                     errors.password_confirmation
                       ? 'border-red-500 dark:border-red-500'
                       : 'border-gray-300 dark:border-gray-600'
@@ -361,14 +361,14 @@ export default function StudentRegistration() {
             <button
               type="button"
               onClick={() => navigate('/faculty/students')}
-              className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-[#4a5568] dark:text-[#4a5568] rounded-xl hover:bg-white dark:hover:bg-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-6 py-2 bg-[#FF4C60]/100 text-gray-900 rounded-xl hover:bg-[#FF4C60] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

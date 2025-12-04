@@ -9,10 +9,10 @@ import EditUserForm from '../../components/admin/EditUserForm';
 
 function getRoleBadge(role) {
   switch (role) {
-    case 'admin': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'admin': return 'bg-[#FF4C60] 100 text-[#ff5252] dark:bg-[#FF4C60] 900/30 dark:text-[#ff9f66]';
     case 'faculty': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
     case 'student': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-    default: return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
+    default: return 'bg-white text-[#4a5568] dark:bg-white/30 dark:text-[#718096]';
   }
 }
 
@@ -106,16 +106,16 @@ function AdminUsers() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-900 text-white p-6">
-        <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-orange-500">
+      <div className="min-h-screen bg-white text-gray-900 p-6">
+        <div className="bg-white rounded-xl p-6 mb-6 border border-[#ff6b6b]">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-white">User Management</h1>
-              <p className="text-gray-400">Manage system users and their roles</p>
+              <h1 className="text-2xl font-bold text-[#1d2026]">User Management</h1>
+              <p className="text-[#718096]">Manage system users and their roles</p>
             </div>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition"
+              className="flex items-center gap-2 bg-[#FF4C60] hover:bg-[#ff3451] text-gray-900 px-4 py-2 rounded-xl transition"
             >
               <UserPlus size={18} />
               Add User
@@ -124,20 +124,20 @@ function AdminUsers() {
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096]" size={18} />
                 <input
                   type="text"
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-gray-600 rounded-xl text-gray-900 placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b]"
                 />
               </div>
             </div>
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-4 py-2 bg-white border border-gray-600 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b]"
             >
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
@@ -146,52 +146,52 @@ function AdminUsers() {
             </select>
           </div>
         </div>
-        <div className="bg-gray-800 rounded-xl p-6 border border-orange-500">
+        <div className="bg-white rounded-xl p-6 border border-[#ff6b6b]">
           {loading ? (
-            <div className="p-16 text-center text-gray-400">Loading users...</div>
+            <div className="p-16 text-center text-[#718096]">Loading users...</div>
           ) : filteredUsers.length === 0 ? (
             <div className="p-16 text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 mb-4">
-                <UserPlus className="w-10 h-10 text-gray-400" />
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white mb-4">
+                <UserPlus className="w-10 h-10 text-[#718096]" />
               </div>
-              <p className="text-lg font-medium text-white mb-1">
+              <p className="text-lg font-medium text-gray-900 mb-1">
                 {searchTerm || filterRole !== 'all' ? 'No users found' : 'No users yet'}
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[#718096]">
                 {searchTerm || filterRole !== 'all' ? 'Try adjusting your filters' : 'Get started by adding your first user'}
               </p>
             </div>
           ) : (<>
             <div className="overflow-x-auto hidden sm:block">
               <table className="w-full">
-                <thead className="bg-gray-800">
+                <thead className="bg-white">
                   <tr>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">NAME</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">EMAIL</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">ROLE</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">STATUS</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">JOINED</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">ACTIONS</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">NAME</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">EMAIL</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">ROLE</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">STATUS</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">JOINED</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
-                    <tr key={user.id} className="bg-gray-900 hover:bg-gray-800 transition-colors border-b border-orange-500/20">
+                    <tr key={user.id} className="bg-white hover:bg-white transition-colors border-b border-[#ff6b6b]/20">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
                             <img
                               src={user.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
                               alt={user.name}
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <span className="text-base font-semibold text-white">
+                          <span className="text-base font-semibold text-[#1d2026]">
                             {user.name}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-6 text-base text-gray-300">
+                      <td className="py-4 px-6 text-base text-[#4a5568]">
                         {user.email}
                       </td>
                       <td className="py-4 px-6">
@@ -204,21 +204,21 @@ function AdminUsers() {
                           {user.status}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-base text-gray-300">
+                      <td className="py-4 px-6 text-base text-[#4a5568]">
                         {new Date(user.joined).toLocaleDateString()}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleEdit(user)}
-                            className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
+                            className="p-2 text-[#ff5252] dark:text-[#FF4C60] hover:bg-[#FF4C60]/10 dark:hover:bg-[#FF4C60] 900/30 rounded-xl transition border border-[#ff6b6b]/20"
                             title="Edit"
                           >
                             <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(user.id)}
-                            className="p-2 text-red-600 dark:text-red-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-[#FF4C60]/10 dark:hover:bg-[#FF4C60] 900/30 rounded-xl transition border border-[#ff6b6b]/20"
                             title="Delete"
                           >
                             <Trash2 size={18} />
@@ -235,10 +235,10 @@ function AdminUsers() {
             <div className="sm:hidden">
               <div className="space-y-3">
                 {filteredUsers.map((user) => (
-                  <div key={`card-${user.id}`} className="bg-gray-900 rounded-lg p-3 flex flex-col gap-2 shadow-sm border border-orange-500">
+                  <div key={`card-${user.id}`} className="bg-white rounded-xl p-3 flex flex-col gap-2 shadow-sm border border-[#ff6b6b]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-white">
                           <img
                             src={user.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`}
                             alt={user.name}
@@ -246,21 +246,21 @@ function AdminUsers() {
                           />
                         </div>
                         <div>
-                          <div className="text-base font-semibold text-white">{user.name}</div>
-                          <div className="text-sm text-gray-400">{user.email}</div>
+                          <div className="text-base font-semibold text-[#1d2026]">{user.name}</div>
+                          <div className="text-sm text-[#718096]">{user.email}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
+                          className="p-2 text-[#ff5252] dark:text-[#FF4C60] hover:bg-[#FF4C60]/10 dark:hover:bg-[#FF4C60] 900/30 rounded-xl transition border border-[#ff6b6b]/20"
                           title="Edit"
                         >
                           <Edit size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="p-2 text-red-600 dark:text-red-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition border border-orange-500/20"
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-[#FF4C60]/10 dark:hover:bg-[#FF4C60] 900/30 rounded-xl transition border border-[#ff6b6b]/20"
                           title="Delete"
                         >
                           <Trash2 size={18} />
@@ -272,7 +272,7 @@ function AdminUsers() {
                         <span className={`chip ${getRoleBadge(user.role)} text-xs font-semibold px-3 py-1 rounded-full`}>{user.role}</span>
                         <span className="chip bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold px-3 py-1 rounded-full">{user.status}</span>
                       </div>
-                      <div className="text-sm text-gray-400">{new Date(user.joined).toLocaleDateString()}</div>
+                      <div className="text-sm text-[#718096]">{new Date(user.joined).toLocaleDateString()}</div>
                     </div>
                   </div>
                 ))}
@@ -330,19 +330,19 @@ function AdminUsers() {
         title={selectedUser ? `User Details` : 'User Details'}
       >
         {detailsLoading ? (
-          <div className="p-8 text-center text-gray-400">Loading details...</div>
+          <div className="p-8 text-center text-[#718096]">Loading details...</div>
         ) : userDetails ? (
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <img
                 src={userDetails.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(userDetails.name)}`}
                 alt={userDetails.name}
-                className="w-16 h-16 rounded-full object-cover border-2 border-orange-500"
+                className="w-16 h-16 rounded-full object-cover border-2 border-[#ff6b6b]"
               />
               <div>
-                <div className="text-xl font-bold text-white">{userDetails.name}</div>
-                <div className="text-gray-400 text-sm">{userDetails.email}</div>
-                {userDetails.phone && <div className="text-gray-400 text-sm">{userDetails.phone}</div>}
+                <div className="text-xl font-bold text-[#1d2026]">{userDetails.name}</div>
+                <div className="text-[#718096] text-sm">{userDetails.email}</div>
+                {userDetails.phone && <div className="text-[#718096] text-sm">{userDetails.phone}</div>}
                 <div className="mt-1">
                   <span className={`chip ${getRoleBadge(userDetails.role)} text-xs font-semibold px-3 py-1 rounded-full`}>{userDetails.role}</span>
                   <span className="chip ml-2 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold px-3 py-1 rounded-full">{userDetails.status}</span>
@@ -351,40 +351,40 @@ function AdminUsers() {
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
-                <div className="text-xs text-gray-400">Joined</div>
-                <div className="text-base text-white font-semibold">{new Date(userDetails.created_at || userDetails.joined).toLocaleDateString()}</div>
+                <div className="text-xs text-[#718096]">Joined</div>
+                <div className="text-base text-gray-900 font-semibold">{new Date(userDetails.created_at || userDetails.joined).toLocaleDateString()}</div>
               </div>
               {userDetails.last_login && (
                 <div>
-                  <div className="text-xs text-gray-400">Last Login</div>
-                  <div className="text-base text-white font-semibold">{new Date(userDetails.last_login).toLocaleDateString()}</div>
+                  <div className="text-xs text-[#718096]">Last Login</div>
+                  <div className="text-base text-gray-900 font-semibold">{new Date(userDetails.last_login).toLocaleDateString()}</div>
                 </div>
               )}
             </div>
             {/* Faculty statistics */}
             {selectedUser && selectedUser.role === 'faculty' && userDetails.statistics && (
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
-                  <div className="text-xs text-gray-400">Courses</div>
-                  <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.courses}</div>
+                <div className="bg-white rounded-xl p-4 text-center border border-[#ff6b6b]">
+                  <div className="text-xs text-[#718096]">Courses</div>
+                  <div className="text-2xl font-bold text-[#FF4C60]">{userDetails.statistics.courses}</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
-                  <div className="text-xs text-gray-400">Students</div>
-                  <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.students}</div>
+                <div className="bg-white rounded-xl p-4 text-center border border-[#ff6b6b]">
+                  <div className="text-xs text-[#718096]">Students</div>
+                  <div className="text-2xl font-bold text-[#FF4C60]">{userDetails.statistics.students}</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
-                  <div className="text-xs text-gray-400">Graded</div>
-                  <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.graded}</div>
+                <div className="bg-white rounded-xl p-4 text-center border border-[#ff6b6b]">
+                  <div className="text-xs text-[#718096]">Graded</div>
+                  <div className="text-2xl font-bold text-[#FF4C60]">{userDetails.statistics.graded}</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-4 text-center border border-orange-500">
-                  <div className="text-xs text-gray-400">Pending</div>
-                  <div className="text-2xl font-bold text-orange-400">{userDetails.statistics.pending}</div>
+                <div className="bg-white rounded-xl p-4 text-center border border-[#ff6b6b]">
+                  <div className="text-xs text-[#718096]">Pending</div>
+                  <div className="text-2xl font-bold text-[#FF4C60]">{userDetails.statistics.pending}</div>
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="p-8 text-center text-gray-400">No details available.</div>
+          <div className="p-8 text-center text-[#718096]">No details available.</div>
         )}
       </Modal>
       {toast && (

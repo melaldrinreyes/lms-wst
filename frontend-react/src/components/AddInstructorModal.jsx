@@ -49,83 +49,83 @@ export default function AddInstructorModal({ isOpen, onClose, onSubmit, loading 
               className="modal-panel modal-panel--md bg-white rounded-2xl shadow-xl w-full max-h-[90vh] overflow-auto border border-gray-200"
             >
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900">Add New Instructor</h2>
-                <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
+                <h2 className="text-2xl font-bold text-[#1d2026]">Add New Instructor</h2>
+                <button onClick={onClose} className="text-[#718096] hover:text-[#4a5568]">
                   <ArrowLeft size={24} />
                 </button>
               </div>
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">Full Name <span className="text-orange-600">*</span></label>
+                  <label className="block text-base font-semibold text-[#4a5568] mb-2">Full Name <span className="text-[#ff5252]">*</span></label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
                     <input
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-400 text-base ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60] text-base ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
                       placeholder="Enter full name"
                     />
                   </div>
                   {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">Email Address <span className="text-orange-600">*</span></label>
+                  <label className="block text-base font-semibold text-[#4a5568] mb-2">Email Address <span className="text-[#ff5252]">*</span></label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-400 text-base ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60] text-base ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
                       placeholder="instructor@example.com"
                     />
                   </div>
                   {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
                 </div>
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">Phone Number <span className="text-gray-400">(Optional)</span></label>
+                  <label className="block text-base font-semibold text-[#4a5568] mb-2">Phone Number <span className="text-[#718096]">(Optional)</span></label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-400 text-base border-gray-200"
+                      className="w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60] text-base border-gray-200"
                       placeholder="+1 (555) 000-0000"
                     />
                   </div>
                 </div>
                 <div className="border-t border-gray-200 pt-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Set Password <span className="text-orange-600">*</span></h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Set Password <span className="text-[#ff5252]">*</span></h3>
                   <div className="mb-4">
-                    <label className="block text-base font-semibold text-gray-700 mb-2">Password <span className="text-orange-600">*</span></label>
+                    <label className="block text-base font-semibold text-[#4a5568] mb-2">Password <span className="text-[#ff5252]">*</span></label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
                       <input
                         type="password"
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-400 text-base ${errors.password ? 'border-red-500' : 'border-gray-200'}`}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60] text-base ${errors.password ? 'border-red-500' : 'border-gray-200'}`}
                         placeholder="At least 8 characters"
                       />
                     </div>
                     {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
                   </div>
                   <div>
-                    <label className="block text-base font-semibold text-gray-700 mb-2">Confirm Password <span className="text-orange-600">*</span></label>
+                    <label className="block text-base font-semibold text-[#4a5568] mb-2">Confirm Password <span className="text-[#ff5252]">*</span></label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#718096] w-5 h-5" />
                       <input
                         type="password"
                         name="password_confirmation"
                         value={formData.password_confirmation}
                         onChange={handleChange}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-400 text-base ${errors.password_confirmation ? 'border-red-500' : 'border-gray-200'}`}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#FF4C60] text-base ${errors.password_confirmation ? 'border-red-500' : 'border-gray-200'}`}
                         placeholder="Re-enter password"
                       />
                     </div>
@@ -136,14 +136,14 @@ export default function AddInstructorModal({ isOpen, onClose, onSubmit, loading 
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition"
+                    className="px-6 py-2.5 bg-white text-[#4a5568] rounded-xl font-semibold hover:bg-white transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/20"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl font-semibold hover:from-[#0a3d62] hover:to-[#0a3d62] transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#FF4C60]/20"
                   >
                     {loading ? (
                       <>

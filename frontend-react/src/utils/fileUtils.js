@@ -26,11 +26,11 @@ export const getFileTypeInfo = (filePath) => {
     'pdf': { category: 'PDF Document', color: 'text-red-400', bgColor: 'bg-red-500/10', borderColor: 'border-red-500/20', icon: '📄' },
     'doc': { category: 'Word Document', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20', icon: '📝' },
     'docx': { category: 'Word Document', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20', icon: '📝' },
-    'txt': { category: 'Text File', color: 'text-gray-400', bgColor: 'bg-gray-500/10', borderColor: 'border-gray-500/20', icon: '📃' },
+    'txt': { category: 'Text File', color: 'text-gray-600', bgColor: 'bg-white/10', borderColor: 'border-gray-500/20', icon: '📃' },
     
     // Presentations
-    'ppt': { category: 'PowerPoint', color: 'text-orange-400', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500/20', icon: '📊' },
-    'pptx': { category: 'PowerPoint', color: 'text-orange-400', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500/20', icon: '📊' },
+    'ppt': { category: 'PowerPoint', color: 'text-blue-500', bgColor: 'bg-blue-600/10', borderColor: 'border-blue-600/20', icon: '📊' },
+    'pptx': { category: 'PowerPoint', color: 'text-blue-500', bgColor: 'bg-blue-600/10', borderColor: 'border-blue-600/20', icon: '📊' },
     
     // Spreadsheets
     'xls': { category: 'Excel Spreadsheet', color: 'text-green-400', bgColor: 'bg-green-500/10', borderColor: 'border-green-500/20', icon: '📈' },
@@ -60,8 +60,8 @@ export const getFileTypeInfo = (filePath) => {
   
   return fileTypes[extension] || { 
     category: extension ? `${extension.toUpperCase()} File` : 'Unknown File', 
-    color: 'text-gray-400', 
-    bgColor: 'bg-gray-500/10', 
+    color: 'text-gray-600', 
+    bgColor: 'bg-white/10', 
     borderColor: 'border-gray-500/20',
     icon: '📎' 
   };

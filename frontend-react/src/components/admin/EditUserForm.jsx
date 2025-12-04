@@ -55,7 +55,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Name
         </label>
         <input
@@ -64,12 +64,12 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
+          className="w-full px-3 py-2 bg-white border border-gray-600 rounded-xl text-gray-900 placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] hover:border-gray-500 transition-colors duration-200"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Email
         </label>
         <input
@@ -78,19 +78,19 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
+          className="w-full px-3 py-2 bg-white border border-gray-600 rounded-xl text-gray-900 placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] hover:border-gray-500 transition-colors duration-200"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Role
         </label>
         <select
           name="role"
           value={formData.role}
           onChange={handleChange}
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200 appearance-none cursor-pointer"
+          className="w-full px-3 py-2 bg-white border border-gray-600 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] hover:border-gray-500 transition-colors duration-200 appearance-none cursor-pointer"
         >
           <option value="student">Student</option>
           <option value="faculty">Faculty</option>
@@ -99,14 +99,14 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           Status
         </label>
         <select
           name="status"
           value={formData.status}
           onChange={handleChange}
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200 appearance-none cursor-pointer"
+          className="w-full px-3 py-2 bg-white border border-gray-600 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] hover:border-gray-500 transition-colors duration-200 appearance-none cursor-pointer"
         >
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
@@ -114,7 +114,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-white mb-1">
+        <label className="block text-sm font-medium text-gray-900 mb-1">
           New Password
         </label>
         <input
@@ -123,9 +123,9 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
           value={formData.password}
           onChange={handleChange}
           placeholder="Leave blank to keep current password"
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-500 transition-colors duration-200"
+          className="w-full px-3 py-2 bg-white border border-gray-600 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] hover:border-gray-500 transition-colors duration-200"
         />
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-[#718096]">
           Only fill this if you want to change the user's password
         </p>
       </div>
@@ -134,14 +134,14 @@ const EditUserForm = ({ user, onSuccess, onCancel }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 rounded-xl hover:bg-white dark:hover:bg-white"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="px-4 py-2 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {loading ? 'Updating...' : 'Update User'}
         </button>

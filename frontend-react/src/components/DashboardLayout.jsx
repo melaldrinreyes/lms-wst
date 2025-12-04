@@ -13,10 +13,17 @@ import {
   Plus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import logo from '../logo/logo.jpg';
+import logo from '../logo/logo.png';
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { facultyAPI } from '../services/api';
+
+// Helper function to get full image URL
+const getImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `http://127.0.0.1:8000/storage/${path.replace(/^\//, '')}`;
+};
 
 export default function DashboardLayout({ role }) {
   const { user, logout } = useAuth();
@@ -111,7 +118,7 @@ export default function DashboardLayout({ role }) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="flex h-screen bg-white">
       {/* Mobile Bottom Navigation Menu Overlay */}
       <AnimatePresence>
         {showMobileMenu && (
@@ -127,17 +134,17 @@ export default function DashboardLayout({ role }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="md:hidden fixed bottom-20 right-4 left-4 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-40 overflow-hidden"
+              className="md:hidden fixed bottom-20 right-4 left-4 bg-white border border-gray-800 rounded-xl shadow-2xl z-40 overflow-hidden"
             >
               <div className="p-2">
                 <NavLink
                   to="/profile"
                   onClick={() => setShowMobileMenu(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                    `flex items-center gap-3 px-4 py-3 rounded-xl transition ${
                       isActive
-                        ? 'bg-orange-500/10 text-orange-500'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-orange-500'
+                        ? 'bg-[#FF4C60]/10 text-[#FF4C60]'
+                        : 'text-[#718096] hover:bg-white hover:text-[#FF4C60]'
                     }`
                   }
                 >
@@ -148,7 +155,7 @@ export default function DashboardLayout({ role }) {
               <div className="border-t border-gray-800 p-2">
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 transition"
+                  className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-900/20 transition"
                 >
                   <LogOut size={20} />
                   <span className="font-medium">Logout</span>
@@ -160,7 +167,7 @@ export default function DashboardLayout({ role }) {
       </AnimatePresence>
 
       {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden lg:block fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 border-r border-gray-800 shadow-lg"
+      <aside className="hidden lg:block fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-800 shadow-lg"
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -169,9 +176,9 @@ export default function DashboardLayout({ role }) {
               <img 
                 src={logo} 
                 alt="MINSU Logo" 
-                className="w-10 h-10 rounded-lg object-cover shadow-lg shadow-orange-500/50"
+                className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-[#FF4C60]/50"
               />
-              <span className="text-lg font-bold text-white">
+              <span className="text-lg font-bold text-[#1d2026]">
                 MINSU
               </span>
             </div>
@@ -180,22 +187,22 @@ export default function DashboardLayout({ role }) {
           {/* User Info */}
           <div className="p-6 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                 {user?.profile_image ? (
                   <img 
-                    src={user.profile_image} 
+                    src={getImageUrl(user.profile_image)} 
                     alt={user?.name || 'User'} 
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                   />
-                ) : (
-                  <User className="text-white" size={24} />
-                )}
+                ) : null}
+                <User className="text-white" size={24} style={{ display: user?.profile_image ? 'none' : 'flex' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">
+                <p className="text-sm font-semibold text-gray-900 truncate">
                   {user?.name || 'User'}
                 </p>
-                <p className="text-xs text-gray-400 capitalize">
+                <p className="text-xs text-[#718096] capitalize">
                   {currentRole}
                 </p>
               </div>
@@ -210,10 +217,10 @@ export default function DashboardLayout({ role }) {
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-lg transition relative ${
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition relative ${
                     isActive
-                      ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-orange-500'
+                      ? 'bg-[#FF4C60]/10 text-[#FF4C60] border border-[#ff6b6b]/20'
+                      : 'text-[#718096] hover:bg-white hover:text-[#FF4C60]'
                   }`
                 }
               >
@@ -221,7 +228,7 @@ export default function DashboardLayout({ role }) {
                 <span className="font-medium">{link.label}</span>
                 {/* Notification Badge */}
                 {link.to === '/faculty/join-requests' && pendingRequestsCount > 0 && (
-                  <span className="ml-auto bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center">
+                  <span className="ml-auto bg-[#FF4C60] text-gray-900 text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center">
                     {pendingRequestsCount}
                   </span>
                 )}
@@ -233,7 +240,7 @@ export default function DashboardLayout({ role }) {
           <div className="p-4 border-t border-gray-800 space-y-2">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 transition"
+              className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-900/20 transition"
             >
               <LogOut size={20} />
               <span className="font-medium">Logout</span>
@@ -243,7 +250,7 @@ export default function DashboardLayout({ role }) {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden lg:hidden fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 z-40 safe-area-bottom shadow-2xl">
+      <nav className="md:hidden lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-800 z-40 safe-area-bottom shadow-2xl">
         <div className="flex justify-around items-center h-16 px-1">
           {mobileLinks.map((item) => {
             const Icon = item.icon;
@@ -256,18 +263,18 @@ export default function DashboardLayout({ role }) {
                 end={item.end}
                 className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors relative ${
                   active
-                    ? 'text-orange-500'
-                    : 'text-gray-400 hover:text-gray-300'
+                    ? 'text-[#FF4C60]'
+                    : 'text-[#718096] hover:text-[#4a5568]'
                 }`}
               >
                 {/* Active indicator */}
                 {active && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-b-full"></div>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#FF4C60] rounded-b-full"></div>
                 )}
                 
                 {/* Notification Badge */}
                 {item.to === '/faculty/join-requests' && pendingRequestsCount > 0 && (
-                  <span className="absolute top-2 right-1/4 bg-orange-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center leading-none">
+                  <span className="absolute top-2 right-1/4 bg-[#FF4C60] text-gray-900 text-[8px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center leading-none">
                     {pendingRequestsCount}
                   </span>
                 )}
@@ -283,11 +290,11 @@ export default function DashboardLayout({ role }) {
           <button
             onClick={() => setShowMobileMenu(!showMobileMenu)}
             className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors relative ${
-              showMobileMenu ? 'text-orange-600 dark:text-orange-500' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+              showMobileMenu ? 'text-[#ff5252] dark:text-[#FF4C60]' : 'text-[#718096] dark:text-[#718096] hover:text-gray-900 dark:hover:text-[#4a5568]'
             }`}
           >
             {showMobileMenu && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-b-full"></div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#FF4C60] rounded-b-full"></div>
             )}
             <MoreHorizontal size={22} strokeWidth={showMobileMenu ? 2.5 : 2} />
             <span className={`text-[10px] leading-tight whitespace-nowrap ${showMobileMenu ? 'font-bold' : 'font-medium'}`}>
@@ -298,11 +305,11 @@ export default function DashboardLayout({ role }) {
       </nav>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-64 w-full overflow-x-hidden bg-gray-950">
+      <div className="flex-1 flex flex-col lg:ml-64 w-full overflow-x-hidden bg-white">
         {/* Top Bar - Hide hamburger menu on mobile */}
-        <header className="bg-gray-900 border-b border-gray-800 px-4 sm:px-6 py-4 sticky top-0 z-10 w-full shadow-sm">
+        <header className="bg-white border-b border-gray-800 px-4 sm:px-6 py-4 sticky top-0 z-10 w-full shadow-sm">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-lg sm:text-xl font-bold text-white capitalize truncate">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 capitalize truncate">
               {location.pathname === '/faculty/courses' ? 'My Courses' : 
                location.pathname === '/student/courses' ? 'My Courses' :
                location.pathname === '/faculty/join-requests' ? 'Join Requests' :

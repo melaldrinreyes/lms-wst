@@ -12,8 +12,10 @@
     min-height: 100vh;
     overflow-x: hidden;
     width: 100%;
-    @apply bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white transition-colors duration-200;
-    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    @apply bg-[#f8f9fa] dark:bg-[#0f1419] text-[#1d2026] dark:text-white transition-colors duration-200;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   html {
@@ -21,7 +23,7 @@
     width: 100%;
   }
   
-  /* Custom Scrollbar - Material Style */
+  /* Apple-style Scrollbar */
   ::-webkit-scrollbar {
     @apply w-2 h-2;
   }
@@ -31,97 +33,250 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+    @apply bg-gray-300/60 rounded-full hover:bg-gray-400/80;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-500 dark:bg-gray-500;
+    @apply bg-gray-400/80;
   }
 }
 
 @layer components {
-  /* Material Design Components */
+  /* Material Design 3 + Soft UI Components */
   
-  /* Gradient Text */
+  /* Eduquest Text - Accent Color */
   .gradient-text {
-    @apply bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent;
+    @apply text-[#FF4C60];
   }
   
-  /* Material Button - Primary */
+  /* Eduquest Button - Primary (Pink) */
   .btn-primary {
-    @apply px-6 py-3 bg-orange-600 text-white rounded-lg font-medium uppercase text-sm tracking-wider;
-    @apply hover:bg-orange-700 active:bg-orange-800 transition-all duration-200;
-    @apply shadow-md hover:shadow-lg active:shadow-sm;
-    @apply transform hover:-translate-y-0.5 active:translate-y-0;
+    @apply px-6 py-3 bg-[#FF4C60] text-white rounded-xl font-semibold text-sm;
+    @apply hover:bg-[#ff3451] active:bg-[#e6354a] transition-all duration-200;
+    @apply shadow-sm hover:shadow-md active:shadow-sm;
+    @apply transform hover:scale-[1.02] active:scale-[0.98];
+    @apply focus:ring-4 focus:ring-[#FF4C60]/20 focus:outline-none;
   }
   
-  /* Material Button - Secondary */
+  /* Eduquest Button - Secondary (Outlined) */
   .btn-secondary {
-    @apply px-6 py-3 bg-transparent text-orange-600 dark:text-orange-400 rounded-lg font-medium uppercase text-sm tracking-wider;
-    @apply border-2 border-orange-600 dark:border-orange-400;
-    @apply hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200;
+    @apply px-6 py-3 bg-white/80 text-[#1e3a5f] rounded-xl font-semibold text-sm;
+    @apply border border-[#1e3a5f]/30 hover:border-[#FF4C60]/50;
+    @apply hover:bg-[#FF4C60]/5 backdrop-blur-xl transition-all duration-200;
+    @apply focus:ring-4 focus:ring-[#FF4C60]/20 focus:outline-none;
   }
   
-  /* Material Card - Elevated */
+  /* Eduquest Button - Text */
+  .btn-text {
+    @apply px-4 py-2 text-[#FF4C60] rounded-xl font-medium text-sm;
+    @apply hover:bg-[#FF4C60]/10 active:bg-[#FF4C60]/20 transition-all duration-200;
+    @apply focus:ring-4 focus:ring-[#FF4C60]/20 focus:outline-none;
+  }
+  
+  /* Eduquest Card - Elevated */
   .card {
-    @apply bg-white dark:bg-[#1e1e1e] rounded-2xl;
-    @apply shadow-md hover:shadow-lg transition-all duration-300;
-    @apply border border-gray-100 dark:border-gray-800;
+    @apply bg-white dark:bg-[#1a2332]/80 rounded-2xl backdrop-blur-2xl;
+    @apply shadow-sm hover:shadow-lg transition-all duration-300;
+    @apply border border-gray-100 dark:border-[#2d3e50]/50;
+    @apply hover:scale-[1.01] hover:-translate-y-1;
   }
   
-  /* Material Card - Outlined */
+  /* Eduquest Card - Frosted Glass */
+  .card-elevated {
+    @apply bg-white/95 dark:bg-[#1a2332]/80 rounded-2xl backdrop-blur-3xl;
+    @apply shadow-md hover:shadow-xl transition-all duration-300;
+    @apply border border-gray-100 dark:border-[#2d3e50]/30;
+  }
+  
+  /* Eduquest Card - Outlined */
   .card-outlined {
-    @apply bg-transparent rounded-2xl;
-    @apply border-2 border-gray-200 dark:border-gray-700;
-    @apply hover:border-orange-500 dark:hover:border-orange-400 transition-all duration-300;
+    @apply bg-white rounded-2xl backdrop-blur-xl;
+    @apply border border-gray-200;
+    @apply hover:border-[#FF4C60]/40 hover:shadow-md transition-all duration-300;
+    @apply hover:scale-[1.01];
   }
   
-  /* Material Input - Filled */
+  /* Eduquest Card - Filled */
+  .card-filled {
+    @apply bg-[#f8f9fa] rounded-2xl;
+    @apply border border-gray-100;
+    @apply hover:bg-white hover:shadow-md transition-all duration-300;
+  }
+  
+  /* Eduquest Input - Filled */
   .input {
-    @apply w-full px-4 py-3 bg-gray-100 dark:bg-[#2c2c2c] rounded-t-lg;
-    @apply border-b-2 border-gray-400 dark:border-gray-600;
-    @apply focus:border-orange-600 dark:focus:border-orange-400 focus:bg-gray-50 dark:focus:bg-[#2c2c2c];
-    @apply text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400;
-    @apply transition-all duration-200 outline-none;
+    @apply w-full px-4 py-3 bg-white dark:bg-[#1a2332] rounded-xl backdrop-blur-xl;
+    @apply border border-gray-200 dark:border-[#2d3e50];
+    @apply focus:border-[#FF4C60] dark:focus:border-[#FF4C60] focus:bg-white dark:focus:bg-[#1a2332];
+    @apply text-[#1d2026] dark:text-white placeholder-gray-400 dark:placeholder-gray-500;
+    @apply transition-all duration-200 outline-none focus:ring-4 focus:ring-[#FF4C60]/10;
+    @apply hover:border-gray-300 dark:hover:border-[#2d3e50]/80;
   }
   
-  /* Material Input - Outlined */
+  /* University Input - Outlined */
   .input-outlined {
-    @apply w-full px-4 py-3 bg-transparent rounded-lg;
-    @apply border-2 border-gray-300 dark:border-gray-600;
-    @apply focus:border-orange-600 dark:focus:border-orange-400;
-    @apply text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400;
+    @apply w-full px-4 py-3 bg-white/90 rounded-xl backdrop-blur-xl;
+    @apply border border-[#DAA520]/40 dark:border-[#8B0000]/40;
+    @apply focus:border-[#8B0000] dark:focus:border-[#DAA520] focus:ring-4 focus:ring-[#8B0000]/10;
+    @apply text-[#2d1b1b] dark:text-white placeholder-gray-400 dark:placeholder-gray-500;
     @apply transition-all duration-200 outline-none;
+    @apply hover:border-[#DAA520]/60 dark:hover:border-[#8B0000]/60;
   }
   
-  /* Material Chip */
+  /* Eduquest Chip */
   .chip {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
-    @apply transition-all duration-200;
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold;
+    @apply bg-gray-100 text-gray-700 border border-gray-200;
+    @apply hover:bg-gray-200 transition-all duration-200;
   }
   
-  /* Material Divider */
+  /* Eduquest Chip - Primary (Pink) */
+  .chip-primary {
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold;
+    @apply bg-[#FF4C60]/10 text-[#FF4C60] border border-[#FF4C60]/30;
+    @apply hover:bg-[#FF4C60]/20 transition-all duration-200;
+  }
+  
+  /* Apple Chip - Success */
+  .chip-success {
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold;
+    @apply bg-emerald-50 text-emerald-600 border border-emerald-200/50;
+    @apply hover:bg-emerald-100/90 transition-all duration-200;
+  }
+  
+  
+  /* University Divider */
   .divider {
-    @apply border-t border-gray-200 dark:border-gray-700;
+    @apply border-t border-[#DAA520]/30 dark:border-[#8B0000]/30;
   }
   
-  /* Material Surface */
+  /* University Surface - Elevated */
   .surface {
-    @apply bg-white dark:bg-[#1e1e1e];
+    @apply bg-white/90 dark:bg-[#2a1515]/80 backdrop-blur-2xl;
+    @apply shadow-sm;
   }
   
-  /* Material Surface Variant */
+  /* University Surface Variant */
   .surface-variant {
-    @apply bg-gray-50 dark:bg-[#2c2c2c];
+    @apply bg-[#faf8f5] dark:bg-[#3a1f1f];
   }
   
-  /* Profile Picture */
+  /* Eduquest Badge */
+  .badge {
+    @apply inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold;
+    @apply bg-red-50 text-red-600 border border-red-200/50;
+  }
+  
+  /* Eduquest Badge - Primary (Pink) */
+  .badge-primary {
+    @apply inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold;
+    @apply bg-[#FF4C60]/10 text-[#FF4C60] border border-[#FF4C60]/30;
+  }
+  
+  /* Eduquest Icon Button */
+  .icon-button {
+    @apply p-2 rounded-xl transition-all duration-200;
+    @apply hover:bg-gray-100 active:bg-gray-200;
+    @apply focus:ring-4 focus:ring-[#FF4C60]/20 focus:outline-none;
+  }
+  
+  /* Eduquest Icon Button - Primary */
+  .icon-button-primary {
+    @apply p-2 rounded-xl transition-all duration-200;
+    @apply text-[#FF4C60] hover:bg-[#FF4C60]/10 active:bg-[#FF4C60]/20;
+    @apply focus:ring-4 focus:ring-[#FF4C60]/20 focus:outline-none;
+  }
+  
+  /* Profile Picture - Apple Style */
   .profile-picture {
-    @apply w-16 h-16 rounded-full object-cover shadow-md;
+    @apply w-16 h-16 rounded-2xl object-cover shadow-md ring-2 ring-white/50;
   }
 }
 
 @layer utilities {
+  /* Apple Elevation System */
+  .elevation-0 {
+    @apply shadow-none;
+  }
+  
+  .elevation-1 {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  }
+  
+  .elevation-2 {
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+  }
+  
+  .elevation-3 {
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.10);
+  }
+  
+  .elevation-4 {
+    box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.12);
+  }
+  
+  .elevation-5 {
+    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.14);
+  }
+  
+  /* Apple Micro-interactions */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-300 ease-out hover:scale-[1.02];
+  }
+  
+  .hover-scale-sm {
+    @apply transition-transform duration-300 ease-out hover:scale-[1.01];
+  }
+  
+  .hover-grow {
+    @apply transition-all duration-300 ease-out hover:scale-105;
+  }
+  
+  .active-press {
+    @apply active:scale-[0.98] transition-transform duration-100;
+  }
+  
+  /* Smooth transitions - Apple timing */
+  .transition-smooth {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transition-quick {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* University Frosted Glass */
+  .glass {
+    @apply bg-white/70 backdrop-blur-3xl border border-[#DAA520]/20;
+  }
+  
+  .glass-dark {
+    @apply bg-[#2a1515]/70 backdrop-blur-3xl border border-[#8B0000]/30;
+  }
+  
+  /* Gradient overlays */
+  .gradient-overlay {
+    @apply relative;
+  }
+  
+  .gradient-overlay::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none;
+  }
+  
+  /* Eduquest Focus Ring */
+  .focus-ring {
+    @apply focus:ring-4 focus:ring-[#FF4C60]/20 focus:outline-none;
+  }
+  
+  .focus-ring-inset {
+    @apply focus:ring-4 focus:ring-inset focus:ring-[#FF4C60]/20 focus:outline-none;
+  }
+  
   /* Mobile bottom nav utilities */
   .pb-mobile-nav {
     padding-bottom: 4rem; /* 64px for bottom nav on mobile */

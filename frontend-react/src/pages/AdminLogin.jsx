@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
-import logo from '../logo/logo.jpg';
-import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { motion } from "framer-motion";
+import { useAuth } from "../contexts/AuthContext";
+import logo from "../logo/logo.png";
+import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle } from "lucide-react";
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { login, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [forgotPasswordModal, setForgotPasswordModal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -59,11 +61,11 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] flex items-center justify-center p-4">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#FF4C60]/100 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
         </div>
       </div>
@@ -88,8 +90,8 @@ export default function AdminLogin() {
               className="w-20 h-20 rounded-2xl object-cover shadow-2xl"
             />
           </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">Teacher Portal</h1>
-          <p className="text-blue-200">MINSU E-LEARN Faculty Management System</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Teacher Portal</h1>
+          <p className="text-[#FF4C60] 200">MINSU E-LEARN Faculty Management System</p>
         </div>
 
         {/* Login Card */}
@@ -105,7 +107,7 @@ export default function AdminLogin() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 flex items-start gap-3"
+                className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex items-start gap-3"
               >
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-200">{error}</p>
@@ -114,11 +116,11 @@ export default function AdminLogin() {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-blue-100 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-[#FF4C60] 100 mb-2">
                 Faculty Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-300" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#FF4C60] 300" />
                 <input
                   type="email"
                   id="email"
@@ -126,7 +128,7 @@ export default function AdminLogin() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="teacher@minsu.edu.ph"
-                  className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-gray-900 placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -134,11 +136,11 @@ export default function AdminLogin() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-blue-100 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-[#FF4C60] 100 mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-300" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#FF4C60] 300" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -146,13 +148,13 @@ export default function AdminLogin() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-12 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-gray-900 placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 hover:text-blue-200 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#FF4C60] 300 hover:text-[#FF4C60] 200 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -167,13 +169,17 @@ export default function AdminLogin() {
                   name="remember"
                   checked={formData.remember}
                   onChange={handleChange}
-                  className="w-4 h-4 rounded border-white/20 bg-white/10 text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                  className="w-4 h-4 rounded border-white/20 bg-white/10 text-[#FF4C60] focus:ring-2 focus:ring-[#ff6b6b] focus:ring-offset-0"
                 />
-                <span className="text-sm text-blue-200">Remember me</span>
+                <span className="text-sm text-[#FF4C60] 200">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-blue-300 hover:text-blue-200 transition-colors">
+              <button
+                type="button"
+                onClick={() => setForgotPasswordModal(true)}
+                className="text-sm text-[#FF4C60] 300 hover:text-[#FF4C60] 200 transition-colors"
+              >
                 Forgot password?
-              </a>
+              </button>
             </div>
 
             {/* Login Button */}
@@ -182,7 +188,7 @@ export default function AdminLogin() {
               disabled={loading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -197,7 +203,7 @@ export default function AdminLogin() {
 
           {/* Security Notice */}
           <div className="mt-6 pt-6 border-t border-white/10">
-            <div className="flex items-start gap-3 text-xs text-blue-200/80">
+            <div className="flex items-start gap-3 text-xs text-[#FF4C60] 200/80">
               <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <p>
                 This is a secure area for authorized faculty and teachers only. All login attempts are logged and monitored.
@@ -210,18 +216,25 @@ export default function AdminLogin() {
         <div className="text-center mt-6">
           <Link 
             to="/" 
-            className="text-sm text-blue-300 hover:text-blue-200 transition-colors inline-flex items-center gap-1"
+            className="text-sm text-[#FF4C60] 300 hover:text-[#FF4C60] 200 transition-colors inline-flex items-center gap-1"
           >
             ← Back to Home
           </Link>
         </div>
 
         {/* Footer Info */}
-        <div className="text-center mt-8 text-xs text-blue-300/60">
+        <div className="text-center mt-8 text-xs text-[#FF4C60] 300/60">
           <p>Mindoro State University</p>
           <p className="mt-1">E-Learning Management System v1.0</p>
         </div>
       </motion.div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={forgotPasswordModal}
+        onClose={() => setForgotPasswordModal(false)}
+        onBackToLogin={() => setForgotPasswordModal(false)}
+      />
     </div>
   );
 }

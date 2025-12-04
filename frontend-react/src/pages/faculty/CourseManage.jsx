@@ -12,9 +12,7 @@ import ClassMaterialsTab from '../../components/ClassMaterialsTab';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
 import { courseAPI, assignmentAPI, submissionAPI, announcementAPI, announcementCommentAPI, studentAPI, classMaterialAPI } from '../../services/api';
 import { getFileTypeInfo, getFileName } from '../../utils/fileUtils';
-
-
-
+ 
 export default function CourseManage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -737,35 +735,35 @@ export default function CourseManage() {
     const marginLeft = depth > 0 ? 'ml-8' : '';
     const avatarSize = depth === 0 ? 'w-8 h-8' : 'w-6 h-6';
     const avatarColor = depth === 0 
-      ? 'from-blue-400 to-blue-600' 
+      ? 'from-blue-400 to-[#0d4973]' 
       : 'from-green-400 to-green-600';
     const textSize = depth === 0 ? 'text-sm' : 'text-xs';
     
     return (
       <div key={comment.id} className={`${marginLeft} space-y-2`}>
-        <div className="bg-gray-800/50 border border-orange-500 rounded-lg p-3 hover:border-orange-600 transition">
+        <div className="bg-white/50 border border-[#ff6b6b] rounded-xl p-3 hover:border-[#ff5252] transition">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2 flex-1">
               <div className={`${avatarSize} bg-gradient-to-br ${avatarColor} rounded-full flex items-center justify-center flex-shrink-0`}>
-                <span className="text-white font-semibold text-xs">
+                <span className="text-gray-900 font-semibold text-xs">
                   {comment.user?.name?.charAt(0) || 'U'}
                 </span>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`font-medium text-gray-200 ${depth > 0 ? 'text-sm' : ''}`}>
+                  <span className={`font-medium text-[#2c3e50] ${depth > 0 ? 'text-sm' : ''}`}>
                     {comment.user?.name || 'Unknown User'}
                   </span>
                   <span className="text-xs text-gray-500">
                     {new Date(comment.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p className={`${textSize} text-gray-300 leading-relaxed`}>
+                <p className={`${textSize} text-[#4a5568] leading-relaxed`}>
                   {comment.comment}
                 </p>
                 <button
                   onClick={() => handleReplyComment(comment)}
-                  className="mt-1.5 text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 transition"
+                  className="mt-1.5 text-xs text-[#FF4C60] hover:text-[#ff9f66] flex items-center gap-1 transition"
                 >
                   <Reply size={10} />
                   Reply
@@ -775,7 +773,7 @@ export default function CourseManage() {
             {/* Faculty can delete any comment */}
             <button
               onClick={() => handleDeleteComment(comment.id)}
-              className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition"
+              className="p-1 text-[#718096] hover:text-red-400 hover:bg-red-900/20 rounded-xl transition"
               title="Delete comment"
             >
               <Trash2 size={12} />
@@ -790,13 +788,13 @@ export default function CourseManage() {
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Reply to ${comment.user?.name}...`}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                className="w-full px-3 py-2 bg-white border border-gray-600 rounded-xl text-sm text-gray-900 placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] transition"
               />
               <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={!replyText.trim()}
-                  className="px-3 py-1.5 bg-orange-600 text-white text-xs rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="px-3 py-1.5 bg-[#ff5252] text-gray-900 text-xs rounded-xl hover:bg-[#ff4444] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                 >
                   <Send size={12} />
                   Reply
@@ -804,7 +802,7 @@ export default function CourseManage() {
                 <button
                   type="button"
                   onClick={handleCancelReply}
-                  className="px-3 py-1.5 bg-gray-700 text-gray-300 text-xs rounded-lg hover:bg-gray-600 transition"
+                  className="px-3 py-1.5 bg-white text-[#4a5568] text-xs rounded-xl hover:bg-white transition"
                 >
                   Cancel
                 </button>
@@ -838,24 +836,24 @@ export default function CourseManage() {
     return (
       <div className="space-y-6">
         {/* Header Skeleton */}
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+        <div className="bg-white dark:bg-white rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <Skeleton className="h-10 w-10 rounded-lg" />
+            <Skeleton className="h-10 w-10 rounded-xl" />
             <div className="flex-1">
               <Skeleton className="h-6 w-32 mb-2" />
               <Skeleton className="h-8 w-96" />
             </div>
           </div>
           <div className="flex gap-2">
-            <Skeleton className="h-10 w-32 rounded-lg" />
-            <Skeleton className="h-10 w-32 rounded-lg" />
+            <Skeleton className="h-10 w-32 rounded-xl" />
+            <Skeleton className="h-10 w-32 rounded-xl" />
           </div>
         </div>
 
         {/* Stats Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+            <div key={i} className="bg-white dark:bg-white rounded-xl border border-gray-800 p-6">
               <Skeleton className="h-4 w-24 mb-3" />
               <Skeleton className="h-8 w-16" />
             </div>
@@ -870,7 +868,7 @@ export default function CourseManage() {
         </div>
 
         {/* Content Skeleton */}
-        <div className="bg-gray-900 dark:bg-gray-950 rounded-xl border border-gray-800 p-6">
+        <div className="bg-white dark:bg-white rounded-xl border border-gray-800 p-6">
           <Skeleton className="h-6 w-48 mb-4" />
           <div className="space-y-3">
             <Skeleton className="h-4 w-full" />
@@ -887,15 +885,15 @@ export default function CourseManage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">Course not found</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <BookOpen className="mx-auto h-12 w-12 text-[#718096]" />
+          <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-[#1d2026]">Course not found</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-[#718096]">
             The course you're looking for doesn't exist or you don't have access to it.
           </p>
           <div className="mt-6">
             <Link
               to="/admin/courses"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-gray-900 bg-[#ff5252] hover:bg-[#ff4444] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff6b6b]"
             >
               <ArrowLeft className="mr-2 h-5 w-5" />
               Back to Courses
@@ -914,22 +912,22 @@ export default function CourseManage() {
       <div className="flex items-center gap-4">
         <Link
           to="/admin/courses"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+          className="p-2 hover:bg-white dark:hover:bg-white rounded-xl transition"
         >
-          <ArrowLeft size={24} className="text-gray-600 dark:text-gray-400" />
+          <ArrowLeft size={24} className="text-[#718096] dark:text-[#718096]" />
         </Link>
         <div className="flex-1">
-          <p className="text-sm text-gray-400">{course.code}</p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+          <p className="text-sm text-[#718096]">{course.code}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#1d2026]">
             {course.name}
           </h1>
-          <p className="text-sm text-gray-300 mt-1">
+          <p className="text-sm text-[#4a5568] mt-1">
             Instructor: {course.instructor} • {course.students} Students
           </p>
         </div>
         <button
           onClick={handleShareCourse}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all shadow-lg"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF4C60]/100 text-gray-900 rounded-xl hover:bg-[#FF4C60] transition-all shadow-lg"
           title="Share course link"
         >
           {linkCopied ? (
@@ -947,19 +945,19 @@ export default function CourseManage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg border border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-white rounded-xl shadow-lg border border-gray-800 overflow-hidden">
         <div className="flex overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveTab('content')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 relative ${
               activeTab === 'content'
-                ? 'border-orange-500 text-orange-400 bg-gray-800/70'
-                : 'border-transparent text-gray-400 hover:text-orange-400 hover:bg-gray-800/50'
+                ? 'border-[#ff6b6b] text-[#FF4C60] bg-white/70'
+                : 'border-transparent text-[#718096] hover:text-[#FF4C60] hover:bg-white/50'
             }`}
           >
             <FileEdit size={20} />
             <span>Content</span>
-            <span className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+            <span className="ml-2 px-2 py-1 bg-[#FF4C60] text-gray-900 text-xs font-bold rounded-full">
               ✓ NEW
             </span>
           </button>
@@ -967,8 +965,8 @@ export default function CourseManage() {
             onClick={() => setActiveTab('assignments')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
               activeTab === 'assignments'
-                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+                ? 'border-[#ff6b6b] bg-[#FF4C60]/10 text-[#FF4C60]'
+                : 'border-transparent text-[#718096] hover:text-[#4a5568] hover:bg-white/50'
             }`}
           >
             <Calendar size={20} />
@@ -978,14 +976,14 @@ export default function CourseManage() {
             onClick={() => setActiveTab('submissions')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 relative ${
               activeTab === 'submissions'
-                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+                ? 'border-[#ff6b6b] bg-[#FF4C60]/10 text-[#FF4C60]'
+                : 'border-transparent text-[#718096] hover:text-[#4a5568] hover:bg-white/50'
             }`}
           >
             <Upload size={20} />
             <span>Submissions</span>
             {newSubmissionsCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-bounce">
+              <span className="absolute -top-1 -right-1 bg-green-500 text-gray-900 text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-bounce">
                 {newSubmissionsCount}
               </span>
             )}
@@ -994,8 +992,8 @@ export default function CourseManage() {
             onClick={() => setActiveTab('students')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
               activeTab === 'students'
-                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+                ? 'border-[#ff6b6b] bg-[#FF4C60]/10 text-[#FF4C60]'
+                : 'border-transparent text-[#718096] hover:text-[#4a5568] hover:bg-white/50'
             }`}
           >
             <Users size={20} />
@@ -1005,8 +1003,8 @@ export default function CourseManage() {
             onClick={() => setActiveTab('announcements')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
               activeTab === 'announcements'
-                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+                ? 'border-[#ff6b6b] bg-[#FF4C60]/10 text-[#FF4C60]'
+                : 'border-transparent text-[#718096] hover:text-[#4a5568] hover:bg-white/50'
             }`}
           >
             <Megaphone size={20} />
@@ -1016,8 +1014,8 @@ export default function CourseManage() {
             onClick={() => setActiveTab('materials')}
             className={`flex-1 min-w-fit px-6 py-4 text-sm font-semibold transition-all border-b-3 flex items-center justify-center gap-2 ${
               activeTab === 'materials'
-                ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+                ? 'border-[#ff6b6b] bg-[#FF4C60]/10 text-[#FF4C60]'
+                : 'border-transparent text-[#718096] hover:text-[#4a5568] hover:bg-white/50'
             }`}
           >
             <FileText size={20} />
@@ -1033,12 +1031,12 @@ export default function CourseManage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Course Assignments</h2>
-              <p className="text-gray-400 text-sm">Create and manage course assignments</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Course Assignments</h2>
+              <p className="text-[#718096] text-sm">Create and manage course assignments</p>
             </div>
             <button
               onClick={handleAddAssignment}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-white rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 font-semibold"
             >
               <Plus size={20} />
               Add Assignment
@@ -1047,17 +1045,17 @@ export default function CourseManage() {
 
           <div className="space-y-4">
             {assignments.length === 0 ? (
-              <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
-                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-10 w-10 text-gray-600" />
+              <div className="bg-white dark:bg-white border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-10 w-10 text-[#718096]" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">No assignments yet</h3>
-                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No assignments yet</h3>
+                <p className="text-[#718096] mb-6 max-w-md mx-auto">
                   Create your first assignment to get started.
                 </p>
                 <button
                   onClick={handleAddAssignment}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-semibold"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF4C60] hover:bg-[#ff3451] text-white rounded-xl transition font-semibold"
                 >
                   <Plus size={20} />
                   Create First Assignment
@@ -1067,20 +1065,20 @@ export default function CourseManage() {
               assignments.map((assignment) => (
                 <div
                   key={assignment.id}
-                  className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl p-6 hover:border-orange-500/50 transition-all group"
+                  className="bg-white dark:bg-white border border-gray-800 rounded-xl p-6 hover:border-[#ff6b6b]/50 transition-all group"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-orange-400 transition">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#FF4C60] transition">
                         {assignment.title}
                       </h3>
-                      <p className="text-sm text-gray-400 mb-4">
+                      <p className="text-sm text-[#718096] mb-4">
                         {assignment.description}
                       </p>
                       {(assignment.files && assignment.files.length > 0) ? (
                         <div className="flex items-center gap-2 mb-4">
                           {assignment.files.map((f) => (
-                            <div key={f.id} className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(f.file_path).bgColor} ${getFileTypeInfo(f.file_path).borderColor}`}>
+                            <div key={f.id} className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${getFileTypeInfo(f.file_path).bgColor} ${getFileTypeInfo(f.file_path).borderColor}`}>
                               <span className="text-lg">{getFileTypeInfo(f.file_path).icon}</span>
                               <div className="flex flex-col">
                                 <span className={`text-xs font-semibold ${getFileTypeInfo(f.file_path).color}`}>
@@ -1091,7 +1089,7 @@ export default function CourseManage() {
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 ml-2">
-                                <button type="button" onClick={() => handleDownloadAssignmentFile(f.id, f.original_name || f.file_path)} className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs">
+                                <button type="button" onClick={() => handleDownloadAssignmentFile(f.id, f.original_name || f.file_path)} className="px-3 py-1 rounded-xl bg-[#FF4C60] hover:bg-[#ff3451] text-gray-900 text-xs">
                                   <Download size={14} />
                                 </button>
                               </div>
@@ -1101,7 +1099,7 @@ export default function CourseManage() {
                       ) : (
                         assignment.file_path && (
                           <div className="flex items-center gap-2 mb-4">
-                            <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
+                            <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${getFileTypeInfo(assignment.file_path).bgColor} ${getFileTypeInfo(assignment.file_path).borderColor}`}>
                               <span className="text-lg">{getFileTypeInfo(assignment.file_path).icon}</span>
                               <div className="flex flex-col">
                                 <span className={`text-xs font-semibold ${getFileTypeInfo(assignment.file_path).color}`}>
@@ -1116,15 +1114,15 @@ export default function CourseManage() {
                         )
                       )}
                       <div className="flex flex-wrap gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Calendar size={16} className="text-orange-400" />
+                        <div className="flex items-center gap-2 text-[#4a5568]">
+                          <Calendar size={16} className="text-[#FF4C60]" />
                           <span className="font-medium">Due:</span> {new Date(assignment.due_date).toLocaleDateString()}
                         </div>
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <FileText size={16} className="text-blue-400" />
+                        <div className="flex items-center gap-2 text-[#4a5568]">
+                          <FileText size={16} className="text-[#ff9f66]" />
                           <span className="font-medium">{assignment.max_points} points</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-300">
+                        <div className="flex items-center gap-2 text-[#4a5568]">
                           <Users size={16} className="text-green-400" />
                           <span className="font-medium">{assignment.submissions}/{assignment.total_students} submitted</span>
                         </div>
@@ -1133,14 +1131,14 @@ export default function CourseManage() {
                     <div className="flex gap-2 ml-4">
                       <button 
                         onClick={() => handleEditAssignment(assignment)}
-                        className="p-2.5 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 border border-transparent hover:border-orange-500/20 rounded-lg transition-all"
+                        className="p-2.5 text-[#FF4C60] hover:bg-[#FF4C60]/10 hover:text-[#ff9f66] border border-transparent hover:border-[#ff6b6b]/20 rounded-xl transition-all"
                         title="Edit assignment"
                       >
                         <Edit size={18} />
                       </button>
                       <button 
                         onClick={() => handleDeleteAssignment(assignment.id, assignment.title)}
-                        className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-lg transition-all"
+                        className="p-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/20 rounded-xl transition-all"
                         title="Delete assignment"
                       >
                         <Trash2 size={18} />
@@ -1160,13 +1158,13 @@ export default function CourseManage() {
         <div className="space-y-6">
           {/* New Submissions Notification Banner */}
           {newSubmissionsCount > 0 && (
-            <div className="bg-gradient-to-r from-green-900/30 to-green-800/20 border-l-4 border-green-500 rounded-lg p-4 flex items-center justify-between">
+            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] border-l-4 border-green-500 rounded-xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-green-500 rounded-full p-2">
-                  <Upload className="text-white" size={20} />
+                  <Upload className="text-[#1d2026]" size={20} />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">
+                  <h3 className="text-gray-900 font-semibold">
                     {newSubmissionsCount} New Submission{newSubmissionsCount > 1 ? 's' : ''}!
                   </h3>
                   <p className="text-green-300 text-sm">
@@ -1184,31 +1182,31 @@ export default function CourseManage() {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">Student Submissions</h2>
-            <p className="text-gray-400 text-sm">Review and grade student work</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Student Submissions</h2>
+            <p className="text-[#718096] text-sm">Review and grade student work</p>
           </div>
 
-          <div className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg overflow-hidden border border-gray-800">
+          <div className="bg-white dark:bg-white rounded-xl shadow-lg overflow-hidden border border-gray-800">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800/50 border-b border-gray-700">
+                <thead className="bg-white/50 border-b border-gray-700">
                   <tr>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Student
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Assignment
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Submitted
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Status
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Grade
                     </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                       Actions
                     </th>
                   </tr>
@@ -1217,36 +1215,36 @@ export default function CourseManage() {
                   {(!Array.isArray(submissions) || submissions.length === 0) ? (
                     <tr>
                       <td colSpan="6" className="py-16 text-center">
-                        <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Upload className="h-10 w-10 text-gray-600" />
+                        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Upload className="h-10 w-10 text-[#718096]" />
                         </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">No submissions yet</h3>
-                        <p className="text-gray-400">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No submissions yet</h3>
+                        <p className="text-[#718096]">
                           Student submissions will appear here once they submit their assignments.
                         </p>
                       </td>
                     </tr>
                   ) : (
                     (Array.isArray(submissions) ? submissions : []).map((submission) => (
-                      <tr key={submission.id} className="hover:bg-gray-800/50 transition">
+                      <tr key={submission.id} className="hover:bg-white/50 transition">
                         <td className="py-4 px-6">
                           <div>
-                            <p className="text-sm font-semibold text-white">
+                            <p className="text-sm font-semibold text-[#1d2026]">
                               {submission.student}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-[#718096]">
                               {submission.student_id}
                             </p>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-300">
+                        <td className="py-4 px-6 text-sm text-[#4a5568]">
                           {submission.assignment}
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-400">
+                        <td className="py-4 px-6 text-sm text-[#718096]">
                           {new Date(submission.submitted_at).toLocaleString()}
                         </td>
                         <td className="py-4 px-6">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
                             submission.status === 'graded'
                               ? 'bg-green-500/10 text-green-400 border-green-500/20'
                               : submission.status === 'pending'
@@ -1259,7 +1257,7 @@ export default function CourseManage() {
                             {submission.status}
                           </span>
                         </td>
-                        <td className="py-4 px-6 text-sm font-semibold text-white">
+                        <td className="py-4 px-6 text-sm font-semibold text-[#1d2026]">
                           {submission.grade !== null ? `${submission.grade}/100` : '-'}
                         </td>
                         <td className="py-4 px-6">
@@ -1267,10 +1265,10 @@ export default function CourseManage() {
                             <button 
                               onClick={() => handleDownloadSubmission(submission.id, submission.student)}
                               disabled={!submission.file_path}
-                              className={`p-2 rounded-lg transition ${
+                              className={`p-2 rounded-xl transition ${
                                 submission.file_path
-                                  ? 'text-blue-400 hover:bg-blue-900/30'
-                                  : 'text-gray-600 cursor-not-allowed opacity-50'
+                                  ? 'text-[#ff9f66] hover:bg-[#FF4C60] 900/30'
+                                  : 'text-[#718096] cursor-not-allowed opacity-50'
                               }`}
                               title={submission.file_path ? "Download submission file" : "No file attached"}
                             >
@@ -1278,7 +1276,7 @@ export default function CourseManage() {
                             </button>
                             <button 
                               onClick={() => handleGradeSubmission(submission)}
-                              className="p-2 text-green-400 hover:bg-green-900/30 rounded-lg transition"
+                              className="p-2 text-green-400 hover:bg-green-900/30 rounded-xl transition"
                               title={submission.status === 'graded' ? "Edit grade" : "Grade submission"}
                             >
                               {submission.status === 'graded' ? <Edit size={16} /> : <Check size={16} />}
@@ -1286,9 +1284,9 @@ export default function CourseManage() {
                             <button 
                               onClick={() => handleRejectSubmission(submission.id, submission.student)}
                               disabled={submission.status === 'rejected'}
-                              className={`p-2 rounded-lg transition ${
+                              className={`p-2 rounded-xl transition ${
                                 submission.status === 'rejected'
-                                  ? 'text-gray-600 cursor-not-allowed opacity-50'
+                                  ? 'text-[#718096] cursor-not-allowed opacity-50'
                                   : 'text-red-400 hover:bg-red-900/30'
                               }`}
                               title={submission.status === 'rejected' ? "Already rejected" : "Reject submission"}
@@ -1312,73 +1310,73 @@ export default function CourseManage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Enrolled Students</h2>
-              <p className="text-gray-400 text-sm">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Enrolled Students</h2>
+              <p className="text-[#718096] text-sm">
                 Total: {students.length} {students.length === 1 ? 'student' : 'students'}
               </p>
             </div>
           </div>
 
           {students.length === 0 ? (
-            <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
-              <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-10 w-10 text-gray-600" />
+            <div className="bg-white dark:bg-white border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-10 w-10 text-[#718096]" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">No students enrolled</h3>
-              <p className="text-gray-400">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No students enrolled</h3>
+              <p className="text-[#718096]">
                 Students will appear here once they enroll in this course.
               </p>
             </div>
           ) : (
-            <div className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg overflow-hidden border border-gray-800">
+            <div className="bg-white dark:bg-white rounded-xl shadow-lg overflow-hidden border border-gray-800">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-800/50 border-b border-gray-700">
+                  <thead className="bg-white/50 border-b border-gray-700">
                     <tr>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                         Student
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                         Student ID
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                         Email
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                         Enrolled Date
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                         Status
                       </th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-300">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-[#4a5568]">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
                     {students.map((student) => (
-                      <tr key={student.id} className="hover:bg-gray-800/50 transition">
+                      <tr key={student.id} className="hover:bg-white/50 transition">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-white font-semibold text-sm">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-gray-900 font-semibold text-sm">
                                 {student.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                               </span>
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-white">
+                              <p className="text-sm font-medium text-[#1d2026]">
                                 {student.name}
                               </p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-300">
+                        <td className="py-4 px-6 text-sm text-[#4a5568]">
                           {student.student_id || 'N/A'}
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-300">
+                        <td className="py-4 px-6 text-sm text-[#4a5568]">
                           {student.email}
                         </td>
-                        <td className="py-4 px-6 text-sm text-gray-400">
+                        <td className="py-4 px-6 text-sm text-[#718096]">
                           {student.enrolled_date ? new Date(student.enrolled_date).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="py-4 px-6">
@@ -1386,8 +1384,8 @@ export default function CourseManage() {
                             student.status === 'enrolled'
                               ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                               : student.status === 'completed'
-                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                              : 'bg-gray-700 text-gray-300 border border-gray-600'
+                              ? 'bg-[#FF4C60]/100/10 text-[#ff9f66] border border-[#FF4C60]/20'
+                              : 'bg-white text-[#4a5568] border border-gray-600'
                           }`}>
                             {student.status === 'enrolled' && <CheckCircle size={12} />}
                             {student.status || 'enrolled'}
@@ -1397,14 +1395,14 @@ export default function CourseManage() {
                           <div className="flex items-center gap-2">
                             <button 
                               onClick={() => handleUpdateStudentStatus(student)}
-                              className="p-2 text-orange-400 hover:bg-orange-900/30 rounded-lg transition"
+                              className="p-2 text-[#FF4C60] hover:bg-[#FF4C60] 900/30 rounded-xl transition"
                               title="Update Status"
                             >
                               <Edit size={16} />
                             </button>
                             <button 
                               onClick={() => handleDeleteStudent(student.id, student.name)}
-                              className="p-2 text-red-400 hover:bg-red-900/30 rounded-lg transition"
+                              className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition"
                               title="Remove Student"
                             >
                               <Trash2 size={16} />
@@ -1426,12 +1424,12 @@ export default function CourseManage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Course Announcements</h2>
-              <p className="text-gray-400 text-sm">Share important updates with your students</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Course Announcements</h2>
+              <p className="text-[#718096] text-sm">Share important updates with your students</p>
             </div>
             <button
               onClick={handleAddAnnouncement}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 font-semibold"
             >
               <Plus size={20} />
               New Announcement
@@ -1440,17 +1438,17 @@ export default function CourseManage() {
 
           <div className="space-y-4">
             {announcements.length === 0 ? (
-              <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
-                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Megaphone className="h-10 w-10 text-gray-600" />
+              <div className="bg-white dark:bg-white border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Megaphone className="h-10 w-10 text-[#718096]" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">No announcements yet</h3>
-                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No announcements yet</h3>
+                <p className="text-[#718096] mb-6 max-w-md mx-auto">
                   Create your first announcement to communicate important updates to your students
                 </p>
                 <button
                   onClick={handleAddAnnouncement}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 font-semibold"
                 >
                   <Plus size={20} />
                   Create Announcement
@@ -1468,7 +1466,7 @@ export default function CourseManage() {
                 return (
                   <div 
                     key={announcement.id} 
-                    className="bg-gray-900 dark:bg-gray-950 rounded-xl shadow-lg overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-all"
+                    className="bg-white dark:bg-white rounded-xl shadow-lg overflow-hidden border border-gray-800 hover:border-[#ff6b6b]/50 transition-all"
                   >
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-4">
@@ -1477,12 +1475,12 @@ export default function CourseManage() {
                           onClick={() => handleViewAnnouncement(announcement)}
                         >
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-xl font-bold text-white hover:text-orange-400 transition">{announcement.title}</h3>
+                            <h3 className="text-xl font-bold text-gray-900 hover:text-[#FF4C60] transition">{announcement.title}</h3>
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${priority.color}`}>
                               {priority.emoji} {priority.label}
                             </span>
                             {announcement.status === 'draft' && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold border text-gray-400 bg-gray-800 border-gray-700">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold border text-[#718096] bg-white border-gray-700">
                                 ○ Draft
                               </span>
                             )}
@@ -1492,8 +1490,8 @@ export default function CourseManage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-gray-300 whitespace-pre-wrap mb-3 line-clamp-3">{announcement.content}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-400">
+                          <p className="text-[#4a5568] whitespace-pre-wrap mb-3 line-clamp-3">{announcement.content}</p>
+                          <div className="flex items-center gap-4 text-sm text-[#718096]">
                             <div className="flex items-center gap-2">
                               <MessageCircle size={16} />
                               <span>{announcement.comments_count || 0} {announcement.comments_count === 1 ? 'comment' : 'comments'}</span>
@@ -1510,7 +1508,7 @@ export default function CourseManage() {
                               e.stopPropagation();
                               handleViewAnnouncement(announcement);
                             }}
-                            className="p-2 text-blue-400 hover:bg-blue-900/30 rounded-lg transition"
+                            className="p-2 text-[#ff9f66] hover:bg-[#FF4C60] 900/30 rounded-xl transition"
                             title="View Details & Comments"
                           >
                             <Eye size={16} />
@@ -1520,7 +1518,7 @@ export default function CourseManage() {
                               e.stopPropagation();
                               handleEditAnnouncement(announcement);
                             }}
-                            className="p-2 text-orange-400 hover:bg-orange-900/30 rounded-lg transition"
+                            className="p-2 text-[#FF4C60] hover:bg-[#FF4C60] 900/30 rounded-xl transition"
                             title="Edit Announcement"
                           >
                             <Edit size={18} />
@@ -1530,7 +1528,7 @@ export default function CourseManage() {
                               e.stopPropagation();
                               handleDeleteAnnouncement(announcement.id, announcement.title);
                             }}
-                            className="p-2 text-red-400 hover:bg-red-900/30 rounded-lg transition"
+                            className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition"
                             title="Delete Announcement"
                           >
                             <Trash2 size={18} />
@@ -1546,6 +1544,71 @@ export default function CourseManage() {
         </div>
       )}
 
+      {/* Module Modal */}
+      <Modal
+        isOpen={isModalOpen === 'module'}
+        onClose={() => setIsModalOpen(null)}
+        title="Add Module"
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-[#1d2026] mb-2">
+              Module Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-[#1d2026] transition"
+              placeholder="Enter module title"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#1d2026] mb-2">
+              Description
+            </label>
+            <input
+              type="text"
+              value={formData.description || ''}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-[#1d2026] transition"
+              placeholder="Short description (optional)"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#1d2026] mb-2">
+              Content
+            </label>
+            <textarea
+              rows={6}
+              value={formData.content || ''}
+              onChange={(e) => setFormData({...formData, content: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-[#1d2026] resize-none transition"
+              placeholder="Module content, notes, or summary"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2 border-t border-gray-700">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(null)} 
+              className="flex-1 px-6 py-3 border border-gray-700 text-[#4a5568] rounded-xl hover:bg-white transition font-medium"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 px-6 py-3 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition font-medium"
+            >
+              Save Module
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Assignment Modal */}
       <Modal
         isOpen={isModalOpen === 'assignment'}
@@ -1555,7 +1618,7 @@ export default function CourseManage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title Section */}
           <div>
-            <label htmlFor="assignment-title" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="assignment-title" className="block text-sm font-semibold text-[#1d2026] mb-2">
               Assignment Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -1563,7 +1626,7 @@ export default function CourseManage() {
               type="text"
               value={formData.title || ''}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-[#1d2026] transition"
               placeholder="Enter assignment title (e.g., Week 1 Quiz)"
               required
             />
@@ -1571,7 +1634,7 @@ export default function CourseManage() {
 
           {/* Description Section */}
           <div>
-            <label htmlFor="assignment-description" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="assignment-description" className="block text-sm font-semibold text-[#1d2026] mb-2">
               Instructions & Description
             </label>
                                                                             <textarea
@@ -1579,10 +1642,10 @@ export default function CourseManage() {
               rows={5}
               value={formData.description || ''}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white resize-none transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-[#1d2026] resize-none transition"
               placeholder="Provide detailed instructions for students..."
             />
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-[#718096]">
               Clear instructions help students understand what is expected
             </p>
           </div>
@@ -1590,7 +1653,7 @@ export default function CourseManage() {
           {/* Due Date and Points Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="assignment-due-date" className="block text-sm font-semibold text-gray-200 mb-2">
+              <label htmlFor="assignment-due-date" className="block text-sm font-semibold text-[#2c3e50] mb-2">
                 📅 Due Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -1598,12 +1661,12 @@ export default function CourseManage() {
                 type="date"
                 value={formData.due_date || ''}
                 onChange={(e) => setFormData({...formData, due_date: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+                className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-gray-900 transition"
                 required
               />
             </div>
             <div>
-              <label htmlFor="assignment-max-points" className="block text-sm font-semibold text-gray-200 mb-2">
+              <label htmlFor="assignment-max-points" className="block text-sm font-semibold text-[#2c3e50] mb-2">
                 🎯 Maximum Points <span className="text-red-500">*</span>
               </label>
               <input
@@ -1613,11 +1676,11 @@ export default function CourseManage() {
                 max="1000"
                 value={formData.max_points || 100}
                 onChange={(e) => setFormData({...formData, max_points: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+                className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-gray-900 transition"
                 placeholder="100"
                 required
               />
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-[#718096]">
                 Total points possible
               </p>
             </div>
@@ -1625,31 +1688,31 @@ export default function CourseManage() {
 
           {/* Status Dropdown */}
           <div>
-            <label htmlFor="assignment-status" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="assignment-status" className="block text-sm font-semibold text-[#2c3e50] mb-2">
               📢 Status <span className="text-red-500">*</span>
             </label>
             <select
               id="assignment-status"
               value={formData.status || 'draft'}
               onChange={(e) => setFormData({...formData, status: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-gray-900 transition"
               required
             >
               <option value="draft">Draft (Not visible to students)</option>
               <option value="published">Published (Visible to students)</option>
               <option value="closed">Closed (No new submissions)</option>
             </select>
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-[#4a5568]">
               Set to "Published" to make this assignment visible to students
             </p>
           </div>
 
           {/* File Upload Section */}
           <div>
-            <div className="block text-sm font-semibold text-gray-200 mb-2">
+            <div className="block text-sm font-semibold text-[#2c3e50] mb-2">
               📎 Attach File (Optional)
             </div>
-            <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center bg-gray-800/50 hover:border-orange-500/50 transition">
+            <div className="border-2 border-dashed border-gray-700 rounded-xl p-6 text-center bg-white/50 hover:border-[#ff6b6b]/50 transition">
               <Upload className="mx-auto text-gray-500 mb-3" size={32} />
               <input
                 type="file"
@@ -1660,22 +1723,22 @@ export default function CourseManage() {
               />
               <label 
                 htmlFor="assignment-file-upload"
-                className="cursor-pointer inline-block px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+                className="cursor-pointer inline-block px-4 py-2 bg-white hover:bg-white text-gray-900 rounded-xl transition"
               >
                 Choose File
               </label>
-              <p className="mt-2 text-xs text-gray-400">
+              <p className="mt-2 text-xs text-[#718096]">
                 PDF, DOC, PPT, images, videos, ZIP, Excel (Max 500MB)
               </p>
             </div>
 
             {/* Existing File Display (for edit mode) */}
             {formData.existingFile && !formData.files?.length && (
-              <div className="mt-3 bg-gray-800 border border-orange-500 rounded-lg p-3">
+              <div className="mt-3 bg-white border border-[#ff6b6b] rounded-xl p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <FileText size={18} className="text-blue-400 flex-shrink-0" />
-                    <span className="text-sm text-gray-300 truncate">
+                    <FileText size={18} className="text-[#ff9f66] flex-shrink-0" />
+                    <span className="text-sm text-[#4a5568] truncate">
                       Current file: {formData.existingFile.split('/').pop()}
                     </span>
                   </div>
@@ -1689,15 +1752,15 @@ export default function CourseManage() {
             {/* Show selected files */}
             {formData.files && formData.files.length > 0 && (
               <div className="mt-3 space-y-2">
-                <div className="text-xs text-gray-400 font-medium mb-1">Selected File:</div>
+                <div className="text-xs text-[#718096] font-medium mb-1">Selected File:</div>
                 {formData.files.map((file, index) => (
-                  <div key={index} className="bg-gray-800 border border-orange-500 rounded-lg p-3">
+                  <div key={index} className="bg-white border border-[#ff6b6b] rounded-xl p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <FileText size={18} className="text-orange-400 flex-shrink-0" />
+                        <FileText size={18} className="text-[#FF4C60] flex-shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-white truncate">{file.name}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-sm text-gray-900 truncate">{file.name}</p>
+                          <p className="text-xs text-[#718096]">
                             {(file.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -1705,7 +1768,7 @@ export default function CourseManage() {
                       <button
                         type="button"
                         onClick={() => handleRemoveFile(index)}
-                        className="flex-shrink-0 p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition"
+                        className="flex-shrink-0 p-2 text-red-400 hover:bg-red-900/20 rounded-xl transition"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -1718,7 +1781,7 @@ export default function CourseManage() {
 
           {/* Warning Message - No File and No Link */}
           {!formData.files?.length && !formData.existingFile && (
-            <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
+            <div className="bg-yellow-900/20 border border-yellow-800 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
                   <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
@@ -1738,8 +1801,8 @@ export default function CourseManage() {
           )}
 
           {/* Info Tip */}
-          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
-            <p className="text-sm text-blue-300">
+          <div className="bg-[#FF4C60] 900/20 border border-[#FF4C60] 800 rounded-xl p-4">
+            <p className="text-sm text-[#FF4C60] 300">
               <span className="font-semibold">💡 Tip:</span> Students will be able to download attached files and upload their submissions after you create this assignment.
             </p>
           </div>
@@ -1749,13 +1812,13 @@ export default function CourseManage() {
             <button 
               type="button" 
               onClick={() => setIsModalOpen(null)} 
-              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+              className="flex-1 px-6 py-3 border border-gray-700 text-[#4a5568] rounded-xl hover:bg-white transition font-medium"
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium shadow-sm hover:shadow-md"
+              className="flex-1 px-6 py-3 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition font-medium shadow-sm hover:shadow-md"
             >
               {formData.id ? 'Update Assignment' : 'Create Assignment'}
             </button>
@@ -1773,11 +1836,11 @@ export default function CourseManage() {
           {/* Student's Response */}
           {formData.submission_text && (
             <div>
-              <div className="block text-sm font-semibold text-gray-200 mb-2">
+              <div className="block text-sm font-semibold text-[#2c3e50] mb-2">
                 📝 Student's Response
               </div>
-              <div className="w-full px-4 py-3 border border-gray-700 bg-gray-800/50 rounded-lg max-h-96 overflow-y-auto">
-                <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+              <div className="w-full px-4 py-3 border border-gray-700 bg-white/50 rounded-xl max-h-96 overflow-y-auto">
+                <p className="text-sm text-[#4a5568] whitespace-pre-wrap leading-relaxed">
                   {formData.submission_text}
                 </p>
               </div>
@@ -1787,20 +1850,20 @@ export default function CourseManage() {
           {/* Submitted File */}
           {formData.file_path && (
             <div>
-              <div className="block text-sm font-semibold text-gray-200 mb-2">
+              <div className="block text-sm font-semibold text-[#2c3e50] mb-2">
                 📎 Submitted File
               </div>
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-900/20 to-blue-800/20 border border-blue-700/50 rounded-lg hover:border-blue-600/50 transition">
-                <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FileText size={20} className="text-blue-400" />
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] border border-[#ff5252]/50 rounded-xl hover:border-[#ff6b6b]/50 transition">
+                <div className="w-10 h-10 bg-[#8B0000]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <FileText size={20} className="text-[#ff9f66]" />
                 </div>
-                <span className="text-sm text-gray-300 flex-1 font-medium truncate">
+                <span className="text-sm text-[#4a5568] flex-1 font-medium truncate">
                   {formData.file_path.split('/').pop()}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleDownloadSubmission(formData.id, formData.student)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#FF4C60] text-gray-900 rounded-xl hover:bg-[#ff3451] transition text-sm font-medium shadow-sm"
                 >
                   <Download size={16} />
                   Download
@@ -1811,7 +1874,7 @@ export default function CourseManage() {
 
           {/* Grade Input */}
           <div>
-            <label htmlFor="grade-input" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="grade-input" className="block text-sm font-semibold text-[#2c3e50] mb-2">
               🎯 Grade (out of 100) <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -1822,7 +1885,7 @@ export default function CourseManage() {
                 max="100"
                 value={formData.grade || ''}
                 onChange={(e) => setFormData({...formData, grade: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-white text-lg font-semibold transition"
+                className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 text-lg font-semibold transition"
                 placeholder="Enter grade (0-100)"
                 required
               />
@@ -1830,13 +1893,13 @@ export default function CourseManage() {
                 / 100
               </div>
             </div>
-            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+            <div className="mt-2 flex items-center gap-2 text-xs text-[#718096]">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span>90-100: Excellent</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-[#FF4C60]/100 rounded-full"></div>
                 <span>80-89: Good</span>
               </div>
               <div className="flex items-center gap-1">
@@ -1852,7 +1915,7 @@ export default function CourseManage() {
 
           {/* Feedback */}
           <div>
-            <label htmlFor="grade-feedback" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="grade-feedback" className="block text-sm font-semibold text-[#2c3e50] mb-2">
               💬 Feedback for Student
             </label>
             <textarea
@@ -1860,10 +1923,10 @@ export default function CourseManage() {
               rows={5}
               value={formData.feedback || ''}
               onChange={(e) => setFormData({...formData, feedback: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-white resize-none transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 resize-none transition"
               placeholder="Provide constructive feedback to help the student improve..."
             />
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-[#718096]">
               💡 Clear feedback helps students understand their strengths and areas for improvement
             </p>
           </div>
@@ -1873,13 +1936,13 @@ export default function CourseManage() {
             <button 
               type="button" 
               onClick={() => setIsModalOpen(null)} 
-              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+              className="flex-1 px-6 py-3 border border-gray-700 text-[#4a5568] rounded-xl hover:bg-white transition font-medium"
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium shadow-lg shadow-green-900/30 flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-green-700 hover:to-green-800 transition font-medium shadow-lg shadow-green-900/30 flex items-center justify-center gap-2"
             >
               <Check size={18} />
               {formData.grade !== null && formData.grade !== '' ? 'Update Grade' : 'Submit Grade'}
@@ -1897,15 +1960,15 @@ export default function CourseManage() {
         <form onSubmit={handleUpdateStudent} className="space-y-6">
           {/* Status Selection */}
           <div>
-            <div className="block text-sm font-semibold text-gray-200 mb-3">
+            <div className="block text-sm font-semibold text-[#2c3e50] mb-3">
               📊 Enrollment Status <span className="text-red-500">*</span>
             </div>
             <div className="space-y-3">
               {/* Enrolled Option */}
-              <label className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.currentStatus === 'enrolled'
                   ? 'border-green-500 bg-green-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -1919,16 +1982,16 @@ export default function CourseManage() {
                   <CheckCircle size={16} className="text-green-500" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-white">Enrolled</div>
-                  <div className="text-xs text-gray-400">Student has active access to the course</div>
+                  <div className="text-sm font-medium text-[#1d2026]">Enrolled</div>
+                  <div className="text-xs text-[#718096]">Student has active access to the course</div>
                 </div>
               </label>
 
               {/* Completed Option */}
-              <label className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.currentStatus === 'completed'
-                  ? 'border-blue-500 bg-blue-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  ? 'border-[#FF4C60] bg-[#FF4C60]/100/10'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -1938,20 +2001,20 @@ export default function CourseManage() {
                   onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}
                   className="sr-only"
                 />
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20">
-                  <CheckCircle size={16} className="text-blue-500" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#FF4C60]/100/20">
+                  <CheckCircle size={16} className="text-[#FF4C60]" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-white">Completed</div>
-                  <div className="text-xs text-gray-400">Student has finished the course</div>
+                  <div className="text-sm font-medium text-[#1d2026]">Completed</div>
+                  <div className="text-xs text-[#4a5568]">Student has finished the course</div>
                 </div>
               </label>
 
               {/* Dropped Option */}
-              <label className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.currentStatus === 'dropped'
                   ? 'border-red-500 bg-red-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -1965,26 +2028,26 @@ export default function CourseManage() {
                   <XCircle size={16} className="text-red-500" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-white">Dropped</div>
-                  <div className="text-xs text-gray-400">Student will lose access to the course</div>
+                  <div className="text-sm font-medium text-[#1d2026]">Dropped</div>
+                  <div className="text-xs text-[#4a5568]">Student will lose access to the course</div>
                 </div>
               </label>
             </div>
           </div>
 
           {/* Warning Notice */}
-          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+          <div className="bg-[#FF4C60] 900/20 border border-[#FF4C60] 800 rounded-xl p-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 mt-0.5">
-                <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-[#ff9f66]" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-blue-300 mb-1">
+                <p className="text-sm font-semibold text-[#FF4C60] 300 mb-1">
                   Important Note
                 </p>
-                <p className="text-xs text-blue-200">
+                <p className="text-xs text-[#FF4C60] 200">
                   Changing the enrollment status will immediately affect the student's access to this course and all its materials.
                 </p>
               </div>
@@ -1996,13 +2059,13 @@ export default function CourseManage() {
             <button 
               type="button" 
               onClick={() => setIsModalOpen(null)} 
-              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+              className="flex-1 px-6 py-3 border border-gray-700 text-[#4a5568] rounded-xl hover:bg-white transition font-medium"
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition font-medium shadow-lg shadow-orange-900/30 flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30 flex items-center justify-center gap-2"
             >
               <Check size={18} />
               Update Status
@@ -2020,7 +2083,7 @@ export default function CourseManage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
-            <label htmlFor="announcement-title" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="announcement-title" className="block text-sm font-semibold text-[#2c3e50] mb-2">
               📢 Announcement Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -2028,7 +2091,7 @@ export default function CourseManage() {
               type="text"
               value={formData.title || ''}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-gray-900 transition"
               placeholder="Enter announcement title"
               required
             />
@@ -2036,7 +2099,7 @@ export default function CourseManage() {
 
           {/* Content */}
           <div>
-            <label htmlFor="announcement-content" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="announcement-content" className="block text-sm font-semibold text-[#2c3e50] mb-2">
               📝 Content <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -2044,7 +2107,7 @@ export default function CourseManage() {
               rows={6}
               value={formData.content || ''}
               onChange={(e) => setFormData({...formData, content: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white resize-none transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-gray-900 resize-none transition"
               placeholder="Write your announcement here..."
               required
             />
@@ -2052,14 +2115,14 @@ export default function CourseManage() {
 
           {/* Priority */}
           <div>
-            <div className="block text-sm font-semibold text-gray-200 mb-3">
+            <div className="block text-sm font-semibold text-[#2c3e50] mb-3">
               🎯 Priority Level <span className="text-red-500">*</span>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.priority === 'high'
                   ? 'border-red-500 bg-red-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -2070,13 +2133,13 @@ export default function CourseManage() {
                   className="sr-only"
                 />
                 <span className="text-2xl">🔴</span>
-                <span className="text-sm font-medium text-gray-200">High</span>
+                <span className="text-sm font-medium text-[#2c3e50]">High</span>
               </label>
               
-              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.priority === 'normal'
                   ? 'border-yellow-500 bg-yellow-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -2087,13 +2150,13 @@ export default function CourseManage() {
                   className="sr-only"
                 />
                 <span className="text-2xl">🟡</span>
-                <span className="text-sm font-medium text-gray-200">Normal</span>
+                <span className="text-sm font-medium text-[#2c3e50]">Normal</span>
               </label>
               
-              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex flex-col items-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.priority === 'low'
                   ? 'border-green-500 bg-green-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -2104,21 +2167,21 @@ export default function CourseManage() {
                   className="sr-only"
                 />
                 <span className="text-2xl">🟢</span>
-                <span className="text-sm font-medium text-gray-200">Low</span>
+                <span className="text-sm font-medium text-[#2c3e50]">Low</span>
               </label>
             </div>
           </div>
 
           {/* Status */}
           <div>
-            <div className="block text-sm font-semibold text-gray-200 mb-3">
+            <div className="block text-sm font-semibold text-[#2c3e50] mb-3">
               📊 Status <span className="text-red-500">*</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.status === 'published'
                   ? 'border-green-500 bg-green-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -2128,17 +2191,17 @@ export default function CourseManage() {
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
                   className="sr-only"
                 />
-                <CheckCircle className={formData.status === 'published' ? 'text-green-400' : 'text-gray-600'} size={20} />
+                <CheckCircle className={formData.status === 'published' ? 'text-green-400' : 'text-[#718096]'} size={20} />
                 <div>
-                  <div className="text-sm font-medium text-gray-200">Published</div>
-                  <div className="text-xs text-gray-400">Visible to students</div>
+                  <div className="text-sm font-medium text-[#2c3e50]">Published</div>
+                  <div className="text-xs text-[#718096]">Visible to students</div>
                 </div>
               </label>
               
-              <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
+              <label className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition ${
                 formData.status === 'draft'
-                  ? 'border-orange-500 bg-orange-500/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  ? 'border-[#ff6b6b] bg-[#FF4C60]/10'
+                  : 'border-gray-700 bg-white/50 hover:border-gray-600'
               }`}>
                 <input
                   type="radio"
@@ -2148,10 +2211,10 @@ export default function CourseManage() {
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
                   className="sr-only"
                 />
-                <XCircle className={formData.status === 'draft' ? 'text-orange-400' : 'text-gray-600'} size={20} />
+                <XCircle className={formData.status === 'draft' ? 'text-[#FF4C60]' : 'text-[#718096]'} size={20} />
                 <div>
-                  <div className="text-sm font-medium text-gray-200">Draft</div>
-                  <div className="text-xs text-gray-400">Only visible to you</div>
+                  <div className="text-sm font-medium text-[#2c3e50]">Draft</div>
+                  <div className="text-xs text-[#718096]">Only visible to you</div>
                 </div>
               </label>
             </div>
@@ -2162,13 +2225,13 @@ export default function CourseManage() {
             <button 
               type="button" 
               onClick={() => setIsModalOpen(null)} 
-              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+              className="flex-1 px-6 py-3 border border-gray-700 text-[#4a5568] rounded-xl hover:bg-white transition font-medium"
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition font-medium shadow-lg shadow-orange-900/30 flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30 flex items-center justify-center gap-2"
             >
               <Check size={18} />
               {formData.id ? 'Update' : 'Create'} Announcement
@@ -2196,24 +2259,24 @@ export default function CourseManage() {
                   };
                   const priority = priorityConfig[selectedAnnouncement.priority] || priorityConfig.normal;
                   return (
-                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg border ${priority.color}`}>
+                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-xl border ${priority.color}`}>
                       {priority.emoji} {priority.label}
                     </span>
                   );
                 })()}
                 {selectedAnnouncement.status === 'draft' && (
-                  <span className="px-3 py-1.5 text-xs font-semibold rounded-lg border text-gray-400 bg-gray-800 border-gray-700">
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-xl border text-[#718096] bg-white border-gray-700">
                     ○ Draft
                   </span>
                 )}
                 {selectedAnnouncement.status === 'published' && (
-                  <span className="px-3 py-1.5 text-xs font-semibold rounded-lg border text-green-400 bg-green-900/20 border-green-700">
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-xl border text-green-400 bg-green-900/20 border-green-700">
                     ✓ Published
                   </span>
                 )}
               </div>
               
-              <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+              <div className="flex items-center gap-4 text-sm text-[#718096] mb-4">
                 <div className="flex items-center gap-2">
                   <Clock size={14} />
                   <span>Posted {new Date(selectedAnnouncement.created_at).toLocaleString()}</span>
@@ -2227,8 +2290,8 @@ export default function CourseManage() {
               </div>
 
               {/* Announcement Content */}
-              <div className="bg-gray-800/50 border border-orange-500 rounded-lg p-4 mb-6">
-                <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-white/50 border border-[#ff6b6b] rounded-xl p-4 mb-6">
+                <p className="text-[#2c3e50] leading-relaxed whitespace-pre-wrap">
                   {selectedAnnouncement.content}
                 </p>
               </div>
@@ -2237,8 +2300,8 @@ export default function CourseManage() {
             {/* Comments Section */}
             <div className="border-t border-gray-700 pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <MessageCircle size={20} className="text-orange-400" />
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <MessageCircle size={20} className="text-[#FF4C60]" />
                   Student Comments ({announcementComments.length})
                 </h3>
               </div>
@@ -2251,12 +2314,12 @@ export default function CourseManage() {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Add a comment..."
-                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                    className="flex-1 px-4 py-2 bg-white border border-gray-700 rounded-xl text-gray-900 placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] transition"
                   />
                   <button
                     type="submit"
                     disabled={!newComment.trim()}
-                    className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition font-medium shadow-lg shadow-orange-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <Send size={16} />
                     Send
@@ -2267,7 +2330,7 @@ export default function CourseManage() {
               {/* Comments List */}
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {announcementComments.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-[#718096]">
                     <MessageCircle size={32} className="mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No comments yet</p>
                   </div>
@@ -2290,12 +2353,12 @@ export default function CourseManage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Course Content</h2>
-              <p className="text-gray-400 text-sm">Modules and lessons for this course</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Course Content</h2>
+              <p className="text-[#718096] text-sm">Modules and lessons for this course</p>
             </div>
             <button
               onClick={() => navigate(`/faculty/courses/${id}/content`)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 font-semibold"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-white rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all shadow-lg shadow-[#FF4C60]/30 font-semibold"
             >
               <FileEdit size={20} />
               Manage Content
@@ -2303,43 +2366,43 @@ export default function CourseManage() {
           </div>
 
           {modules.length === 0 ? (
-            <div className="bg-gray-900 dark:bg-gray-950 border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
-              <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="h-10 w-10 text-gray-600" />
+            <div className="bg-white dark:bg-white border-2 border-dashed border-gray-700 rounded-xl p-16 text-center">
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-10 w-10 text-[#718096]" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">No content yet</h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No content yet</h3>
+              <p className="text-[#718096] mb-6 max-w-md mx-auto">
                 Create your first module to start building your course content.
               </p>
               <button
-                onClick={() => navigate(`/faculty/courses/${id}/content`)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-semibold"
+                onClick={() => setIsModalOpen('module')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF4C60] hover:bg-[#ff3451] text-white rounded-xl transition font-semibold"
               >
                 <Plus size={20} />
                 Create First Module
               </button>
             </div>
           ) : (
-            <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-xl overflow-hidden">
+            <div className="bg-white dark:bg-white border border-gray-800 rounded-xl overflow-hidden">
               {modules.map((module, index) => (
                 <div key={module.id} className="border-b border-gray-800 last:border-b-0">
                   {/* Module */}
-                  <div className="p-4 bg-gray-800/30 flex items-center gap-3">
-                    <span className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  <div className="p-4 bg-white/30 flex items-center gap-3">
+                    <span className="w-8 h-8 bg-[#FF4C60] rounded flex items-center justify-center text-gray-900 font-bold text-sm flex-shrink-0">
                       {index + 1}
                     </span>
-                    <span className="text-white font-semibold">{module.title}</span>
+                    <span className="text-gray-900 font-semibold">{module.title}</span>
                   </div>
                   
                   {/* Chapters */}
                   {module.children && module.children.length > 0 && (
-                    <div className="bg-gray-900/50">
+                    <div className="bg-white/50">
                       {module.children.map((chapter, chapterIndex) => (
                         <div
                           key={chapter.id}
-                          className="px-4 py-3 pl-16 text-sm text-gray-300 hover:bg-gray-800/50 transition border-t border-gray-800/50"
+                          className="px-4 py-3 pl-16 text-sm text-[#4a5568] hover:bg-white/50 transition border-t border-gray-800/50"
                         >
-                          <span className="text-orange-400 font-medium mr-3">
+                          <span className="text-[#FF4C60] font-medium mr-3">
                             {index + 1}.{chapterIndex + 1}
                           </span>
                           {chapter.title}
@@ -2363,7 +2426,7 @@ export default function CourseManage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title Section */}
           <div>
-            <label htmlFor="material-title" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="material-title" className="block text-sm font-semibold text-[#1d2026] mb-2">
               Material Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -2371,7 +2434,7 @@ export default function CourseManage() {
               type="text"
               value={formData.title || ''}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-[#1d2026] transition"
               placeholder="Enter material title (e.g., Lecture Notes - Week 1)"
               required
             />
@@ -2379,7 +2442,7 @@ export default function CourseManage() {
 
           {/* Description Section */}
           <div>
-            <label htmlFor="material-description" className="block text-sm font-semibold text-gray-200 mb-2">
+            <label htmlFor="material-description" className="block text-sm font-semibold text-[#1d2026] mb-2">
               Description (Optional)
             </label>
             <textarea
@@ -2387,17 +2450,17 @@ export default function CourseManage() {
               rows={3}
               value={formData.description || ''}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-700 bg-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-white resize-none transition"
+              className="w-full px-4 py-3 border border-gray-700 bg-white rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] text-[#1d2026] resize-none transition"
               placeholder="Brief description of the material..."
             />
           </div>
 
           {/* File Upload Section */}
           <div>
-            <div className="block text-sm font-semibold text-gray-200 mb-2">
+            <div className="block text-sm font-semibold text-[#2c3e50] mb-2">
               📎 Upload File <span className="text-red-500">*</span>
             </div>
-            <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center bg-gray-800/50 hover:border-orange-500/50 transition">
+            <div className="border-2 border-dashed border-gray-700 rounded-xl p-6 text-center bg-white/50 hover:border-[#ff6b6b]/50 transition">
               <Upload className="mx-auto text-gray-500 mb-3" size={32} />
               <input
                 type="file"
@@ -2408,11 +2471,11 @@ export default function CourseManage() {
               />
               <label 
                 htmlFor="material-file-upload"
-                className="cursor-pointer inline-block px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+                className="cursor-pointer inline-block px-4 py-2 bg-white hover:bg-white text-gray-900 rounded-xl transition"
               >
                 Choose File
               </label>
-              <p className="mt-2 text-xs text-gray-400">
+              <p className="mt-2 text-xs text-[#718096]">
                 PDF, DOC, PPT, images, videos, ZIP, Excel (Max 500MB)
               </p>
             </div>
@@ -2420,15 +2483,15 @@ export default function CourseManage() {
             {/* Show selected file */}
             {formData.files && formData.files.length > 0 && (
               <div className="mt-3 space-y-2">
-                <div className="text-xs text-gray-400 font-medium mb-1">Selected File:</div>
+                <div className="text-xs text-[#4a5568] font-medium mb-1">Selected File:</div>
                 {formData.files.map((file, index) => (
-                  <div key={index} className="bg-gray-800 border border-orange-500 rounded-lg p-3">
+                  <div key={index} className="bg-white border border-[#ff6b6b] rounded-xl p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <FileText size={18} className="text-orange-400 flex-shrink-0" />
+                        <FileText size={18} className="text-[#FF4C60] flex-shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-white truncate">{file.name}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-sm text-gray-900 truncate">{file.name}</p>
+                          <p className="text-xs text-[#718096]">
                             {(file.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -2436,7 +2499,7 @@ export default function CourseManage() {
                       <button
                         type="button"
                         onClick={() => handleRemoveFile(index)}
-                        className="flex-shrink-0 p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition"
+                        className="flex-shrink-0 p-2 text-red-400 hover:bg-red-900/20 rounded-xl transition"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -2448,8 +2511,8 @@ export default function CourseManage() {
           </div>
 
           {/* Info Tip */}
-          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
-            <p className="text-sm text-blue-300">
+          <div className="bg-[#FF4C60] 900/20 border border-[#FF4C60] 800 rounded-xl p-4">
+            <p className="text-sm text-[#FF4C60] 300">
               <span className="font-semibold">💡 Tip:</span> Upload course materials like lecture notes, handouts, reference documents, or supplementary resources that students can download and access anytime.
             </p>
           </div>
@@ -2459,14 +2522,14 @@ export default function CourseManage() {
             <button 
               type="button" 
               onClick={() => setIsModalOpen(null)} 
-              className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 transition font-medium"
+              className="flex-1 px-6 py-3 border border-gray-700 text-[#4a5568] rounded-xl hover:bg-white transition font-medium"
               disabled={uploading}
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={uploading}
             >
               {uploading ? 'Uploading...' : 'Upload Material'}
@@ -2477,12 +2540,12 @@ export default function CourseManage() {
           {uploading && (
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-200">Uploading...</span>
-                <span className="text-sm font-medium text-gray-200">{uploadProgress}%</span>
+                <span className="text-sm font-medium text-[#2c3e50]">Uploading...</span>
+                <span className="text-sm font-medium text-[#2c3e50]">{uploadProgress}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-white rounded-full h-2">
                 <div 
-                  className="bg-orange-500 h-2 rounded-full transition-all duration-300 ease-out"
+                  className="bg-[#FF4C60] h-2 rounded-full transition-all duration-300 ease-out"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>

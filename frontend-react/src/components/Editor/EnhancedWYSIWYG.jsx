@@ -61,19 +61,19 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: 'bg-gray-800 rounded-lg p-4 text-sm font-mono my-4'
+          class: 'bg-white rounded-xl p-4 text-sm font-mono my-4'
         }
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-600 underline hover:text-blue-700'
+          class: 'text-[#FF4C60] underline hover:text-[#ff5252]'
         }
       }),
       Image.configure({
         inline: true,
         HTMLAttributes: {
-          class: 'max-w-full h-auto rounded-lg my-4'
+          class: 'max-w-full h-auto rounded-xl my-4'
         }
       }),
       Table.configure({
@@ -85,7 +85,7 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
       TableRow,
       TableHeader.configure({
         HTMLAttributes: {
-          class: 'bg-gray-100 border border-gray-300'
+          class: 'bg-white border border-gray-300'
         }
       }),
       TableCell.configure({
@@ -99,7 +99,7 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
         width: 640,
         height: 360,
         HTMLAttributes: {
-          class: 'mx-auto rounded-lg my-4'
+          class: 'mx-auto rounded-xl my-4'
         }
       })
     ],
@@ -178,19 +178,19 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
   ];
 
   if (!editor) {
-    return <div className="flex items-center justify-center h-64 bg-gray-50 text-gray-400">Loading editor...</div>;
+    return <div className="flex items-center justify-center h-64 bg-white text-[#718096]">Loading editor...</div>;
   }
 
   return (
-    <div className="flex flex-col h-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full bg-white border border-gray-200 rounded-xl overflow-hidden">
       {/* Toolbar - NetAcad Style */}
       <div className="bg-white border-b border-gray-200 p-2 flex flex-wrap gap-1 items-center">
         {/* Text Formatting */}
         <div className="flex items-center gap-0.5 pr-2 border-r border-gray-200">
           <button
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('bold') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('bold') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Bold (Ctrl+B)"
           >
@@ -198,8 +198,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('italic') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('italic') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Italic (Ctrl+I)"
           >
@@ -207,8 +207,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('underline') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('underline') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Underline (Ctrl+U)"
           >
@@ -216,8 +216,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('strike') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('strike') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Strikethrough"
           >
@@ -229,8 +229,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
         <div className="flex items-center gap-0.5 pr-2 border-r border-gray-200">
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`px-2 py-1 rounded hover:bg-gray-100 transition-colors text-sm font-semibold ${
-              editor.isActive('heading', { level: 1 }) ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`px-2 py-1 rounded hover:bg-white transition-colors text-sm font-semibold ${
+              editor.isActive('heading', { level: 1 }) ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Heading 1"
           >
@@ -238,8 +238,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`px-2 py-1 rounded hover:bg-gray-100 transition-colors text-sm font-semibold ${
-              editor.isActive('heading', { level: 2 }) ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`px-2 py-1 rounded hover:bg-white transition-colors text-sm font-semibold ${
+              editor.isActive('heading', { level: 2 }) ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Heading 2"
           >
@@ -247,8 +247,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={`px-2 py-1 rounded hover:bg-gray-100 transition-colors text-sm font-semibold ${
-              editor.isActive('heading', { level: 3 }) ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`px-2 py-1 rounded hover:bg-white transition-colors text-sm font-semibold ${
+              editor.isActive('heading', { level: 3 }) ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Heading 3"
           >
@@ -260,8 +260,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
         <div className="flex items-center gap-0.5 pr-2 border-r border-gray-200">
           <button
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('bulletList') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('bulletList') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Bullet List"
           >
@@ -269,8 +269,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('orderedList') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('orderedList') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Numbered List"
           >
@@ -278,8 +278,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleTaskList().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('taskList') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('taskList') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Task List"
           >
@@ -291,21 +291,21 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
         <div className="flex items-center gap-0.5 pr-2 border-r border-gray-200">
           <button
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600"
+            className="p-2 rounded hover:bg-white transition-colors text-[#718096]"
             title="Align Left"
           >
             <AlignLeft size={16} />
           </button>
           <button
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600"
+            className="p-2 rounded hover:bg-white transition-colors text-[#718096]"
             title="Align Center"
           >
             <AlignCenter size={16} />
           </button>
           <button
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600"
+            className="p-2 rounded hover:bg-white transition-colors text-[#718096]"
             title="Align Right"
           >
             <AlignRight size={16} />
@@ -316,8 +316,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
         <div className="flex items-center gap-0.5 pr-2 border-r border-gray-200">
           <button
             onClick={() => editor.chain().focus().toggleHighlight().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('highlight') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('highlight') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Highlight"
           >
@@ -325,8 +325,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleCode().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('code') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('code') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Inline Code"
           >
@@ -334,8 +334,8 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           </button>
           <button
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-              editor.isActive('blockquote') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+            className={`p-2 rounded hover:bg-white transition-colors ${
+              editor.isActive('blockquote') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
             }`}
             title="Quote"
           >
@@ -348,18 +348,18 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           <div className="relative">
             <button
               onClick={() => setShowLinkInput(!showLinkInput)}
-              className={`p-2 rounded hover:bg-gray-100 transition-colors ${
-                editor.isActive('link') ? 'bg-gray-200 text-gray-900' : 'text-gray-600'
+              className={`p-2 rounded hover:bg-white transition-colors ${
+                editor.isActive('link') ? 'bg-white text-[#1d2026]' : 'text-[#718096]'
               }`}
               title="Add Link"
             >
               <LinkIcon size={16} />
             </button>
             {showLinkInput && (
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg p-3 shadow-lg z-50 w-72">
+              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl p-3 shadow-lg z-50 w-72">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Insert Link</span>
-                  <button onClick={() => setShowLinkInput(false)} className="text-gray-400 hover:text-gray-600">
+                  <span className="text-sm font-medium text-[#4a5568]">Insert Link</span>
+                  <button onClick={() => setShowLinkInput(false)} className="text-[#718096] hover:text-[#718096]">
                     <X size={16} />
                   </button>
                 </div>
@@ -369,12 +369,12 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
                   onChange={(e) => setLinkUrl(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addLink()}
                   placeholder="https://example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b]"
                   autoFocus
                 />
                 <button
                   onClick={addLink}
-                  className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition"
+                  className="w-full px-3 py-2 bg-[#FF4C60] text-gray-900 rounded text-sm hover:bg-[#ff3451] transition"
                 >
                   Insert Link
                 </button>
@@ -385,16 +385,16 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           <div className="relative">
             <button
               onClick={() => setShowImageInput(!showImageInput)}
-              className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600"
+              className="p-2 rounded hover:bg-white transition-colors text-[#718096]"
               title="Add Image"
             >
               <ImageIcon size={16} />
             </button>
             {showImageInput && (
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg p-3 shadow-lg z-50 w-72">
+              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl p-3 shadow-lg z-50 w-72">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Insert Image</span>
-                  <button onClick={() => setShowImageInput(false)} className="text-gray-400 hover:text-gray-600">
+                  <span className="text-sm font-medium text-[#4a5568]">Insert Image</span>
+                  <button onClick={() => setShowImageInput(false)} className="text-[#718096] hover:text-[#718096]">
                     <X size={16} />
                   </button>
                 </div>
@@ -404,11 +404,11 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
                   onChange={(e) => setImageUrl(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addImage()}
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b]"
                 />
                 <button
                   onClick={addImage}
-                  className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition mb-2"
+                  className="w-full px-3 py-2 bg-[#FF4C60] text-gray-900 rounded text-sm hover:bg-[#ff3451] transition mb-2"
                 >
                   Insert Image
                 </button>
@@ -422,7 +422,7 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition flex items-center justify-center gap-2"
+                    className="w-full px-3 py-2 bg-white text-[#4a5568] rounded text-sm hover:bg-white transition flex items-center justify-center gap-2"
                   >
                     <FileUp size={16} />
                     Upload from Computer
@@ -435,16 +435,16 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           <div className="relative">
             <button
               onClick={() => setShowVideoInput(!showVideoInput)}
-              className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600"
+              className="p-2 rounded hover:bg-white transition-colors text-[#718096]"
               title="Add Video"
             >
               <Film size={16} />
             </button>
             {showVideoInput && (
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg p-3 shadow-lg z-50 w-72">
+              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl p-3 shadow-lg z-50 w-72">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Insert YouTube Video</span>
-                  <button onClick={() => setShowVideoInput(false)} className="text-gray-400 hover:text-gray-600">
+                  <span className="text-sm font-medium text-[#4a5568]">Insert YouTube Video</span>
+                  <button onClick={() => setShowVideoInput(false)} className="text-[#718096] hover:text-[#718096]">
                     <X size={16} />
                   </button>
                 </div>
@@ -454,11 +454,11 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
                   onChange={(e) => setVideoUrl(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addVideo()}
                   placeholder="https://youtube.com/watch?v=..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b]"
                 />
                 <button
                   onClick={addVideo}
-                  className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition"
+                  className="w-full px-3 py-2 bg-[#FF4C60] text-gray-900 rounded text-sm hover:bg-[#ff3451] transition"
                 >
                   Insert Video
                 </button>
@@ -468,7 +468,7 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
 
           <button
             onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-            className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600"
+            className="p-2 rounded hover:bg-white transition-colors text-[#718096]"
             title="Insert Table"
           >
             <TableIcon size={16} />
@@ -480,13 +480,13 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           <div className="relative">
             <button
               onClick={() => setShowColorPicker(!showColorPicker)}
-              className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600"
+              className="p-2 rounded hover:bg-white transition-colors text-[#718096]"
               title="Text Color"
             >
               <Palette size={16} />
             </button>
             {showColorPicker && (
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg p-3 shadow-lg z-50">
+              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl p-3 shadow-lg z-50">
                 <div className="grid grid-cols-6 gap-1 mb-2">
                   {colors.map((color) => (
                     <button
@@ -495,7 +495,7 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
                         editor.chain().focus().setColor(color).run();
                         setShowColorPicker(false);
                       }}
-                      className="w-7 h-7 rounded border-2 border-gray-300 hover:border-blue-500 transition-colors"
+                      className="w-7 h-7 rounded border-2 border-gray-300 hover:border-[#FF4C60] transition-colors"
                       style={{ backgroundColor: color }}
                       title={color}
                     />
@@ -511,7 +511,7 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           <button
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 rounded hover:bg-white transition-colors text-[#718096] disabled:opacity-30 disabled:cursor-not-allowed"
             title="Undo"
           >
             <Undo size={16} />
@@ -519,7 +519,7 @@ const EnhancedWYSIWYG = forwardRef(({ initialValue = '', onChange, onFilesPendin
           <button
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 rounded hover:bg-white transition-colors text-[#718096] disabled:opacity-30 disabled:cursor-not-allowed"
             title="Redo"
           >
             <Redo size={16} />

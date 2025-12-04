@@ -92,6 +92,16 @@ export const authAPI = {
     const response = await api.put('/user/password', data);
     return response.data;
   },
+
+  forgotPassword: async (data) => {
+    const response = await api.post('/forgot-password', data);
+    return response.data;
+  },
+
+  resetPassword: async (data) => {
+    const response = await api.post('/reset-password', data);
+    return response.data;
+  },
 };
 
 // Course API calls

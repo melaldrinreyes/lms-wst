@@ -146,7 +146,7 @@ export default function Chatbot() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg flex items-center justify-center z-50 transition group"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-[#FF4C60] hover:bg-[#ff3451] text-gray-900 rounded-full shadow-lg flex items-center justify-center z-50 transition group"
       >
         {isOpen ? (
           <X size={24} />
@@ -165,11 +165,11 @@ export default function Chatbot() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden"
+            className="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white border border-gray-800 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden"
             style={{ height: '600px' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 flex items-center justify-between">
+            <div className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                   <Sparkles size={20} />
@@ -185,7 +185,7 @@ export default function Chatbot() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-950">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
@@ -196,8 +196,8 @@ export default function Chatbot() {
                   <div
                     className={`max-w-[85%] ${
                       message.sender === 'user'
-                        ? 'bg-orange-500 text-white rounded-2xl rounded-br-md'
-                        : 'bg-gray-800 border border-gray-700 text-white rounded-2xl rounded-bl-md'
+                        ? 'bg-[#FF4C60] text-gray-900 rounded-2xl rounded-br-md'
+                        : 'bg-white border border-gray-700 text-gray-900 rounded-2xl rounded-bl-md'
                     } p-3 shadow-md`}
                   >
                     <p className="text-sm whitespace-pre-line leading-relaxed">{message.text}</p>
@@ -215,11 +215,11 @@ export default function Chatbot() {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex justify-start"
                 >
-                  <div className="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md p-3 shadow-md">
+                  <div className="bg-white border border-gray-700 rounded-2xl rounded-bl-md p-3 shadow-md">
                     <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                      <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                     </div>
                   </div>
                 </motion.div>
@@ -230,14 +230,14 @@ export default function Chatbot() {
 
             {/* Quick Actions */}
             {messages.length <= 2 && !isTyping && (
-              <div className="p-3 bg-gray-900 border-t border-gray-800">
-                <p className="text-xs text-gray-400 mb-2">Quick actions:</p>
+              <div className="p-3 bg-white border-t border-gray-800">
+                <p className="text-xs text-[#718096] mb-2">Quick actions:</p>
                 <div className="grid grid-cols-2 gap-2">
                   {quickActions.map((action, index) => (
                     <button
                       key={index}
                       onClick={() => handleQuickAction(action.value)}
-                      className="px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-orange-500/50 rounded-lg text-xs text-gray-300 hover:text-orange-400 transition text-left"
+                      className="px-3 py-2 bg-white hover:bg-white border border-gray-700 hover:border-[#ff6b6b]/50 rounded-xl text-xs text-[#4a5568] hover:text-[#FF4C60] transition text-left"
                     >
                       {action.label}
                     </button>
@@ -247,7 +247,7 @@ export default function Chatbot() {
             )}
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-800 bg-gray-900">
+            <div className="p-4 border-t border-gray-800 bg-white">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -255,13 +255,13 @@ export default function Chatbot() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask me anything..."
-                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500 text-sm"
+                  className="flex-1 px-4 py-3 bg-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent text-gray-900 placeholder-gray-500 text-sm"
                   disabled={isTyping}
                 />
                 <button
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isTyping}
-                  className="px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-3 bg-[#FF4C60] text-gray-900 rounded-xl hover:bg-[#ff3451] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={18} />
                 </button>

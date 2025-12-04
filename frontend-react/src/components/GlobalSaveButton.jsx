@@ -12,11 +12,11 @@ export default function GlobalSaveButton({
 
   return (
     <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
-      <div className="bg-white rounded-lg shadow-2xl border-2 border-orange-500 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-2xl border-2 border-[#ff6b6b] overflow-hidden">
         {/* Header with warning */}
-        <div className="bg-orange-50 px-4 py-2 border-b border-orange-200 flex items-center gap-2">
-          <AlertCircle size={16} className="text-orange-600" />
-          <span className="text-sm font-medium text-orange-900">
+        <div className="bg-[#FF4C60]/10 px-4 py-2 border-b border-[#FF4C60] 200 flex items-center gap-2">
+          <AlertCircle size={16} className="text-[#ff5252]" />
+          <span className="text-sm font-medium text-[#FF4C60] 900">
             You have unsaved changes
           </span>
         </div>
@@ -26,7 +26,7 @@ export default function GlobalSaveButton({
           <button
             onClick={onSaveComplete}
             disabled={isSaving}
-            className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-lg"
+            className="w-full px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-green-700 hover:to-green-800 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-lg"
           >
             <Save size={20} />
             {isSaving ? 'Saving...' : 'Save All Changes'}
@@ -35,11 +35,11 @@ export default function GlobalSaveButton({
           {/* Upload progress */}
           {isUploading && (
             <div className="mt-3">
-              <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+              <div className="flex items-center justify-between text-xs text-[#718096] mb-1">
                 <span>Uploading files...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-white rounded-full h-2 overflow-hidden">
                 <div 
                   className="bg-green-600 h-2 rounded-full transition-all duration-200" 
                   style={{ width: `${uploadProgress}%` }}

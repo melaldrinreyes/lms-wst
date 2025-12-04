@@ -166,7 +166,7 @@ export default function FacultySubmissions() {
       >
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] mb-2">
               Grade (0-100) <span className="text-red-500">*</span>
             </label>
             <input
@@ -180,9 +180,9 @@ export default function FacultySubmissions() {
                 setGradeError('');
               }}
               placeholder="Enter grade (0-100)"
-              className={`w-full px-4 py-3 bg-gray-800 border ${
+              className={`w-full px-4 py-3 bg-white border ${
                 gradeError ? 'border-red-500' : 'border-gray-700'
-              } rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition`}
+              } rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition`}
             />
             {gradeError && (
               <p className="mt-2 text-sm text-red-400">{gradeError}</p>
@@ -190,7 +190,7 @@ export default function FacultySubmissions() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#4a5568] mb-2">
               Feedback (optional)
             </label>
             <textarea
@@ -198,14 +198,14 @@ export default function FacultySubmissions() {
               onChange={(e) => setGradeForm({ ...gradeForm, feedback: e.target.value })}
               placeholder="Provide feedback to the student..."
               rows="5"
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition resize-none"
+              className="w-full px-4 py-3 bg-white border border-gray-700 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#ff6b6b] focus:border-transparent transition resize-none"
             />
           </div>
 
           <div className="flex gap-3 pt-4">
             <button
               onClick={submitGrade}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg shadow-orange-500/30"
+              className="flex-1 px-6 py-3 bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] text-gray-900 rounded-xl hover:from-[#0a3d62] hover:to-[#0a3d62] transition-all font-semibold shadow-lg shadow-[#FF4C60]/30"
             >
               Submit Grade
             </button>
@@ -216,7 +216,7 @@ export default function FacultySubmissions() {
                 setGradeForm({ grade: '', feedback: '' });
                 setGradeError('');
               }}
-              className="px-6 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all font-semibold"
+              className="px-6 py-3 bg-white text-[#4a5568] rounded-xl hover:bg-white transition-all font-semibold"
             >
               Cancel
             </button>
