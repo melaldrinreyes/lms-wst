@@ -61,7 +61,7 @@ export default function RegisterModal({ isOpen, onClose }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="relative modal-panel modal-panel--md w-full bg-white/95 backdrop-blur-3xl rounded-2xl border border-white/20 shadow-2xl my-8 text-[#1d2026] dark:text-white"
+              className="relative modal-panel modal-panel--md w-full max-w-md sm:max-w-lg bg-white/95 backdrop-blur-3xl rounded-2xl border border-white/20 shadow-2xl my-6 text-[#1d2026] dark:text-white"
               onClick={(e) => e.stopPropagation()}
             >
               {toast && <Toast {...toast} onClose={() => setToast(null)} />}
@@ -75,24 +75,24 @@ export default function RegisterModal({ isOpen, onClose }) {
                 <X size={20} />
               </button>
 
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {/* Logo */}
-                <div className="text-center mb-5">
+                <div className="text-center mb-4">
                   <img 
                     src={logo} 
                     alt="MINSU Logo" 
-                    className="inline-block w-12 h-12 rounded-xl object-cover mb-3 shadow-sm"
+                    className="inline-block w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover mb-2 shadow-sm"
                   />
-                  <h2 className="text-xl font-bold text-[#1d2026] mb-1 drop-shadow-sm">
+                  <h2 className="text-lg sm:text-xl font-bold text-[#1d2026] mb-1 drop-shadow-sm">
                     Create Student Account
                   </h2>
-                  <p className="text-[#2c3e50] text-xs font-medium drop-shadow-sm">
+                  <p className="text-[#2c3e50] text-[13px] sm:text-xs font-medium drop-shadow-sm">
                     Register as a student at MINSU E-LEARN
                   </p>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
                   {/* Name */}
                   <div>
                     <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
@@ -186,7 +186,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#FF4C60] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#ff3451] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                    className="w-full bg-[#FF4C60] text-white py-2 rounded-lg font-semibold text-sm hover:bg-[#ff3451] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                   >
                     {loading ? 'Creating account...' : 'Create Student Account'}
                   </button>
