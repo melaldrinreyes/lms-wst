@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, UserCircle, X } from 'lucide-react';
+import { Mail, Lock, User, UserCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import logo from '../logo/logo.png';
 import Toast from '../components/ui/Toast';
 
 export default function RegisterModal({ isOpen, onClose }) {
+  const [showOptions, setShowOptions] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -77,18 +79,44 @@ export default function RegisterModal({ isOpen, onClose }) {
 
               <div className="p-6">
                 {/* Logo */}
-                <div className="text-center mb-4">
-                  <img 
-                    src={logo} 
-                    alt="MINSU Logo" 
-                    className="inline-block w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover mb-2 shadow-sm"
-                  />
-                  <h2 className="text-lg sm:text-xl font-bold text-[#1d2026] mb-1 drop-shadow-sm">
-                    Create Student Account
-                  </h2>
-                  <p className="text-[#2c3e50] text-[13px] sm:text-xs font-medium drop-shadow-sm">
-                    Register as a student at MINSU E-LEARN
-                  </p>
+                <div className="text-center mb-3">
+                  <div className="flex items-center justify-center gap-3">
+                    <img 
+                      src={logo} 
+                      alt="MINSU Logo" 
+                      className="inline-block w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover shadow-sm"
+                    />
+                    <div className="text-left">
+                      <h2 className="text-lg sm:text-xl font-bold text-[#1d2026] mb-0 drop-shadow-sm">
+                        Create Student Account
+                      </h2>
+                      <p className="text-[#2c3e50] text-[13px] sm:text-xs font-medium drop-shadow-sm">
+                        Register as a student at MINSU E-LEARN
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* More options toggle - collapses optional fields on small screens to avoid scrolling */}
+                  <div className="mt-3 flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowOptions((s) => !s)}
+                      className="inline-flex items-center gap-2 text-sm text-[#FF4C60] font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff6b6b]"
+                      aria-expanded={showOptions}
+                    >
+                      {showOptions ? (
+                        <>
+                          <ChevronUp size={16} />
+                          Hide optional fields
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown size={16} />
+                          Show optional fields
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Form */}
@@ -129,22 +157,24 @@ export default function RegisterModal({ isOpen, onClose }) {
                     </div>
                   </div>
 
-                  {/* Student ID */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
-                      Student ID (Optional)
-                    </label>
-                    <div className="relative">
-                      <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                      <input
-                        type="text"
-                        value={formData.student_id}
-                        onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#FF4C60]/20 focus:border-[#FF4C60] text-[#1d2026] text-sm placeholder-gray-500 transition shadow-sm"
-                        placeholder="2024-00001"
-                      />
+                  {/* Student ID (Optional) - hidden by default on mobile unless 'More options' is shown */}
+                  {showOptions && (
+                    <div>
+                      <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
+                        Student ID (Optional)
+                      </label>
+                      <div className="relative">
+                        <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                          type="text"
+                          value={formData.student_id}
+                          onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+                          className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#FF4C60]/20 focus:border-[#FF4C60] text-[#1d2026] text-sm placeholder-gray-500 transition shadow-sm"
+                          placeholder="2024-00001"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Password */}
                   <div>
