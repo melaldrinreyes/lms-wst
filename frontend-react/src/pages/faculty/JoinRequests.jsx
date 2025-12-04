@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { facultyAPI } from '../../services/api';
 import Swal from 'sweetalert2';
 import Skeleton from '../../components/ui/Skeleton';
+import MobileBottomNav from '../../components/MobileBottomNav';
 
 // Helper to normalize image URLs (local storage vs absolute)
 const getImageUrl = (path) => {
@@ -24,6 +25,8 @@ export default function JoinRequests() {
 
   useEffect(() => {
     fetchRequests();
+    // Previously this page added `mobile-nav-inline` to suppress the global mobile nav.
+    // That behavior is no longer needed because the global nav is scoped in `Navbar.jsx`.
   }, []);
 
   const fetchRequests = async () => {
@@ -521,6 +524,10 @@ export default function JoinRequests() {
           </div>
         </div>
       )}
+      {/* Inline mobile bottom nav (appears inside content on small screens) */}
+      <div className="md:hidden">
+        <MobileBottomNav onLoginClick={() => {}} inline />
+      </div>
     </div>
   );
 }

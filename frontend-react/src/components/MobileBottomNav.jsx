@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export default function MobileBottomNav({ onLoginClick }) {
+export default function MobileBottomNav({ onLoginClick, inline = false, sticky = false }) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
@@ -62,12 +62,12 @@ export default function MobileBottomNav({ onLoginClick }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="md:hidden fixed bottom-20 right-4 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-40 overflow-hidden min-w-[200px]"
+              className={`${inline ? 'md:hidden absolute bottom-20 right-4' : 'md:hidden fixed bottom-20 right-4'} bg-white border border-gray-800 rounded-xl shadow-2xl z-40 overflow-hidden min-w-[200px]`}
             >
               <Link
                 to="/profile"
                 onClick={() => setShowMenu(false)}
-                className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-orange-500 transition border-b border-gray-800"
+                className="flex items-center gap-3 px-4 py-3 text-[#4a5568] hover:bg-white hover:text-[#FF4C60] transition border-b border-gray-800"
               >
                 <User size={18} />
                 <span className="font-medium">Profile</span>
@@ -84,7 +84,13 @@ export default function MobileBottomNav({ onLoginClick }) {
         )}
       </AnimatePresence>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 z-40 safe-area-bottom shadow-2xl">
+      <nav className={
+        inline && sticky
+          ? 'md:hidden sticky bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-800 z-40 safe-area-bottom shadow-sm'
+          : (inline
+              ? 'md:hidden relative bg-white/95 border-t border-gray-800 shadow-none'
+              : 'md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-800 z-40 safe-area-bottom shadow-2xl')
+      }>
         <div className="flex justify-around items-center h-16 px-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -96,24 +102,16 @@ export default function MobileBottomNav({ onLoginClick }) {
                 to={item.to}
                 className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors relative ${
                   active
-                    ? 'text-orange-500'
-                    : 'text-gray-400 hover:text-gray-300'
+                    ? 'text-[#FF4C60]'
+                    : 'text-[#718096] hover:text-[#4a5568]'
                 }`}
               >
                 {/* Active indicator */}
                 {active && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-b-full"></div>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#FF4C60] rounded-b-full"></div>
                 )}
 
-                {item.to === '/profile' ? (
-                  <img
-                    src={user?.profilePicture || '/default-profile.png'}
-                    alt="Profile"
-                    className="profile-picture"
-                  />
-                ) : (
-                  <Icon size={22} strokeWidth={active ? 2.5 : 2} />
-                )}
+                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
 
                 <span className={`text-[10px] leading-tight whitespace-nowrap ${active ? 'font-bold' : 'font-medium'}`}>
                   {item.label}
@@ -125,7 +123,7 @@ export default function MobileBottomNav({ onLoginClick }) {
           {!user ? (
             <button
               onClick={onLoginClick}
-              className="flex flex-col items-center justify-center flex-1 h-full gap-1 text-orange-500 hover:text-orange-400 transition-colors"
+              className="flex flex-col items-center justify-center flex-1 h-full gap-1 text-[#FF4C60] hover:text-[#FF4C60] transition-colors"
             >
               <LogIn size={22} strokeWidth={2.5} />
               <span className="text-[10px] leading-tight whitespace-nowrap font-bold">Login</span>
@@ -134,11 +132,11 @@ export default function MobileBottomNav({ onLoginClick }) {
             <button
               onClick={() => setShowMenu(!showMenu)}
               className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors relative ${
-                showMenu ? 'text-orange-500' : 'text-gray-400 hover:text-gray-300'
+                showMenu ? 'text-[#FF4C60]' : 'text-[#718096] hover:text-[#4a5568]'
               }`}
             >
               {showMenu && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-b-full"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#FF4C60] rounded-b-full"></div>
               )}
               <MoreHorizontal size={22} strokeWidth={showMenu ? 2.5 : 2} />
               <span className={`text-[10px] leading-tight whitespace-nowrap ${showMenu ? 'font-bold' : 'font-medium'}`}>

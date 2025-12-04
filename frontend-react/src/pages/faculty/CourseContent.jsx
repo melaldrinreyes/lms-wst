@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FileEdit, ArrowLeft } from 'lucide-react';
 import HierarchicalLectureContent from '../../components/HierarchicalLectureContent';
+import MobileBottomNav from '../../components/MobileBottomNav';
 import Toast from '../../components/ui/Toast';
 import { courseAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -39,10 +40,20 @@ function CourseContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // If this is the student view, suppress the global navbar mobile nav
+  // so we can render a page-specific mobile nav for content.
+  useEffect(() => {
+    if (isStudentView) {
+      try { document.body.classList.add('mobile-nav-inline'); } catch (err) { void err; }
+      return () => { try { document.body.classList.remove('mobile-nav-inline'); } catch (err) { void err; } };
+    }
+    return undefined;
+  }, [isStudentView]);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-[#1d2026]">Loading...</div>
       </div>
     );
   }
@@ -60,7 +71,7 @@ function CourseContent() {
                 navigate(`/faculty/courses/${id}`);
               }
             }}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 text-[#718096] hover:text-gray-900 hover:bg-white rounded-xl transition"
           >
             <ArrowLeft size={20} />
           </button>
@@ -76,17 +87,29 @@ function CourseContent() {
       </div>
 
       {/* Content Editor - NetAcad Style */}
-      <div className="flex-1 bg-gray-50 overflow-hidden">
-        <HierarchicalLectureContent 
-          courseId={id}
-          isTeacher={isTeacher && !isStudentView}
-          onSave={() => {
-            setToast({ 
-              message: 'Course content saved successfully!', 
-              type: 'success' 
-            });
-          }}
-        />
+      <div className="flex-1 bg-white overflow-hidden">
+        <div className="relative min-h-0">
+          <div className="pb-20 md:pb-0">
+            <HierarchicalLectureContent 
+              courseId={id}
+              isTeacher={isTeacher && !isStudentView}
+              onSave={() => {
+                setToast({ 
+                  message: 'Course content saved successfully!', 
+                  type: 'success' 
+                });
+              }}
+            />
+          </div>
+
+          {isStudentView && (
+            <div className="md:hidden absolute left-0 right-0 bottom-0">
+              <div className="px-3 py-2 bg-white border-t border-gray-200">
+                <MobileBottomNav />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {toast && (

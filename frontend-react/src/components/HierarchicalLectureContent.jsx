@@ -27,7 +27,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export default function HierarchicalLectureContent({ courseId, isTeacher = false, onSave }) {
+export default function HierarchicalLectureContent({ courseId, isTeacher = false, onSave, previewMode = false }) {
   // Use centralized save context
   const saveContext = useSave();
   
@@ -543,9 +543,9 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
     // Icons based on level
     const getIcon = () => {
-      if (lecture.level === 0) return <FolderOpen size={16} className={isSelected ? "text-white" : "text-blue-600"} />;
-      if (lecture.level === 1) return <BookOpen size={16} className={isSelected ? "text-white" : "text-green-600"} />;
-      return <FileText size={16} className={isSelected ? "text-white" : "text-purple-600"} />;
+      if (lecture.level === 0) return <FolderOpen size={16} className={isSelected ? "text-[#1d2026]" : "text-[#FF4C60]"} />;
+      if (lecture.level === 1) return <BookOpen size={16} className={isSelected ? "text-[#1d2026]" : "text-green-600"} />;
+      return <FileText size={16} className={isSelected ? "text-[#1d2026]" : "text-purple-600"} />;
     };
 
     return (
@@ -560,13 +560,13 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           style={{ paddingLeft: `${level * 16 + 12}px` }}
           className={`flex items-center gap-2 py-2 pr-3 cursor-pointer transition group ${
             isSelected
-              ? 'bg-orange-600 text-white shadow-sm'
-              : 'hover:bg-gray-100 text-gray-700'
+              ? 'bg-[#ff5252] text-gray-900 shadow-sm'
+              : 'hover:bg-white text-[#4a5568]'
           }`}
         >
           {hasChildren ? (
             <span className="flex-shrink-0 transition-transform" style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
-              <ChevronDown size={14} className={isSelected ? "text-white" : "text-gray-500"} />
+              <ChevronDown size={14} className={isSelected ? "text-[#1d2026]" : "text-gray-500"} />
             </span>
           ) : (
             <span className="w-3.5"></span>
@@ -583,7 +583,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           {/* Unsaved indicator (orange dot) */}
           {isUnsaved && (
             <span className="flex-shrink-0">
-              <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-yellow-300' : 'bg-orange-500'} animate-pulse`} title="Unsaved changes"></div>
+              <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-yellow-300' : 'bg-[#FF4C60]'} animate-pulse`} title="Unsaved changes"></div>
             </span>
           )}
 
@@ -619,10 +619,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       if (lecture.level === 0) {
         return {
           bg: 'bg-white',
-          border: 'border-blue-200',
-          hoverBorder: 'hover:border-blue-400',
-          icon: <Layers size={20} className="text-blue-600" />,
-          badge: 'bg-blue-100 text-blue-700',
+          border: 'border-[#FF4C60] 200',
+          hoverBorder: 'hover:border-[#FF4C60] 400',
+          icon: <Layers size={20} className="text-[#FF4C60]" />,
+          badge: 'bg-[#FF4C60] 100 text-[#ff5252]',
           label: 'Module'
         };
       } else if (lecture.level === 1) {
@@ -654,19 +654,19 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
         lecture.level === 2 ? 'ml-12' :
         lecture.level > 2 ? 'ml-18' : ''
       }`}>
-        <div className={`${styles.bg} rounded-lg border-2 ${styles.border} ${styles.hoverBorder} transition-all duration-200 mb-3 overflow-hidden shadow-sm ${
-          isSearchMatch ? 'ring-2 ring-orange-400 shadow-md' : ''
+        <div className={`${styles.bg} rounded-xl border-2 ${styles.border} ${styles.hoverBorder} transition-all duration-200 mb-3 overflow-hidden shadow-sm ${
+          isSearchMatch ? 'ring-2 ring-[#ff6b6b] shadow-md' : ''
         }`}>
           {/* Header */}
           <div
             onClick={() => toggleLecture(lecture.id)}
-            className={`flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-gray-50 transition ${
-              lecture.level === 0 ? 'bg-gradient-to-r from-gray-50 to-white' : ''
+            className={`flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-white transition ${
+              lecture.level === 0 ? 'bg-gradient-to-br from-[#1e3a5f] to-[#152d4a]' : ''
             }`}
           >
             {/* Drag Handle (for future drag-and-drop) */}
             {isTeacher && (
-              <div className="flex-shrink-0 text-gray-300 hover:text-gray-600 cursor-move">
+              <div className="flex-shrink-0 text-[#4a5568] hover:text-[#718096] cursor-move">
                 <GripVertical size={18} />
               </div>
             )}
@@ -675,9 +675,9 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             <div className="flex-shrink-0">
               {hasChildren ? (
                 isExpanded ? (
-                  <ChevronDown size={20} className="text-gray-600" />
+                  <ChevronDown size={20} className="text-[#718096]" />
                 ) : (
-                  <ChevronRight size={20} className="text-gray-400" />
+                  <ChevronRight size={20} className="text-[#718096]" />
                 )
               ) : (
                 <div className="w-5"></div>
@@ -692,7 +692,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             {/* Title and Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className={`px-2 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wide ${styles.badge}`}>
+                <span className={`px-2 py-0.5 rounded-xl text-xs font-semibold uppercase tracking-wide ${styles.badge}`}>
                   {styles.label}
                 </span>
                 {lecture.content && (
@@ -723,7 +723,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     e.stopPropagation();
                     setShowAddSubModal(lecture.id);
                   }}
-                  className="p-2 hover:bg-blue-100 rounded-lg text-blue-600 transition"
+                  className="p-2 hover:bg-[#FF4C60] 100 rounded-xl text-[#FF4C60] transition"
                   title={`Add ${lecture.level === 0 ? 'Chapter' : lecture.level === 1 ? 'Topic' : 'Item'}`}
                 >
                   <Plus size={16} />
@@ -733,7 +733,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     e.stopPropagation();
                     editLecture(lecture);
                   }}
-                  className="p-2 hover:bg-orange-100 rounded-lg text-orange-600 transition"
+                  className="p-2 hover:bg-[#FF4C60] 100 rounded-xl text-[#ff5252] transition"
                   title="Edit"
                 >
                   <Edit size={16} />
@@ -743,7 +743,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     e.stopPropagation();
                     setShowDeleteConfirm(lecture.id);
                   }}
-                  className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition"
+                  className="p-2 hover:bg-red-100 rounded-xl text-red-600 transition"
                   title="Delete"
                 >
                   <Trash2 size={16} />
@@ -754,7 +754,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
           {/* Content Preview - Always show when available */}
           {lecture.content && isExpanded && (
-            <div className="border-t border-gray-200 px-6 py-5 bg-gray-50">
+            <div className="border-t border-gray-200 px-6 py-5 bg-white">
               <style>{`
                 .lecture-content h1 { font-size: 2.25rem; font-weight: bold; margin: 1.5rem 0 0.75rem 0; color: #ea580c; line-height: 1.2; }
                 .lecture-content h2 { font-size: 1.875rem; font-weight: bold; margin: 1.25rem 0 0.75rem 0; color: #c2410c; line-height: 1.3; }
@@ -787,7 +787,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 .lecture-content hr { border: none; border-top: 2px solid #e5e7eb; margin: 2rem 0; }
               `}</style>
               <div 
-                className="lecture-content prose max-w-none text-gray-700 bg-white p-6 rounded-lg border border-gray-200 shadow-sm"
+                className="lecture-content prose max-w-none text-[#4a5568] bg-white p-6 rounded-xl border border-gray-200 shadow-sm"
                 dangerouslySetInnerHTML={{ __html: lecture.content }}
               />
             </div>
@@ -795,7 +795,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
 
           {/* Children */}
           {hasChildren && isExpanded && (
-            <div className="border-t border-gray-200 px-6 py-4 bg-gray-50/50">
+            <div className="border-t border-gray-200 px-6 py-4 bg-white/50">
               <div className="space-y-3">
                 {children.map(child => (
                   <LectureItem key={child.id} lecture={child} />
@@ -815,8 +815,8 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <Skeleton className="h-4 w-48 mb-3" />
             <div className="flex gap-2">
-              <Skeleton className="flex-1 h-10 rounded-lg" />
-              <Skeleton className="h-10 w-32 rounded-lg" />
+              <Skeleton className="flex-1 h-10 rounded-xl" />
+              <Skeleton className="h-10 w-32 rounded-xl" />
             </div>
           </div>
         )}
@@ -827,9 +827,9 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 <Skeleton className="h-5 w-5 rounded" />
                 <Skeleton className="h-6 w-64" />
                 <div className="ml-auto flex gap-2">
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-xl" />
+                  <Skeleton className="h-8 w-8 rounded-xl" />
+                  <Skeleton className="h-8 w-8 rounded-xl" />
                 </div>
               </div>
             </div>
@@ -942,16 +942,16 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       <>
         {isUploading && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="modal-panel modal-panel--sm bg-gray-900 border border-orange-500 rounded-xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl min-w-[300px]">
-              <svg className="animate-spin h-8 w-8 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <div className="modal-panel modal-panel--sm bg-white border border-[#ff6b6b] rounded-xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl min-w-[300px]">
+              <svg className="animate-spin h-8 w-8 text-[#FF4C60] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
               </svg>
-              <span className="text-orange-200 font-semibold mb-1">Uploading file... Please wait</span>
-              <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
-                <div className="bg-orange-500 h-3 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
+              <span className="text-[#FF4C60] 200 font-semibold mb-1">Uploading file... Please wait</span>
+              <div className="w-full bg-white rounded-full h-3 overflow-hidden">
+                <div className="bg-[#FF4C60] h-3 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
               </div>
-              <span className="text-orange-300 text-sm mt-1">{uploadProgress}%</span>
+              <span className="text-[#ff9f66] text-sm mt-1">{uploadProgress}%</span>
             </div>
           </div>
         )}
@@ -985,11 +985,11 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     <h2 className="text-base sm:text-xl font-bold text-gray-900 mb-1 truncate">
                       Edit: {editingLecture?.title}
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-600">Lecture content editor</p>
+                    <p className="text-xs sm:text-sm text-[#718096]">Lecture content editor</p>
                   </div>
                   <button
                     onClick={() => setShowPreview(!showPreview)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 rounded-lg hover:bg-blue-600/30 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#8B0000]/20 border border-[#FF4C60]/50 text-[#ff9f66] rounded-xl hover:bg-[#8B0000]/30 transition"
                   >
                     <Eye size={18} />
                     {showPreview ? 'Hide' : 'Show'} Preview
@@ -998,7 +998,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
               </div>
               <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 max-h-[60vh] lg:max-h-[500px]">
                 <div className="flex-1 p-6 overflow-y-auto">
-                  <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                  <label className="text-sm font-semibold text-[#4a5568] mb-2 block">
                     📝 Editor
                   </label>
                   <RichTextEditor
@@ -1010,14 +1010,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   />
                 </div>
                 {showPreview && (
-                  <div className="flex-1 p-6 bg-gray-50 overflow-y-auto">
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                  <div className="flex-1 p-6 bg-white overflow-y-auto">
+                    <label className="text-sm font-semibold text-[#4a5568] mb-2 block">
                       👁️ Live Preview
                     </label>
                     <div className="bg-white rounded-xl border border-gray-200 p-4 max-h-[600px] overflow-y-auto">
                       {currentContent ? (
                         <div 
-                          className="prose max-w-none text-gray-700"
+                          className="prose max-w-none text-[#4a5568]"
                           dangerouslySetInnerHTML={{ __html: currentContent }}
                         />
                       ) : (
@@ -1029,14 +1029,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   </div>
                 )}
               </div>
-              <div className="bg-gray-50 border-t border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap gap-3 justify-between">
+              <div className="bg-white border-t border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap gap-3 justify-between">
                 <button
                   onClick={() => {
                     setIsEditing(false);
                     setEditingLectureId(null);
                     setCurrentContent('');
                   }}
-                  className="flex items-center gap-2 px-4 sm:px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium text-sm"
+                  className="flex items-center gap-2 px-4 sm:px-6 py-2.5 bg-white text-gray-900 rounded-xl hover:bg-white transition font-medium text-sm"
                 >
                   <X size={18} />
                   <span>Cancel</span>
@@ -1075,7 +1075,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     }
                   }}
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-4 sm:px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="flex items-center gap-2 px-4 sm:px-6 py-2.5 bg-green-600 text-gray-900 rounded-xl hover:bg-green-700 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   <Save size={18} />
                   <span>{isSaving ? 'Saving...' : 'Save & Close'}</span>
@@ -1088,8 +1088,60 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
     );
   }
 
+  // Preview mode for student view - simplified module list
+  if (previewMode) {
+    return (
+      <div className="space-y-4">
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-6 w-48" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : lectures.length === 0 ? (
+          <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
+            <BookOpen size={32} className="mx-auto text-[#718096] mb-2" />
+            <p className="text-sm text-gray-500">No course modules available yet</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {getRootLectures().map(lecture => (
+              <div key={lecture.id} className="bg-white border border-gray-200 rounded-xl p-4 hover:border-[#FF4C60]/30 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#FF4C60]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Layers size={16} className="text-[#FF4C60]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-[#1d2026] truncate">{lecture.title}</h4>
+                    <div className="flex items-center gap-4 text-xs text-[#718096] mt-1">
+                      <span>Module</span>
+                      {getChildren(lecture.id).length > 0 && (
+                        <span>{getChildren(lecture.id).length} chapters</span>
+                      )}
+                      {lecture.content && (
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Has content
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full md:h-screen bg-gray-100">
+    <div className="flex h-full md:h-screen bg-white">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
       {/* Mobile Sidebar Backdrop */}
@@ -1103,14 +1155,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
       {isUploading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl min-w-[300px]">
-            <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#FF4C60] 200 border-t-blue-600 rounded-full animate-spin"></div>
             <span className="text-gray-900 font-semibold mb-1">Uploading file...</span>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-              <div className="bg-orange-600 h-2 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
+            <div className="w-full bg-white rounded-full h-2 overflow-hidden">
+              <div className="bg-[#ff5252] h-2 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
             </div>
-            <span className="text-gray-600 text-sm">{uploadProgress}%</span>
+            <span className="text-[#718096] text-sm">{uploadProgress}%</span>
             <button
-              className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm"
+              className="mt-3 px-4 py-2 bg-red-600 text-gray-900 rounded-xl hover:bg-red-700 transition font-medium text-sm"
               onClick={cancelUpload}
             >
               Cancel Upload
@@ -1133,10 +1185,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {getRootLectures().length === 0 ? (
             <div className="p-6 text-center">
-              <BookOpen size={32} className="mx-auto text-gray-400 mb-2" />
+              <BookOpen size={32} className="mx-auto text-[#718096] mb-2" />
               <p className="text-sm text-gray-500">No modules yet</p>
               {isTeacher && (
-                <p className="text-xs text-gray-400 mt-1">Add your first module to get started</p>
+                <p className="text-xs text-[#718096] mt-1">Add your first module to get started</p>
               )}
             </div>
           ) : (
@@ -1154,7 +1206,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             <button
               onClick={saveAllLectures}
               disabled={isSaving}
-              className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-sm"
+              className="w-full px-4 py-2.5 bg-green-600 text-gray-900 rounded-xl hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-sm"
             >
               <Save size={18} />
               <span className="hidden sm:inline">{isSaving ? 'Saving Changes...' : 'Save All Changes'}</span>
@@ -1162,6 +1214,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             </button>
           </div>
         )}
+
       </div>
 
       {/* Main Content Area */}
@@ -1171,23 +1224,23 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
+              className="lg:hidden p-2 hover:bg-white rounded-xl transition flex-shrink-0"
               title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
             >
-              <Menu size={20} className="text-gray-600" />
+              <Menu size={20} className="text-[#718096]" />
             </button>
             
-            <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
+            <div className="h-6 w-px bg-white hidden sm:block"></div>
             
             <h2 className="text-sm sm:text-lg font-semibold text-gray-900 flex items-center gap-2 truncate">
               {selectedLectureId ? (
                 <>
-                  <FileText size={16} className="text-orange-600 flex-shrink-0" />
+                  <FileText size={16} className="text-[#ff5252] flex-shrink-0" />
                   <span className="truncate">{lectures.find(l => l.id === selectedLectureId)?.title}</span>
                 </>
               ) : (
                 <>
-                  <Layers size={16} className="text-gray-400 flex-shrink-0" />
+                  <Layers size={16} className="text-[#718096] flex-shrink-0" />
                   <span className="text-gray-500 hidden sm:inline">Course Content Editor</span>
                   <span className="text-gray-500 sm:hidden">Content</span>
                 </>
@@ -1202,7 +1255,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   setSelectedLectureId(null);
                   setTimeout(() => document.querySelector('input[placeholder*="Module"]')?.focus(), 100);
                 }}
-                className="px-3 sm:px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2 font-medium text-sm"
+                className="px-3 sm:px-4 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition flex items-center gap-2 font-medium text-sm"
               >
                 <Plus size={16} />
                 <span className="hidden sm:inline">Add Module</span>
@@ -1212,7 +1265,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
         </div>
 
         {/* Content Display Area - Scrollable */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white md:bg-gray-50">
+        <div className="flex-1 flex flex-col overflow-hidden bg-white md:bg-white">
           {/* Show selected lecture content OR the tree structure */}
           {selectedLectureId ? (
             // Display selected lecture content
@@ -1225,7 +1278,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     {/* Header */}
                     <div className="border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0 gap-3">
                       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                        {selectedLecture.level === 0 && <FolderOpen size={18} className="text-blue-600 flex-shrink-0" />}
+                        {selectedLecture.level === 0 && <FolderOpen size={18} className="text-[#FF4C60] flex-shrink-0" />}
                         {selectedLecture.level === 1 && <BookOpen size={18} className="text-green-600 flex-shrink-0" />}
                         {selectedLecture.level >= 2 && <FileText size={18} className="text-purple-600 flex-shrink-0" />}
                         <h1 className="text-base sm:text-xl font-bold text-gray-900 truncate">{selectedLecture.title}</h1>
@@ -1236,7 +1289,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                             // Module - Show delete button only
                             <button
                               onClick={() => setShowDeleteConfirm(selectedLecture.id)}
-                              className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                              className="px-3 sm:px-4 py-2 bg-red-600 text-gray-900 rounded-xl hover:bg-red-700 transition flex items-center gap-2"
                             >
                               <Trash2 size={16} />
                               <span className="hidden sm:inline">Delete Module</span>
@@ -1246,14 +1299,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                             <>
                               <button
                                 onClick={() => setShowDeleteConfirm(selectedLecture.id)}
-                                className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                                className="px-3 py-2 bg-red-600 text-gray-900 rounded-xl hover:bg-red-700 transition flex items-center gap-2"
                               >
                                 <Trash2 size={16} />
                                 <span className="hidden sm:inline">Delete</span>
                               </button>
                               <button
                                 onClick={() => editLecture(selectedLecture)}
-                                className="px-3 sm:px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
+                                className="px-3 sm:px-4 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition flex items-center gap-2"
                               >
                                 <Edit size={16} />
                                 <span className="hidden sm:inline">Edit Content</span>
@@ -1272,12 +1325,12 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                           <div className="mb-4 sm:mb-6 flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Module Overview</h2>
-                              <p className="text-sm sm:text-base text-gray-600">This module contains the following chapters and topics:</p>
+                              <p className="text-sm sm:text-base text-[#718096]">This module contains the following chapters and topics:</p>
                             </div>
                             {isTeacher && (
                               <button
                                 onClick={() => setShowAddSubModal(selectedLecture.id)}
-                                className="flex-shrink-0 px-3 sm:px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2 text-sm font-medium"
+                                className="flex-shrink-0 px-3 sm:px-4 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition flex items-center gap-2 text-sm font-medium"
                               >
                                 <Plus size={16} />
                                 <span className="hidden sm:inline">Add Chapter</span>
@@ -1292,7 +1345,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                                 <div
                                   key={child.id}
                                   onClick={() => setSelectedLectureId(child.id)}
-                                  className="bg-white border-2 border-gray-200 rounded-lg p-3 sm:p-4 hover:border-orange-500 hover:shadow-md transition cursor-pointer active:scale-98"
+                                  className="bg-white border-2 border-gray-200 rounded-xl p-3 sm:p-4 hover:border-[#ff6b6b] hover:shadow-md transition cursor-pointer active:scale-98"
                                 >
                                   <div className="flex items-center gap-3">
                                     {child.level === 1 && <BookOpen size={18} className="text-green-600" />}
@@ -1306,19 +1359,19 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                                         </span>
                                       )}
                                     </div>
-                                    <ChevronRight size={20} className="text-gray-400" />
+                                    <ChevronRight size={20} className="text-[#718096]" />
                                   </div>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                              <BookOpen size={40} className="sm:w-12 sm:h-12 mx-auto text-gray-300 mb-3 sm:mb-4" />
+                            <div className="text-center py-8 sm:py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
+                              <BookOpen size={40} className="sm:w-12 sm:h-12 mx-auto text-[#4a5568] mb-3 sm:mb-4" />
                               <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4">No chapters in this module yet</p>
                               {isTeacher && (
                                 <button
                                   onClick={() => setShowAddSubModal(selectedLecture.id)}
-                                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+                                  className="px-4 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition"
                                 >
                                   Add Chapter
                                 </button>
@@ -1367,12 +1420,12 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                       ) : (
                         <div className="flex items-center justify-center h-full">
                           <div className="text-center">
-                            <FileText size={48} className="mx-auto text-gray-300 mb-4" />
+                            <FileText size={48} className="mx-auto text-[#4a5568] mb-4" />
                             <p className="text-gray-500">No content yet</p>
                             {isTeacher && (
                               <button
                                 onClick={() => editLecture(selectedLecture)}
-                                className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+                                className="mt-4 px-4 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition"
                               >
                                 Add Content
                               </button>
@@ -1390,10 +1443,10 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 {/* Add New Module Card - Static */}
                 {isTeacher && (
                   <div className="flex-shrink-0 p-3 sm:p-6 pb-0">
-                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg sm:rounded-xl p-4 sm:p-6 hover:border-orange-400 transition">
+                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl sm:rounded-xl p-4 sm:p-6 hover:border-[#FF4C60] transition">
                     <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Plus size={20} className="text-orange-600" />
+                      <div className="w-10 h-10 bg-[#FF4C60] 100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Plus size={20} className="text-[#ff5252]" />
                       </div>
                       <div className="flex-1">
                         <h3 className="text-sm font-semibold text-gray-900 mb-1">Add New Module</h3>
@@ -1404,13 +1457,13 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                             value={newLectureTitle}
                             onChange={(e) => setNewLectureTitle(e.target.value)}
                             placeholder="Module 1: Introduction"
-                            className="flex-1 px-3 sm:px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white"
+                            className="flex-1 px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff6b6b] focus:border-[#ff6b6b] focus:bg-white"
                             onKeyPress={(e) => e.key === 'Enter' && newLectureTitle.trim() && addLecture()}
                           />
                           <button
                             onClick={addLecture}
                             disabled={!newLectureTitle.trim()}
-                            className="w-full sm:w-auto px-4 sm:px-5 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto px-4 sm:px-5 py-2 bg-[#ff5252] text-gray-900 rounded-xl hover:bg-[#ff4444] transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                           >
                             <Plus size={16} />
                             <span>Add Module</span>
@@ -1427,14 +1480,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 <div className="space-y-4">
                   {getRootLectures().length === 0 ? (
                     <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                      <BookOpen size={48} className="mx-auto text-gray-300 mb-4" />
+                      <BookOpen size={48} className="mx-auto text-[#4a5568] mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">No Content Yet</h3>
                       <p className="text-gray-500 mb-1">
                         {isTeacher
                           ? 'Start building your course by adding modules'
                           : 'No course materials have been added yet'}
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-[#718096]">
                         {isTeacher && 'Modules can contain chapters, and chapters can contain topics'}
                       </p>
                     </div>
@@ -1451,7 +1504,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     <button
                       onClick={saveAllLectures}
                       disabled={isSaving}
-                      className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base"
+                      className="w-full px-4 py-3 bg-green-600 text-gray-900 rounded-xl hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base"
                     >
                       <Save size={20} />
                       <span>{isSaving ? 'Saving Changes...' : 'Save All Changes'}</span>
@@ -1475,7 +1528,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="modal-panel modal-panel--md bg-white rounded-lg p-4 sm:p-6 w-full mx-4 border border-gray-300 shadow-xl max-w-md"
+              className="modal-panel modal-panel--md bg-white rounded-xl p-4 sm:p-6 w-full mx-4 border border-gray-300 shadow-xl max-w-md"
             >
               <div className="flex items-start gap-3 sm:gap-4 mb-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -1485,11 +1538,11 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   <h3 className="text-lg font-bold text-gray-900 mb-2">
                     Delete {itemType}?
                   </h3>
-                  <p className="text-gray-600 mb-2">
-                    You are about to delete: <strong className="text-gray-900">{itemToDelete?.title}</strong>
+                  <p className="text-[#718096] mb-2">
+                    You are about to delete: <strong className="text-[#1d2026]">{itemToDelete?.title}</strong>
                   </p>
                   {childCount > 0 && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mt-3">
                       <p className="text-sm text-yellow-800 font-medium">
                         ⚠️ This {itemType.toLowerCase()} contains <strong>{childCount}</strong> {childCount === 1 ? 'item' : 'items'} that will also be deleted.
                       </p>
@@ -1503,7 +1556,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(null)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-[#4a5568] hover:bg-white transition"
                 >
                   Cancel
                 </button>
@@ -1513,7 +1566,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                     setShowDeleteConfirm(null);
                   }}
                   disabled={isDeleting}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="flex-1 px-4 py-2 bg-red-600 text-gray-900 rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
@@ -1529,13 +1582,13 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="modal-panel modal-panel--md bg-gray-900 rounded-lg p-6 w-full mx-4 border border-gray-700"
+            className="modal-panel modal-panel--md bg-white rounded-xl p-6 w-full mx-4 border border-gray-700"
           >
-            <h3 className="text-lg font-bold text-white mb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               Create Sub-Lecture
             </h3>
             <div className="mb-4">
-              <label className="block text-sm text-gray-300 mb-2">
+              <label className="block text-sm text-[#4a5568] mb-2">
                 Sub-Lecture Title
               </label>
               <input
@@ -1543,7 +1596,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                 value={subLectureTitle}
                 onChange={(e) => setSubLectureTitle(e.target.value)}
                 placeholder="e.g., Chapter 1: Getting Started"
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-white border border-gray-700 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                 onKeyPress={(e) => e.key === 'Enter' && addSubLecture(showAddSubModal)}
               />
             </div>
@@ -1553,14 +1606,14 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
                   setShowAddSubModal(null);
                   setSubLectureTitle('');
                 }}
-                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition"
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-xl text-[#4a5568] hover:bg-white transition"
               >
                 Cancel
               </button>
               <button
                 onClick={() => addSubLecture(showAddSubModal)}
                 disabled={isSaving || !subLectureTitle.trim()}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-green-600 text-gray-900 rounded-xl hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSaving ? 'Creating...' : 'Create'}
               </button>
@@ -1577,7 +1630,7 @@ export default function HierarchicalLectureContent({ courseId, isTeacher = false
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-40 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
+            className="fixed bottom-6 right-6 z-40 bg-[#ff5252] hover:bg-[#ff4444] text-gray-900 p-3 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl"
             title="Scroll to top"
           >
             <ChevronUp size={24} />
