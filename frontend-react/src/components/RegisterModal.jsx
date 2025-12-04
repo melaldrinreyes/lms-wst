@@ -61,7 +61,7 @@ export default function RegisterModal({ isOpen, onClose }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="relative modal-panel modal-panel--md w-full max-w-md sm:max-w-lg bg-white/95 backdrop-blur-3xl rounded-2xl border border-white/20 shadow-2xl my-6 text-[#1d2026] dark:text-white"
+              className="relative modal-panel modal-panel--md w-full max-w-[92vw] sm:max-w-2xl bg-white/95 backdrop-blur-3xl rounded-2xl border border-white/20 shadow-2xl my-6 text-[#1d2026] dark:text-white"
               onClick={(e) => e.stopPropagation()}
             >
               {toast && <Toast {...toast} onClose={() => setToast(null)} />}
@@ -75,13 +75,13 @@ export default function RegisterModal({ isOpen, onClose }) {
                 <X size={20} />
               </button>
 
-              <div className="p-4 sm:p-6">
+              <div className="p-6">
                 {/* Logo */}
                 <div className="text-center mb-4">
                   <img 
                     src={logo} 
                     alt="MINSU Logo" 
-                    className="inline-block w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover mb-2 shadow-sm"
+                    className="inline-block w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover mb-2 shadow-sm"
                   />
                   <h2 className="text-lg sm:text-xl font-bold text-[#1d2026] mb-1 drop-shadow-sm">
                     Create Student Account
