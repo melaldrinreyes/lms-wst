@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, UserCircle, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import logo from '../logo/logo.jpg';
+import logo from '../logo/logo.png';
 import Toast from '../components/ui/Toast';
 
 export default function RegisterModal({ isOpen, onClose }) {
@@ -51,7 +51,7 @@ export default function RegisterModal({ isOpen, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-md z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
           />
 
           {/* Modal */}
@@ -61,7 +61,7 @@ export default function RegisterModal({ isOpen, onClose }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="relative modal-panel modal-panel--md w-full bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl my-8"
+              className="relative modal-panel modal-panel--md w-full bg-white/95 backdrop-blur-3xl rounded-2xl border border-white/20 shadow-2xl my-8 text-[#1d2026] dark:text-white"
               onClick={(e) => e.stopPropagation()}
             >
               {toast && <Toast {...toast} onClose={() => setToast(null)} />}
@@ -69,7 +69,8 @@ export default function RegisterModal({ isOpen, onClose }) {
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition z-10"
+                className="absolute top-4 right-4 p-2 text-[#1d2026] dark:text-white hover:text-[#1d2026] hover:bg-white/50 rounded-xl transition z-10 backdrop-blur-sm"
+                aria-label="Close register modal"
               >
                 <X size={20} />
               </button>
@@ -80,12 +81,12 @@ export default function RegisterModal({ isOpen, onClose }) {
                   <img 
                     src={logo} 
                     alt="MINSU Logo" 
-                    className="inline-block w-12 h-12 rounded-xl object-cover mb-3 shadow-lg shadow-orange-500/50"
+                    className="inline-block w-12 h-12 rounded-xl object-cover mb-3 shadow-sm"
                   />
-                  <h2 className="text-xl font-bold text-white mb-1">
+                  <h2 className="text-xl font-bold text-[#1d2026] mb-1 drop-shadow-sm">
                     Create Student Account
                   </h2>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-[#2c3e50] text-xs font-medium drop-shadow-sm">
                     Register as a student at MINSU E-LEARN
                   </p>
                 </div>
@@ -94,17 +95,17 @@ export default function RegisterModal({ isOpen, onClose }) {
                 <form onSubmit={handleSubmit} className="space-y-3">
                   {/* Name */}
                   <div>
-                    <label className="block text-xs font-medium text-white/80 mb-1.5">
+                    <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
                       Full Name
                     </label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-white/40 text-white text-sm placeholder-white/60 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#FF4C60]/20 focus:border-[#FF4C60] text-[#1d2026] text-sm placeholder-gray-500 transition shadow-sm"
                         placeholder="John Doe"
                       />
                     </div>
@@ -112,17 +113,17 @@ export default function RegisterModal({ isOpen, onClose }) {
 
                   {/* Email */}
                   <div>
-                    <label className="block text-xs font-medium text-white/80 mb-1.5">
+                    <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-white/40 text-white text-sm placeholder-white/60 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#FF4C60]/20 focus:border-[#FF4C60] text-[#1d2026] text-sm placeholder-gray-500 transition shadow-sm"
                         placeholder="you@example.com"
                       />
                     </div>
@@ -130,16 +131,16 @@ export default function RegisterModal({ isOpen, onClose }) {
 
                   {/* Student ID */}
                   <div>
-                    <label className="block text-xs font-medium text-white/80 mb-1.5">
+                    <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
                       Student ID (Optional)
                     </label>
                     <div className="relative">
-                      <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                      <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="text"
                         value={formData.student_id}
                         onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-white/40 text-white text-sm placeholder-white/60 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#FF4C60]/20 focus:border-[#FF4C60] text-[#1d2026] text-sm placeholder-gray-500 transition shadow-sm"
                         placeholder="2024-00001"
                       />
                     </div>
@@ -147,17 +148,17 @@ export default function RegisterModal({ isOpen, onClose }) {
 
                   {/* Password */}
                   <div>
-                    <label className="block text-xs font-medium text-white/80 mb-1.5">
+                    <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
                       Password
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="password"
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-white/40 text-white text-sm placeholder-white/60 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#FF4C60]/20 focus:border-[#FF4C60] text-[#1d2026] text-sm placeholder-gray-500 transition shadow-sm"
                         placeholder="••••••••"
                       />
                     </div>
@@ -165,17 +166,17 @@ export default function RegisterModal({ isOpen, onClose }) {
 
                   {/* Confirm Password */}
                   <div>
-                    <label className="block text-xs font-medium text-white/80 mb-1.5">
+                    <label className="block text-xs font-semibold text-[#1d2026] mb-1.5 drop-shadow-sm">
                       Confirm Password
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="password"
                         required
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-white/40 text-white text-sm placeholder-white/60 transition"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#FF4C60]/20 focus:border-[#FF4C60] text-[#1d2026] text-sm placeholder-gray-500 transition shadow-sm"
                         placeholder="••••••••"
                       />
                     </div>
@@ -185,7 +186,7 @@ export default function RegisterModal({ isOpen, onClose }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/50 hover:shadow-orange-500/70"
+                    className="w-full bg-[#FF4C60] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#ff3451] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                   >
                     {loading ? 'Creating account...' : 'Create Student Account'}
                   </button>
@@ -194,17 +195,17 @@ export default function RegisterModal({ isOpen, onClose }) {
                 {/* Divider */}
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/20"></div>
+                    <div className="w-full border-t border-gray-200"></div>
                   </div>
                   <div className="relative flex justify-center text-xs">
-                    <span className="px-2 bg-transparent text-white/70">Already have an account?</span>
+                    <span className="px-3 bg-white text-[#1d2026] font-medium rounded-full shadow-sm">Already have an account?</span>
                   </div>
                 </div>
 
                 {/* Login Link */}
                 <button
                   onClick={onClose}
-                  className="block w-full text-center py-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white text-sm rounded-xl font-semibold transition border border-white/20 hover:border-white/30"
+                  className="block w-full text-center py-2 bg-white hover:bg-gray-50 text-[#1d2026] text-sm rounded-xl font-semibold transition border border-gray-300 shadow-sm"
                 >
                   Sign In Instead
                 </button>
